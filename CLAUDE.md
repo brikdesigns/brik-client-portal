@@ -27,12 +27,60 @@ User → ClickUp Brain (Claude) → Netlify Agent Runner → MCP (Notion/Webflow
 | ClickUp | Brain + Claude / Webhooks |
 | Claude | Netlify Agent Runners |
 
+## Design System (brik-bds)
+
+The design system is included as a git submodule at `./brik-bds/`. Always use these standards.
+
+### Token Naming Convention
+```
+--_[category]---[type]--[variant]
+```
+
+Examples:
+- `--_space---section--lg` (spacing)
+- `--_color---brand--primary` (color)
+- `--_radius---component--md` (border radius)
+
+### Core Tokens (Reference: `brik-bds/tokens/TOKEN-REFERENCE.md`)
+
+**Spacing:**
+- Section padding: `--_space---section--lg` (6rem default)
+- Component padding: `--_space---component--md` (2rem default)
+- Layout gap: `--_space---layout--md` (2rem default)
+
+**Colors:**
+- Primary: `--_color---brand--primary`
+- Accent: `--_color---brand--accent`
+- Surface: `--_color---surface--card`
+
+**Typography:**
+- Display font: `--_font---family--display` (Instrument Serif)
+- Body font: `--_font---family--body` (Sora)
+
+### Component Patterns
+
+When building UI components:
+1. Check if component exists in `brik-bds/components/`
+2. Use existing component or follow its patterns
+3. Apply design tokens, not hardcoded values
+4. Follow BEM-style naming for custom classes
+
+### HTML/CSS Class Conventions
+
+| Content Type | Class Pattern |
+|-------------|---------------|
+| Sections | `.section.section--[type]` |
+| Layouts | `.layout.layout--[cols]` |
+| Display | `.display.display--[type]` |
+| Elements | `.el.el--[type]` |
+
 ## Development Guidelines
 
 1. **Check Notion doc first** for architecture decisions
 2. **Use Netlify Agent Runners** for Claude integration (no custom backend needed for MVP)
-3. **Follow brik-bds** design tokens when building UI
+3. **Follow brik-bds** design tokens when building UI (see above)
 4. **Test locally** before deploying via Netlify
+5. **Reference `/references/`** folder for detailed documentation
 
 ## Commands
 

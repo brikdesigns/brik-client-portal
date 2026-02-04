@@ -38,5 +38,5 @@ npm run dev
 
 ## Related Projects
 
-- [brik-llm](https://github.com/nickstanerson/brik-llm) - Automation scripts and workflows
-- [brik-bds](https://github.com/nickstanerson/brik-bds) - Brik Design System
+- [brik-llm](https://github.com/brikdesigns/brik-llm) - Automation scripts and workflows
+- [brik-bds](https://github.com/brikdesigns/brik-bds) - Brik Design System
