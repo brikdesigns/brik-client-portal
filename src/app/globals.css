@@ -129,3 +129,57 @@
   --_space---button: var(--space--200);
   --_space---input: var(--space--200);
 }
+
+/*
+ * Dark mode overrides.
+ *
+ * Adopted from brikdesigns.com (header.css → :root[data-theme="dark"]).
+ * Activated by data-theme="dark" on <html>, set via:
+ *   1. localStorage('theme') — user's explicit choice
+ *   2. prefers-color-scheme: dark — OS preference fallback
+ *   3. Anti-FOUC script in layout.tsx prevents flash on load
+ *
+ * Service-specific tokens (yellow, green, blue, purple, orange) are omitted
+ * since the portal doesn't use service category colors.
+ */
+:root[data-theme="dark"] .body {
+  /* Text */
+  --_color---text--primary: var(--grayscale--lightest);
+  --_color---text--secondary: var(--grayscale--light);
+  --_color---text--muted: var(--grayscale--dark);
+  --_color---text--brand: var(--brand--primary);
+  --_color---text--inverse: var(--grayscale--darkest);
+
+  /* Surface */
+  --_color---surface--primary: var(--grayscale--black);
+  --_color---surface--secondary: var(--grayscale--darkest);
+  --_color---surface--brand-primary: var(--brand--primary);
+
+  /* Page */
+  --_color---page--primary: var(--grayscale--black);
+  --_color---page--secondary: var(--grayscale--darker);
+  --_color---page--accent: var(--grayscale--darkest);
+
+  /* Background */
+  --_color---background--brand-primary: var(--brand--primary);
+  --_color---background--primary: var(--grayscale--darker);
+  --_color---background--secondary: var(--grayscale--darkest);
+  --_color---background--inverse: var(--brand--primary);
+  --_color---background--input: var(--grayscale--black);
+
+  /* Border */
+  --_color---border--primary: var(--grayscale--darkest);
+  --_color---border--secondary: var(--grayscale--darker);
+  --_color---border--brand: var(--brand--primary);
+  --_color---border--input: var(--grayscale--dark);
+  --_color---border--inverse: var(--grayscale--black);
+
+  /* System */
+  --_color---system--link: #6b8aff;
+}
+
+/* Dark mode logo inversion — filter to white */
+:root[data-theme="dark"] .portal-logo {
+  filter: brightness(0) invert(1);
+  transition: filter 0.3s ease;
+}

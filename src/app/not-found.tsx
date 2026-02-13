@@ -23,6 +23,7 @@ export default function NotFound() {
           width={100}
           height={35}
           style={{ marginBottom: '32px' }}
+          className="portal-logo"
         />
         <h1
           style={{

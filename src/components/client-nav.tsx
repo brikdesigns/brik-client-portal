@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { SignOutButton } from '@/components/sign-out-button';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface ClientNavProps {
   userName: string;
@@ -50,6 +51,7 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
             width={80}
             height={28}
             priority
+            className="portal-logo"
           />
           <nav style={{ display: 'flex', gap: '4px' }}>
             {navItems.map((item) => {
@@ -122,6 +124,7 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
               </p>
             )}
           </div>
+          <ThemeToggle />
           <SignOutButton />
         </div>
       </div>

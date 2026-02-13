@@ -14,7 +14,7 @@ export default function ForgotPasswordPage() {
     >
       <div
         style={{
-          backgroundColor: 'white',
+          backgroundColor: 'var(--_color---surface--primary, white)',
           borderRadius: '8px',
           padding: '48px',
           width: '100%',
@@ -29,6 +29,7 @@ export default function ForgotPasswordPage() {
             width={130}
             height={45}
             priority
+            className="portal-logo"
           />
         </div>
 

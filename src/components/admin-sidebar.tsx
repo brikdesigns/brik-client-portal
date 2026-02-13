@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { SignOutButton } from '@/components/sign-out-button';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 interface AdminSidebarProps {
   userName: string;
@@ -50,6 +51,7 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
           width={100}
           height={35}
           priority
+          className="portal-logo"
         />
       </div>
 
@@ -118,7 +120,10 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
         >
           {userName}
         </p>
-        <SignOutButton />
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <SignOutButton />
+          <ThemeToggle />
+        </div>
       </div>
     </aside>
   );
