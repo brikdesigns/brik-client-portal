@@ -56,13 +56,27 @@ Browser → Next.js (Netlify) → Supabase Auth + PostgreSQL
 
 ## Design System (brik-bds)
 
-Git submodule at `./brik-bds/`. Uses Brik Designs company brand (NOT any template theme).
+Git submodule at `./brik-bds/`. Uses **Brik Designs company brand** — NOT any of the 8 BDS web template themes.
 
-### Brand Tokens (overridden in globals.css)
+### Brand vs Templates (critical distinction)
+
+| | Brik Designs Brand | BDS Web Templates |
+| --- | --- | --- |
+| Purpose | Company identity (portal, brikdesigns.com) | Product offering (web store) |
+| CSS class | None — brand tokens on `.body` selector | `.body.theme-1` through `.body.theme-8` |
+| Colors | Poppy red, near-black, tan/cream | Varies per theme |
+| Font | Poppins (all roles) | Varies (Open Sans, Geist, Playfair, etc.) |
+| Figma source | `figma-variables.json` → `theme.brik` | `figma-variables.json` → theme palettes |
+
+**Architecture:** ThemeProvider has `applyToBody={false}` so no `theme-X` class is added to `<body>`. The portal's `<body>` only has the `body` class. Brand tokens are defined in `globals.css` on the `.body` selector, which beats BDS `.body` defaults by source order. BDS theme-specific CSS rules (like `@media 1440px .body.theme-1` spacious spacing) never match.
+
+### Brand Tokens (defined in globals.css)
+
 - Primary: `#E35335` (poppy red)
 - Secondary: `#1B1B1B` (near-black)
 - Accent: `#F1F0EC` (tan/cream)
 - Font: Poppins (all roles)
+- Dark mode: Not yet implemented (brikdesigns.com is light-only currently)
 
 ### Token Naming Convention
 ```
