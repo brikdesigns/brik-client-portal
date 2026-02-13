@@ -1,0 +1,124 @@
+/* BDS Design System CSS — provides component classes and base token structure */
+@import '../../brik-bds/updates/brik-bds.webflow/css/brik-bds.webflow.css';
+
+/* Tailwind layers */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * Reset Webflow .body class border/radius.
+ * In Webflow preview, .body has a visible border. In the app, we want a clean body.
+ */
+.body {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+/*
+ * Brik Designs company brand overrides.
+ *
+ * The BDS Webflow CSS defines 8 web template themes (theme-1 through theme-8).
+ * These are a PRODUCT offering, not the Brik Designs company identity.
+ * The actual brand palette comes from brikdesigns.com (the company site).
+ *
+ * Source: /GitHub/brikdesigns/css/brikdesigns.webflow.css
+ * Source: /GitHub/brik-bds/figma-variables.json → theme.brik
+ */
+.body {
+  /* ---- Brik brand color primitives ---- */
+  --brand--primary: #e35335;
+  --brand--secondary: #1b1b1b;
+  --brand--accent: #f1f0ec;
+
+  /* Poppy scale */
+  --poppy--lightest: #ffefeb;
+  --poppy--lighter: #ffa693;
+  --poppy--light-base: #e35335;
+  --poppy--dark: #b0351b;
+  --poppy--darker: #7d1d09;
+  --poppy--darkest: #4a0d00;
+
+  /* Tan scale */
+  --tan--lightest: #f1f0ec;
+  --tan--lighter: #cfcdc5;
+  --tan--light: #adaaa0;
+  --tan--dark: #8b887d;
+  --tan--darker: #69665c;
+  --tan--darkest: #47453c;
+
+  /* Grayscale (brikdesigns.com values) */
+  --grayscale--white: white;
+  --grayscale--lightest: #f2f2f2;
+  --grayscale--lighter: #e0e0e0;
+  --grayscale--light: #bdbdbd;
+  --grayscale--dark: #828282;
+  --grayscale--darker: #333;
+  --grayscale--darkest: #1b1b1b;
+  --grayscale--black: #000;
+
+  /* ---- Semantic color tokens (mapped to Brik brand) ---- */
+
+  /* Page */
+  --_color---page--primary: var(--grayscale--white);
+  --_color---page--secondary: var(--grayscale--lightest);
+  --_color---page--accent: var(--tan--lightest);
+
+  /* Text */
+  --_color---text--primary: var(--grayscale--darkest);
+  --_color---text--secondary: var(--grayscale--dark);
+  --_color---text--muted: var(--grayscale--light);
+  --_color---text--inverse: var(--grayscale--white);
+  --_color---text--brand: var(--brand--primary);
+
+  /* Surface */
+  --_color---surface--primary: var(--grayscale--white);
+  --_color---surface--secondary: var(--grayscale--lightest);
+  --_color---surface--brand-primary: var(--brand--primary);
+
+  /* Background */
+  --_color---background--brand-primary: var(--brand--primary);
+  --_color---background--primary: var(--grayscale--white);
+  --_color---background--secondary: var(--grayscale--lightest);
+  --_color---background--inverse: var(--grayscale--darkest);
+  --_color---background--input: var(--grayscale--white);
+
+  /* Border */
+  --_color---border--primary: var(--grayscale--darkest);
+  --_color---border--secondary: var(--grayscale--lighter);
+  --_color---border--brand: var(--brand--primary);
+  --_color---border--input: var(--grayscale--light);
+  --_color---border--inverse: var(--grayscale--white);
+
+  /* System */
+  --_color---system--link: #0034ea;
+
+  /* ---- Typography (Poppins — Brik brand font) ---- */
+  --_typography---font-family--body: Poppins, sans-serif;
+  --_typography---font-family--label: Poppins, sans-serif;
+  --_typography---font-family--heading: Poppins, sans-serif;
+  --_typography---font-family--display: Poppins, sans-serif;
+
+  /* ---- Base mode spacing ---- */
+  --_space---none: var(--space--0);
+  --_space---tiny: var(--space--100);
+  --_space---sm: var(--space--150);
+  --_space---md: var(--space--200);
+  --_space---lg: var(--space--400);
+  --_space---xl: var(--space--600);
+  --_space---xxl: var(--space--800);
+  --_space---huge: var(--space--1000);
+
+  --_space---gap--none: var(--space--0);
+  --_space---gap--tiny: var(--space--50);
+  --_space---gap--sm: var(--space--100);
+  --_space---gap--md: var(--space--200);
+  --_space---gap--lg: var(--space--400);
+  --_space---gap--xl: var(--space--500);
+  --_space---gap--xxl: var(--space--600);
+  --_space---gap--huge: var(--space--1200);
+
+  --_space---button: var(--space--200);
+  --_space---input: var(--space--200);
+}
