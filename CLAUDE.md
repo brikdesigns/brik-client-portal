@@ -171,10 +171,36 @@ src/
 ## Commands
 
 ```bash
-npm run dev      # Start development server (localhost:3000)
-npm run build    # Build for production
-npm run lint     # Run linter
+npm run dev        # Start development server (localhost:3000)
+npm run build      # Build for production
+npm run lint       # Run linter
+npm run db:push    # Apply pending migrations to live Supabase
+npm run db:diff    # Generate migration from schema diff
+npm run db:status  # List migration status (applied/pending)
+npm run db:seed    # Reset local DB with seeds (destructive!)
 ```
+
+## Migration Workflow
+
+Supabase CLI manages database schema via SQL migration files in `supabase/migrations/`.
+
+**Local development:**
+
+1. Make schema changes → write SQL in `supabase/migrations/00003_*.sql`
+2. `npm run db:push` to apply to live Supabase (requires `supabase link` first)
+3. Commit and push — GitHub Action auto-applies on merge to main
+
+**GitHub Action (`.github/workflows/migrate.yml`):**
+
+- Triggers on push to `main` when `supabase/migrations/**` changes
+- Runs `supabase db push` against live project
+- Requires GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
+
+**First-time setup:**
+
+1. `supabase login` (opens browser for Supabase dashboard OAuth)
+2. `supabase link --project-ref rnspxmrkpoukccahggli`
+3. Add secrets to GitHub: Settings → Secrets → Actions
 
 ## Key Integrations
 

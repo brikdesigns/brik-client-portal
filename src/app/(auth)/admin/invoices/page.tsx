@@ -1,0 +1,200 @@
+import { createClient } from '@/lib/supabase/server';
+import { Card } from '@bds/components/ui/Card/Card';
+import { Button } from '@bds/components/ui/Button/Button';
+import { PageHeader } from '@/components/page-header';
+import { StatCard } from '@/components/stat-card';
+import { DataTable } from '@/components/data-table';
+import { InvoiceStatusBadge } from '@/components/status-badges';
+import { formatCurrency } from '@/lib/format';
+
+export default async function AdminInvoicesPage() {
+  const supabase = await createClient();
+
+  const { data: invoices } = await supabase
+    .from('invoices')
+    .select(`
+      id, description, amount_cents, currency, status,
+      invoice_date, due_date, paid_at, invoice_url,
+      clients(id, name)
+    `)
+    .order('created_at', { ascending: false });
+
+  const all = invoices ?? [];
+  const openInvoices = all.filter((i) => i.status === 'open');
+  const draftInvoices = all.filter((i) => i.status === 'draft');
+  const paidInvoices = all.filter((i) => i.status === 'paid');
+  const totalOpen = openInvoices.reduce((sum, i) => sum + i.amount_cents, 0);
+  const totalPaid = paidInvoices.reduce((sum, i) => sum + i.amount_cents, 0);
+
+  const linkStyle = {
+    fontFamily: 'var(--_typography---font-family--body)',
+    fontSize: '13px',
+    color: 'var(--_color---system--link, #0034ea)',
+    textDecoration: 'none' as const,
+  };
+
+  type InvoiceRow = (typeof all)[number];
+
+  return (
+    <div>
+      <PageHeader
+        title="Invoices"
+        subtitle={`${all.length} total invoices across all clients.`}
+      />
+
+      {/* Stats */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+          gap: '16px',
+          marginBottom: '24px',
+        }}
+      >
+        <StatCard label="Open" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
+        <StatCard label="Draft" value={draftInvoices.length} />
+        <StatCard label="Paid" value={`${paidInvoices.length} (${formatCurrency(totalPaid)})`} />
+        <StatCard label="Total invoices" value={all.length} />
+      </div>
+
+      {/* Open invoices */}
+      {openInvoices.length > 0 && (
+        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+          <h2
+            style={{
+              fontFamily: 'var(--_typography---font-family--heading)',
+              fontSize: '18px',
+              fontWeight: 600,
+              color: 'var(--_color---text--primary)',
+              margin: '0 0 16px',
+            }}
+          >
+            Open invoices
+          </h2>
+          <DataTable<InvoiceRow>
+            data={openInvoices}
+            rowKey={(inv) => inv.id}
+            emptyMessage=""
+            columns={[
+              {
+                header: 'Client',
+                accessor: (inv) => {
+                  const client = inv.clients as unknown as { id: string; name: string } | null;
+                  return client ? (
+                    <a href={`/admin/clients/${client.id}`} style={linkStyle}>
+                      {client.name}
+                    </a>
+                  ) : '—';
+                },
+                style: { fontWeight: 500 },
+              },
+              {
+                header: 'Description',
+                accessor: (inv) => inv.description || 'Invoice',
+                style: { color: 'var(--_color---text--primary)' },
+              },
+              {
+                header: 'Amount',
+                accessor: (inv) => formatCurrency(inv.amount_cents),
+                style: { fontWeight: 600 },
+              },
+              {
+                header: 'Due',
+                accessor: (inv) =>
+                  inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
+                style: { color: 'var(--_color---text--secondary)' },
+              },
+              {
+                header: 'Status',
+                accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
+              },
+              {
+                header: '',
+                accessor: (inv) => (
+                  <a href={`/admin/invoices/${inv.id}/edit`} style={linkStyle}>
+                    Edit
+                  </a>
+                ),
+              },
+            ]}
+          />
+        </Card>
+      )}
+
+      {/* All invoices */}
+      <Card variant="elevated" padding="lg">
+        <h2
+          style={{
+            fontFamily: 'var(--_typography---font-family--heading)',
+            fontSize: '18px',
+            fontWeight: 600,
+            color: 'var(--_color---text--primary)',
+            margin: '0 0 16px',
+          }}
+        >
+          All invoices
+        </h2>
+        <DataTable<InvoiceRow>
+          data={all}
+          rowKey={(inv) => inv.id}
+          emptyMessage="No invoices yet."
+          columns={[
+            {
+              header: 'Client',
+              accessor: (inv) => {
+                const client = inv.clients as unknown as { id: string; name: string } | null;
+                return client ? (
+                  <a href={`/admin/clients/${client.id}`} style={linkStyle}>
+                    {client.name}
+                  </a>
+                ) : '—';
+              },
+              style: { fontWeight: 500 },
+            },
+            {
+              header: 'Description',
+              accessor: (inv) => inv.description || 'Invoice',
+              style: { color: 'var(--_color---text--primary)' },
+            },
+            {
+              header: 'Amount',
+              accessor: (inv) => formatCurrency(inv.amount_cents),
+              style: { fontWeight: 600 },
+            },
+            {
+              header: 'Date',
+              accessor: (inv) =>
+                inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '—',
+              style: { color: 'var(--_color---text--secondary)' },
+            },
+            {
+              header: 'Due',
+              accessor: (inv) =>
+                inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
+              style: { color: 'var(--_color---text--secondary)' },
+            },
+            {
+              header: 'Status',
+              accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
+            },
+            {
+              header: '',
+              accessor: (inv) => (
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <a href={`/admin/invoices/${inv.id}/edit`} style={linkStyle}>
+                    Edit
+                  </a>
+                  {inv.invoice_url && (
+                    <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={linkStyle}>
+                      View
+                    </a>
+                  )}
+                </div>
+              ),
+            },
+          ]}
+        />
+      </Card>
+    </div>
+  );
+}
