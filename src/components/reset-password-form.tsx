@@ -75,7 +75,7 @@ export function ResetPasswordForm() {
         />
       </div>
 
-      <Button type="submit" variant="primary" size="lg" fullWidth disabled={loading}>
+      <Button type="submit" variant="primary" size="md" fullWidth disabled={loading}>
         {loading ? 'Updating...' : 'Update password'}
       </Button>
     </form>

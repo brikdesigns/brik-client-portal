@@ -37,8 +37,12 @@ Brik Designs client portal — secure web app where agency clients track project
 
 - **Project ID:** `902a0eb4-00bb-4cd7-b45b-f31f1358076b`
 - **Site Name:** `brik-client-portal`
-- **Target Domain:** `portal.brikdesigns.com` (planned)
-- **Features:** Agent Runners enabled
+- **Live Domain:** `portal.brikdesigns.com`
+- **DNS:** CNAME `portal` → `brik-client-portal.netlify.app` (SiteGround)
+- **Features:** Agent Runners enabled, Next.js Runtime auto-detected
+- **GitHub App:** Installed on `brikdesigns` org (required for auto-deploy)
+- **Env Vars:** NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SITE_URL
+- **Both repos public:** brik-client-portal + brik-bds (required for submodule build)
 
 ## Architecture
 
@@ -114,6 +118,11 @@ src/
 │           └── billing/page.tsx  # Invoice list
 ├── components/
 │   ├── bds-provider.tsx         # ThemeProvider wrapper
+│   ├── page-header.tsx          # Shared page header (title, subtitle, action)
+│   ├── status-badges.tsx        # Project/Client/Invoice status badges
+│   ├── stat-card.tsx            # Metric card (label + value)
+│   ├── data-table.tsx           # Generic table with column definitions
+│   ├── empty-state.tsx          # Consistent empty state messaging
 │   ├── admin-sidebar.tsx        # Admin navigation sidebar
 │   ├── client-nav.tsx           # Client top navigation
 │   ├── sign-out-button.tsx      # Shared sign-out
@@ -124,6 +133,7 @@ src/
 │   └── edit-client-form.tsx     # Client edit form
 ├── lib/
 │   ├── fonts.ts                 # Poppins via next/font/google
+│   ├── format.ts                # formatCurrency utility
 │   ├── email.ts                 # Resend integration
 │   └── supabase/
 │       ├── client.ts            # Browser client
@@ -144,16 +154,42 @@ npm run lint     # Run linter
 | Service | Integration Method | Status |
 |---------|-------------------|--------|
 | Supabase | Auth + PostgreSQL + RLS | Live |
+| Netlify | Auto-deploy from main | Live |
 | Resend | Transactional email API | Configured (needs API key) |
 | Notion | MCP Server / Direct API | Planned (content sync) |
 | Webflow | MCP Server / Direct API | Planned (site integration) |
 | Stripe | Webhook + API | Planned (invoice sync) |
 | ClickUp | Brain + Claude / Webhooks | Planned |
 
+## Reusable Framework Pattern
+
+This portal is designed as a **template for future client portals**. Key reusable patterns:
+
+| Pattern | Files | What It Does |
+|---------|-------|-------------|
+| Auth flow | `middleware.ts`, `(auth)/layout.tsx`, `login-form.tsx` | Admin-invite-only, role-based routing |
+| Admin CRUD | `admin/clients/`, `admin/users/` | Full client/user management with forms |
+| Client dashboard | `dashboard/` | Self-service project + billing views |
+| Shared components | `page-header`, `data-table`, `status-badges`, `stat-card` | Consistent UI with minimal code |
+| Supabase RLS | `migrations/00001_initial_schema.sql` | Admin bypass + client data isolation |
+| Brand theming | `globals.css`, `bds-provider.tsx` | BDS design system with brand overrides |
+
+**To spin up for a new client:** Fork repo → update brand tokens in `globals.css` → create new Supabase project → set env vars → deploy.
+
+## Deployment Checklist (for new instances)
+
+1. Create Supabase project, run migration SQL
+2. Set Supabase Auth redirect URLs for target domain
+3. Create Netlify site, link to GitHub repo
+4. Install Netlify GitHub App on org (`github.com/apps/netlify/installations/new`)
+5. Set env vars: NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SITE_URL
+6. Configure DNS (CNAME to netlify app)
+7. Create admin user in Supabase Auth, set profile role to 'admin'
+
 ## Related Repos
 
 - `brik-llm` — Automation scripts, MCP configurations
-- `brik-bds` — Design system components (submodule)
+- `brik-bds` — Design system components (submodule, public)
 - `brikdesigns` — Company website (brand source CSS)
 
 ## MCP Servers Available

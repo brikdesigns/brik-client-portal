@@ -23,10 +23,15 @@
  * These are a PRODUCT offering, not the Brik Designs company identity.
  * The actual brand palette comes from brikdesigns.com (the company site).
  *
+ * Selector: .body.theme-1 (specificity 0,2,0) is required to beat the BDS
+ * Webflow CSS which defines "cozy" section-level spacing on .body.theme-1
+ * inside @media (min-width: 1440px) at line ~5780. A plain .body (0,1,0)
+ * loses that specificity battle.
+ *
  * Source: /GitHub/brikdesigns/css/brikdesigns.webflow.css
  * Source: /GitHub/brik-bds/figma-variables.json → theme.brik
  */
-.body {
+.body.theme-1 {
   /* ---- Brik brand color primitives ---- */
   --brand--primary: #e35335;
   --brand--secondary: #1b1b1b;
