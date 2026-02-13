@@ -5,7 +5,8 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
-import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge } from '@/components/status-badges';
+import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeBadge } from '@/components/status-badges';
+import { ServiceBadge } from '@/components/service-badge';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -21,7 +22,13 @@ export default async function ClientDetailPage({ params }: Props) {
       id, name, status, contact_name, contact_email, website_url, notes, created_at,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
-      profiles(id, full_name, email, is_active, last_login_at)
+      profiles(id, full_name, email, is_active, last_login_at),
+      client_services(
+        id, status, started_at, notes,
+        services(id, name, service_type, billing_frequency, base_price_cents,
+          service_categories(slug, name)
+        )
+      )
     `)
     .eq('id', params.id)
     .single();
@@ -33,6 +40,20 @@ export default async function ClientDetailPage({ params }: Props) {
   const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
   const invoices = (client.invoices as { id: string; description: string | null; amount_cents: number; status: string; due_date: string | null; invoice_url: string | null }[]) ?? [];
   const users = (client.profiles as { id: string; full_name: string | null; email: string; is_active: boolean; last_login_at: string | null }[]) ?? [];
+  const clientServices = ((client as unknown as Record<string, unknown>).client_services as {
+    id: string;
+    status: string;
+    started_at: string | null;
+    notes: string | null;
+    services: {
+      id: string;
+      name: string;
+      service_type: string;
+      billing_frequency: string | null;
+      base_price_cents: number | null;
+      service_categories: { slug: string; name: string } | null;
+    } | null;
+  }[]) ?? [];
 
   const linkStyle = {
     fontFamily: 'var(--_typography---font-family--body)',
@@ -88,10 +109,64 @@ export default async function ClientDetailPage({ params }: Props) {
           marginBottom: '24px',
         }}
       >
+        <StatCard label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
         <StatCard label="Projects" value={projects.length} />
         <StatCard label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
         <StatCard label="Portal users" value={users.length} />
       </div>
+
+      {/* Services */}
+      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
+          <a href={`/admin/clients/${client.id}/services/new`} style={linkStyle}>Assign service</a>
+        </div>
+        <DataTable
+          data={clientServices}
+          rowKey={(cs) => cs.id}
+          emptyMessage="No services assigned yet."
+          columns={[
+            {
+              header: '',
+              accessor: (cs) => {
+                const slug = cs.services?.service_categories?.slug;
+                return slug ? <ServiceBadge category={slug} size={16} /> : null;
+              },
+              style: { width: '32px', padding: '10px 4px 10px 12px' },
+            },
+            {
+              header: 'Service',
+              accessor: (cs) =>
+                cs.services ? (
+                  <a
+                    href={`/admin/services/${cs.services.id}`}
+                    style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
+                  >
+                    {cs.services.name}
+                  </a>
+                ) : '—',
+              style: { fontWeight: 500 },
+            },
+            {
+              header: 'Type',
+              accessor: (cs) =>
+                cs.services ? <ServiceTypeBadge type={cs.services.service_type} /> : '—',
+            },
+            {
+              header: 'Price',
+              accessor: (cs) =>
+                cs.services?.base_price_cents
+                  ? `${formatCurrency(cs.services.base_price_cents)}${cs.services.billing_frequency === 'monthly' ? '/mo' : ''}`
+                  : '—',
+              style: { color: 'var(--_color---text--secondary)' },
+            },
+            {
+              header: 'Status',
+              accessor: (cs) => <ServiceStatusBadge status={cs.status} />,
+            },
+          ]}
+        />
+      </Card>
 
       {/* Projects */}
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>

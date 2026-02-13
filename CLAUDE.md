@@ -28,7 +28,7 @@ Brik Designs client portal — secure web app where agency clients track project
 - **Project Ref:** `rnspxmrkpoukccahggli`
 - **URL:** `https://rnspxmrkpoukccahggli.supabase.co`
 - **Admin User:** nick@brikdesigns.com
-- **Schema:** 5 tables — profiles, clients, projects, invoices, email_log
+- **Schema:** 8 tables — profiles, clients, projects, invoices, email_log, service_categories, services, client_services
 - **Auth Model:** Admin-invite-only, role-based (admin/client)
 - **RLS:** Admin bypass via `(select role from profiles where id = auth.uid()) = 'admin'`
 - **Keys:** JWT format (`eyJ...`), stored in `.env.local`
@@ -119,21 +119,32 @@ src/
 │       │   │   ├── page.tsx     # Client list
 │       │   │   ├── new/page.tsx # Add client form
 │       │   │   └── [id]/        # Client detail
-│       │   │       ├── page.tsx          # Detail view
+│       │   │       ├── page.tsx          # Detail view (+ services section)
 │       │   │       ├── edit/page.tsx     # Edit form
 │       │   │       ├── projects/new/     # Add project
-│       │   │       └── invoices/new/     # Add invoice
+│       │   │       ├── invoices/new/     # Add invoice
+│       │   │       └── services/new/     # Assign service
+│       │   ├── services/        # Service catalog management
+│       │   │   ├── page.tsx     # Service list (grouped by category)
+│       │   │   ├── new/page.tsx # Add service form
+│       │   │   └── [id]/        # Service detail
+│       │   │       ├── page.tsx          # Detail + client assignments
+│       │   │       └── edit/page.tsx     # Edit form
 │       │   └── users/page.tsx   # User management + invite
 │       └── dashboard/           # Client dashboard (role=client)
 │           ├── layout.tsx       # Top nav
-│           ├── page.tsx         # Overview (projects, invoices)
+│           ├── page.tsx         # Overview (services + stats, 2-col)
 │           ├── loading.tsx      # Skeleton loader
-│           ├── projects/page.tsx # Project list
-│           └── billing/page.tsx  # Invoice list
+│           ├── services/page.tsx # Client services list
+│           ├── payments/page.tsx # Invoice list (renamed from billing)
+│           ├── projects/page.tsx # Project list (legacy)
+│           └── billing/page.tsx  # Invoice list (legacy)
 ├── components/
 │   ├── bds-provider.tsx         # ThemeProvider wrapper
 │   ├── page-header.tsx          # Shared page header (title, subtitle, action)
-│   ├── status-badges.tsx        # Project/Client/Invoice status badges
+│   ├── status-badges.tsx        # Project/Client/Invoice/Service status badges
+│   ├── service-badge.tsx        # Category color badge + label
+│   ├── service-card.tsx         # Dashboard service card (badge + name + desc)
 │   ├── stat-card.tsx            # Metric card (label + value)
 │   ├── data-table.tsx           # Generic table with column definitions
 │   ├── empty-state.tsx          # Consistent empty state messaging
@@ -144,7 +155,9 @@ src/
 │   ├── forgot-password-form.tsx # Password reset request
 │   ├── reset-password-form.tsx  # New password form
 │   ├── invite-user-form.tsx     # Admin invite form
-│   └── edit-client-form.tsx     # Client edit form
+│   ├── edit-client-form.tsx     # Client edit form
+│   ├── edit-service-form.tsx    # Service edit form
+│   └── theme-toggle.tsx         # Dark/light mode toggle
 ├── lib/
 │   ├── fonts.ts                 # Poppins via next/font/google
 │   ├── format.ts                # formatCurrency utility
@@ -182,10 +195,10 @@ This portal is designed as a **template for future client portals**. Key reusabl
 | Pattern | Files | What It Does |
 |---------|-------|-------------|
 | Auth flow | `middleware.ts`, `(auth)/layout.tsx`, `login-form.tsx` | Admin-invite-only, role-based routing |
-| Admin CRUD | `admin/clients/`, `admin/users/` | Full client/user management with forms |
-| Client dashboard | `dashboard/` | Self-service project + billing views |
-| Shared components | `page-header`, `data-table`, `status-badges`, `stat-card` | Consistent UI with minimal code |
-| Supabase RLS | `migrations/00001_initial_schema.sql` | Admin bypass + client data isolation |
+| Admin CRUD | `admin/clients/`, `admin/services/`, `admin/users/` | Full client/service/user management |
+| Client dashboard | `dashboard/` | Services-centric overview + payments |
+| Shared components | `page-header`, `data-table`, `status-badges`, `stat-card`, `service-badge`, `service-card` | Consistent UI with minimal code |
+| Supabase RLS | `migrations/00001_initial_schema.sql`, `00002_services.sql` | Admin bypass + client data isolation |
 | Brand theming | `globals.css`, `bds-provider.tsx` | BDS design system with brand overrides |
 
 **To spin up for a new client:** Fork repo → update brand tokens in `globals.css` → create new Supabase project → set env vars → deploy.

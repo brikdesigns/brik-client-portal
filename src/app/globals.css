@@ -128,6 +128,23 @@
 
   --_space---button: var(--space--200);
   --_space---input: var(--space--200);
+
+  /* ---- Service category colors (from brikdesigns.com) ---- */
+  --services--yellow: #f4d364;
+  --services--yellow-dark: #634716;
+  --services--yellow-light: #fffee1;
+  --services--green: #9ada6c;
+  --services--green-dark: #2a5542;
+  --services--green-light: #f8fff3;
+  --services--blue: #8ebbcc;
+  --services--blue-dark: #314952;
+  --services--blue-light: #f8fdff;
+  --services--purple: #c4b0eb;
+  --services--purple-dark: #362d48;
+  --services--purple-light: #eae3f3;
+  --services--orange: #e76134;
+  --services--orange-dark: #4e1400;
+  --services--orange-light: #ffe8dc;
 }
 
 /*
@@ -139,8 +156,6 @@
  *   2. prefers-color-scheme: dark — OS preference fallback
  *   3. Anti-FOUC script in layout.tsx prevents flash on load
  *
- * Service-specific tokens (yellow, green, blue, purple, orange) are omitted
- * since the portal doesn't use service category colors.
  */
 :root[data-theme="dark"] .body {
   /* Text */
@@ -176,6 +191,23 @@
 
   /* System */
   --_color---system--link: #6b8aff;
+
+  /* Service category colors (dark mode — slightly muted for dark backgrounds) */
+  --services--yellow: #d4b54a;
+  --services--yellow-dark: #f4d364;
+  --services--yellow-light: #2a2110;
+  --services--green: #7aba52;
+  --services--green-dark: #9ada6c;
+  --services--green-light: #1a2a14;
+  --services--blue: #6e9bac;
+  --services--blue-dark: #8ebbcc;
+  --services--blue-light: #141f24;
+  --services--purple: #a490cb;
+  --services--purple-dark: #c4b0eb;
+  --services--purple-light: #1e1828;
+  --services--orange: #c74e24;
+  --services--orange-dark: #e76134;
+  --services--orange-light: #241008;
 }
 
 /* Dark mode logo inversion — filter to white */

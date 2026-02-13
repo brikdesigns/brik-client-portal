@@ -13,8 +13,8 @@ interface ClientNavProps {
 
 const navItems = [
   { label: 'Overview', href: '/dashboard' },
-  { label: 'Projects', href: '/dashboard/projects' },
-  { label: 'Billing', href: '/dashboard/billing' },
+  { label: 'Services', href: '/dashboard/services' },
+  { label: 'Payments', href: '/dashboard/payments' },
 ];
 
 export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {

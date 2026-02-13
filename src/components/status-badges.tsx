@@ -44,3 +44,24 @@ export function ClientStatusBadge({ status }: { status: string }) {
 export function InvoiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={invoiceStatusMap} />;
 }
+
+const serviceStatusMap: Record<string, StatusConfig> = {
+  active: { label: 'Active', variant: 'positive' },
+  paused: { label: 'Paused', variant: 'warning' },
+  cancelled: { label: 'Cancelled', variant: 'default' },
+  completed: { label: 'Completed', variant: 'info' },
+};
+
+const serviceTypeMap: Record<string, StatusConfig> = {
+  one_time: { label: 'One-time', variant: 'default' },
+  recurring: { label: 'Recurring', variant: 'info' },
+  add_on: { label: 'Add-on', variant: 'warning' },
+};
+
+export function ServiceStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={serviceStatusMap} />;
+}
+
+export function ServiceTypeBadge({ type }: { type: string }) {
+  return <StatusBadgeBase status={type} map={serviceTypeMap} />;
+}
