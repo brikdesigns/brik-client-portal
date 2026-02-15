@@ -4,7 +4,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge, categoryConfig } from '@/components/service-badge';
-import { ServiceTypeTag } from '@/components/status-badges';
+import { ServiceTypeTag, ClientStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 
 export default async function AdminServicesPage() {
@@ -129,19 +129,7 @@ export default async function AdminServicesPage() {
                 },
                 {
                   header: 'Status',
-                  accessor: (s) => (
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        color: s.active
-                          ? 'var(--services--green-dark)'
-                          : 'var(--_color---text--muted)',
-                      }}
-                    >
-                      {s.active ? 'Active' : 'Inactive'}
-                    </span>
-                  ),
+                  accessor: (s) => <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />,
                 },
               ]}
             />
@@ -194,19 +182,7 @@ export default async function AdminServicesPage() {
                 },
                 {
                   header: 'Status',
-                  accessor: (s) => (
-                    <span
-                      style={{
-                        fontSize: '12px',
-                        fontWeight: 500,
-                        color: s.active
-                          ? 'var(--services--green-dark)'
-                          : 'var(--_color---text--muted)',
-                      }}
-                    >
-                      {s.active ? 'Active' : 'Inactive'}
-                    </span>
-                  ),
+                  accessor: (s) => <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />,
                 },
               ]}
             />
