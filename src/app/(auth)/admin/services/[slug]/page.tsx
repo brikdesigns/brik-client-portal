@@ -10,26 +10,26 @@ import { ServiceStatusBadge, ServiceTypeBadge } from '@/components/status-badges
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export default async function ServiceDetailPage({ params }: Props) {
-  const { id } = await params;
+  const { slug } = await params;
   const supabase = await createClient();
 
   const { data: service, error } = await supabase
     .from('services')
     .select(`
-      id, name, description, service_type, billing_frequency,
+      id, name, slug, description, service_type, billing_frequency,
       base_price_cents, stripe_product_id, stripe_price_id,
       active, created_at,
       service_categories(id, name, slug, color_token),
       client_services(
         id, status, started_at, cancelled_at, notes,
-        clients(id, name, status)
+        clients(id, name, slug, status)
       )
     `)
-    .eq('id', id)
+    .eq('slug', slug)
     .single();
 
   if (error || !service) {
@@ -43,7 +43,7 @@ export default async function ServiceDetailPage({ params }: Props) {
     started_at: string | null;
     cancelled_at: string | null;
     notes: string | null;
-    clients: { id: string; name: string; status: string } | null;
+    clients: { id: string; name: string; slug: string; status: string } | null;
   }[]) ?? [];
 
   const activeAssignments = assignments.filter((a) => a.status === 'active').length;
@@ -104,7 +104,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         subtitle={service.description || undefined}
         action={
           <div style={{ display: 'flex', gap: '16px' }}>
-            <a href={`/admin/services/${service.id}/edit`} style={linkStyle}>
+            <a href={`/admin/services/${service.slug}/edit`} style={linkStyle}>
               Edit
             </a>
             <a href="/admin/services" style={linkStyle}>
@@ -180,7 +180,7 @@ export default async function ServiceDetailPage({ params }: Props) {
               accessor: (a) =>
                 a.clients ? (
                   <a
-                    href={`/admin/clients/${a.clients.id}`}
+                    href={`/admin/clients/${a.clients.slug}`}
                     style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
                   >
                     {a.clients.name}

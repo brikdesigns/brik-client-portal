@@ -10,27 +10,28 @@ import { ServiceBadge } from '@/components/service-badge';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ slug: string }>;
 }
 
 export default async function ClientDetailPage({ params }: Props) {
+  const { slug } = await params;
   const supabase = await createClient();
 
   const { data: client, error } = await supabase
     .from('clients')
     .select(`
-      id, name, status, contact_name, contact_email, website_url, notes, created_at,
+      id, name, slug, status, contact_name, contact_email, website_url, notes, created_at,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
       profiles(id, full_name, email, is_active, last_login_at),
       client_services(
         id, status, started_at, notes,
-        services(id, name, service_type, billing_frequency, base_price_cents,
+        services(id, name, slug, service_type, billing_frequency, base_price_cents,
           service_categories(slug, name)
         )
       )
     `)
-    .eq('id', params.id)
+    .eq('slug', slug)
     .single();
 
   if (error || !client) {
@@ -48,6 +49,7 @@ export default async function ClientDetailPage({ params }: Props) {
     services: {
       id: string;
       name: string;
+      slug: string;
       service_type: string;
       billing_frequency: string | null;
       base_price_cents: number | null;
@@ -80,7 +82,7 @@ export default async function ClientDetailPage({ params }: Props) {
         }
         action={
           <div style={{ display: 'flex', gap: '16px' }}>
-            <a href={`/admin/clients/${client.id}/edit`} style={linkStyle}>Edit</a>
+            <a href={`/admin/clients/${client.slug}/edit`} style={linkStyle}>Edit</a>
             <a href="/admin/clients" style={linkStyle}>Back to clients</a>
           </div>
         }
@@ -119,7 +121,7 @@ export default async function ClientDetailPage({ params }: Props) {
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
-          <a href={`/admin/clients/${client.id}/services/new`} style={linkStyle}>Assign service</a>
+          <a href={`/admin/clients/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
         </div>
         <DataTable
           data={clientServices}
@@ -139,7 +141,7 @@ export default async function ClientDetailPage({ params }: Props) {
               accessor: (cs) =>
                 cs.services ? (
                   <a
-                    href={`/admin/services/${cs.services.id}`}
+                    href={`/admin/services/${cs.services.slug}`}
                     style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
                   >
                     {cs.services.name}
@@ -172,7 +174,7 @@ export default async function ClientDetailPage({ params }: Props) {
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
-          <a href={`/admin/clients/${client.id}/projects/new`} style={linkStyle}>Add project</a>
+          <a href={`/admin/clients/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
         </div>
         <DataTable
           data={projects}
@@ -206,7 +208,7 @@ export default async function ClientDetailPage({ params }: Props) {
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
           <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
-          <a href={`/admin/clients/${client.id}/invoices/new`} style={linkStyle}>Add invoice</a>
+          <a href={`/admin/clients/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
         </div>
         <DataTable
           data={invoices}

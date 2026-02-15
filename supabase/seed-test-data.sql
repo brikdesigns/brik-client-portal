@@ -18,39 +18,40 @@ ON CONFLICT (slug) DO NOTHING;
 -- ============================================
 -- 2. Sample services (10 services across categories)
 -- ============================================
-INSERT INTO public.services (name, description, category_id, service_type, billing_frequency, base_price_cents, active, sort_order)
+INSERT INTO public.services (name, slug, description, category_id, service_type, billing_frequency, base_price_cents, active, sort_order)
 VALUES
   -- Brand Design
-  ('Brand Identity Package', 'Complete brand identity including logo, color palette, typography, and brand guidelines.', (SELECT id FROM service_categories WHERE slug = 'brand'), 'one_time', 'one_time', 750000, true, 1),
-  ('Logo Design', 'Custom logo design with 3 concepts and 2 rounds of revisions.', (SELECT id FROM service_categories WHERE slug = 'brand'), 'one_time', 'one_time', 250000, true, 2),
-  ('Brand Guidelines Document', 'Comprehensive brand standards manual for consistent brand application.', (SELECT id FROM service_categories WHERE slug = 'brand'), 'one_time', 'one_time', 350000, true, 3),
+  ('Brand Identity Package', 'brand-identity-package', 'Complete brand identity including logo, color palette, typography, and brand guidelines.', (SELECT id FROM service_categories WHERE slug = 'brand'), 'one_time', 'one_time', 750000, true, 1),
+  ('Logo Design', 'logo-design', 'Custom logo design with 3 concepts and 2 rounds of revisions.', (SELECT id FROM service_categories WHERE slug = 'brand'), 'one_time', 'one_time', 250000, true, 2),
+  ('Brand Guidelines Document', 'brand-guidelines-document', 'Comprehensive brand standards manual for consistent brand application.', (SELECT id FROM service_categories WHERE slug = 'brand'), 'one_time', 'one_time', 350000, true, 3),
   -- Marketing Design
-  ('Social Media Management', 'Monthly social media content creation, scheduling, and analytics.', (SELECT id FROM service_categories WHERE slug = 'marketing'), 'recurring', 'monthly', 200000, true, 1),
-  ('Email Campaign Design', 'Custom email template design and campaign setup.', (SELECT id FROM service_categories WHERE slug = 'marketing'), 'one_time', 'one_time', 150000, true, 2),
+  ('Social Media Management', 'social-media-management', 'Monthly social media content creation, scheduling, and analytics.', (SELECT id FROM service_categories WHERE slug = 'marketing'), 'recurring', 'monthly', 200000, true, 1),
+  ('Email Campaign Design', 'email-campaign-design', 'Custom email template design and campaign setup.', (SELECT id FROM service_categories WHERE slug = 'marketing'), 'one_time', 'one_time', 150000, true, 2),
   -- Information Design
-  ('Website Design & Development', 'Custom website design and Webflow development with CMS.', (SELECT id FROM service_categories WHERE slug = 'information'), 'one_time', 'one_time', 1500000, true, 1),
-  ('Website Maintenance', 'Monthly website updates, security patches, and content changes.', (SELECT id FROM service_categories WHERE slug = 'information'), 'recurring', 'monthly', 75000, true, 2),
+  ('Website Design & Development', 'website-design--development', 'Custom website design and Webflow development with CMS.', (SELECT id FROM service_categories WHERE slug = 'information'), 'one_time', 'one_time', 1500000, true, 1),
+  ('Website Maintenance', 'website-maintenance', 'Monthly website updates, security patches, and content changes.', (SELECT id FROM service_categories WHERE slug = 'information'), 'recurring', 'monthly', 75000, true, 2),
   -- Product Design
-  ('UI/UX Design', 'User interface and experience design for web or mobile applications.', (SELECT id FROM service_categories WHERE slug = 'product'), 'one_time', 'one_time', 1000000, true, 1),
-  ('Design System', 'Component library and design token system for consistent product design.', (SELECT id FROM service_categories WHERE slug = 'product'), 'one_time', 'one_time', 2000000, true, 2),
+  ('UI/UX Design', 'uiux-design', 'User interface and experience design for web or mobile applications.', (SELECT id FROM service_categories WHERE slug = 'product'), 'one_time', 'one_time', 1000000, true, 1),
+  ('Design System', 'design-system', 'Component library and design token system for consistent product design.', (SELECT id FROM service_categories WHERE slug = 'product'), 'one_time', 'one_time', 2000000, true, 2),
   -- Service Design
-  ('Process Mapping', 'Service blueprint and customer journey mapping workshop.', (SELECT id FROM service_categories WHERE slug = 'service'), 'one_time', 'one_time', 500000, true, 1)
-ON CONFLICT DO NOTHING;
+  ('Process Mapping', 'process-mapping', 'Service blueprint and customer journey mapping workshop.', (SELECT id FROM service_categories WHERE slug = 'service'), 'one_time', 'one_time', 500000, true, 1)
+ON CONFLICT (name) DO UPDATE SET slug = EXCLUDED.slug;
 
 -- ============================================
 -- 3. Test client: Acme Corp
 -- ============================================
-INSERT INTO public.clients (id, name, status, contact_name, contact_email, website_url, notes)
+INSERT INTO public.clients (id, name, slug, status, contact_name, contact_email, website_url, notes)
 VALUES (
   'a0000000-0000-0000-0000-000000000001',
   'Acme Corporation',
+  'acme-corporation',
   'active',
   'Jane Smith',
   'jane@acmecorp.example.com',
   'https://acmecorp.example.com',
   'Demo client for portal testing. Has active services and invoices.'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug;
 
 -- ============================================
 -- 4. Assign services to Acme Corp
@@ -104,17 +105,18 @@ ON CONFLICT DO NOTHING;
 -- ============================================
 -- 7. Second test client: Pinnacle Labs
 -- ============================================
-INSERT INTO public.clients (id, name, status, contact_name, contact_email, website_url, notes)
+INSERT INTO public.clients (id, name, slug, status, contact_name, contact_email, website_url, notes)
 VALUES (
   'a0000000-0000-0000-0000-000000000002',
   'Pinnacle Labs',
+  'pinnacle-labs',
   'active',
   'Marcus Chen',
   'marcus@pinnaclelabs.example.com',
   'https://pinnaclelabs.example.com',
   'Second demo client. Early engagement — just started.'
 )
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE SET slug = EXCLUDED.slug;
 
 -- Assign services to Pinnacle Labs
 INSERT INTO public.client_services (client_id, service_id, status, started_at)

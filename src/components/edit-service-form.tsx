@@ -35,10 +35,15 @@ interface Category {
   slug: string;
 }
 
+function toSlug(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
 interface EditServiceFormProps {
   service: {
     id: string;
     name: string;
+    slug?: string;
     description: string | null;
     category_id: string | null;
     service_type: string;
@@ -88,10 +93,12 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
       const supabase = createClient();
       const priceCents = basePrice ? Math.round(parseFloat(basePrice) * 100) : null;
 
+      const newSlug = toSlug(name);
       const { error: updateError } = await supabase
         .from('services')
         .update({
           name,
+          slug: newSlug,
           description: description || null,
           category_id: categoryId || null,
           service_type: serviceType,
@@ -108,7 +115,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
         return;
       }
 
-      router.push(`/admin/services/${service.id}`);
+      router.push(`/admin/services/${newSlug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');
@@ -250,7 +257,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
           <Button type="submit" variant="primary" size="md" disabled={loading}>
             {loading ? 'Saving...' : 'Save changes'}
           </Button>
-          <a href={`/admin/services/${service.id}`}>
+          <a href={`/admin/services/${service.slug}`}>
             <Button type="button" variant="outline" size="md">
               Cancel
             </Button>

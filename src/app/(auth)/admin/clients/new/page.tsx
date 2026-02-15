@@ -7,6 +7,10 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { Input } from '@bds/components/ui/Input/Input';
 import { Button } from '@bds/components/ui/Button/Button';
 
+function toSlug(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
 export default function NewClientPage() {
   const [name, setName] = useState('');
   const [contactName, setContactName] = useState('');
@@ -28,6 +32,7 @@ export default function NewClientPage() {
         .from('clients')
         .insert({
           name,
+          slug: toSlug(name),
           contact_name: contactName || null,
           contact_email: contactEmail || null,
           website_url: websiteUrl || null,

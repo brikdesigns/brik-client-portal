@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -62,7 +63,7 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
         {navItems.map((item) => {
           const active = isActive(item.href);
           return (
-            <a
+            <Link
               key={item.href}
               href={item.href}
               style={{
@@ -97,7 +98,7 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
                 }}
               />
               {item.label}
-            </a>
+            </Link>
           );
         })}
       </nav>

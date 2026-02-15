@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
@@ -57,7 +58,7 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
             {navItems.map((item) => {
               const active = isActive(item.href);
               return (
-                <a
+                <Link
                   key={item.href}
                   href={item.href}
                   style={{
@@ -77,7 +78,7 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
                   }}
                 >
                   {item.label}
-                </a>
+                </Link>
               );
             })}
           </nav>
@@ -86,7 +87,7 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
         {/* Right: User info + actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isAdmin && (
-            <a
+            <Link
               href="/admin"
               style={{
                 fontFamily: 'var(--_typography---font-family--body)',
@@ -97,7 +98,7 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
               }}
             >
               Admin
-            </a>
+            </Link>
           )}
           <div style={{ textAlign: 'right' }}>
             <p

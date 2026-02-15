@@ -16,7 +16,7 @@ export default async function EditInvoicePage({ params }: Props) {
     .select(`
       id, client_id, description, amount_cents, status,
       invoice_date, due_date, paid_at, invoice_url,
-      clients(name)
+      clients(name, slug)
     `)
     .eq('id', id)
     .single();
@@ -25,7 +25,7 @@ export default async function EditInvoicePage({ params }: Props) {
     notFound();
   }
 
-  const client = invoice.clients as unknown as { name: string } | null;
+  const client = invoice.clients as unknown as { name: string; slug: string } | null;
 
   return (
     <div>
@@ -46,6 +46,7 @@ export default async function EditInvoicePage({ params }: Props) {
           invoice_url: invoice.invoice_url,
         }}
         clientName={client?.name ?? 'Unknown'}
+        clientSlug={client?.slug}
       />
     </div>
   );

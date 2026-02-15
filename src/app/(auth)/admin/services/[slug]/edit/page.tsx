@@ -1,21 +1,24 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { EditClientForm } from '@/components/edit-client-form';
+import { EditServiceForm } from '@/components/edit-service-form';
 
 interface Props {
-  params: { id: string };
+  params: Promise<{ slug: string }>;
 }
 
-export default async function EditClientPage({ params }: Props) {
+export default async function EditServicePage({ params }: Props) {
+  const { slug } = await params;
   const supabase = await createClient();
 
-  const { data: client, error } = await supabase
-    .from('clients')
-    .select('id, name, status, contact_name, contact_email, website_url, notes')
-    .eq('id', params.id)
+  const { data: service, error } = await supabase
+    .from('services')
+    .select(
+      'id, name, slug, description, category_id, service_type, billing_frequency, base_price_cents, stripe_product_id, stripe_price_id, active'
+    )
+    .eq('slug', slug)
     .single();
 
-  if (error || !client) {
+  if (error || !service) {
     notFound();
   }
 
@@ -31,7 +34,7 @@ export default async function EditClientPage({ params }: Props) {
             margin: 0,
           }}
         >
-          Edit client
+          Edit service
         </h1>
         <p
           style={{
@@ -41,11 +44,11 @@ export default async function EditClientPage({ params }: Props) {
             margin: '8px 0 0',
           }}
         >
-          Update {client.name}&apos;s details.
+          Update {service.name}.
         </p>
       </div>
 
-      <EditClientForm client={client} />
+      <EditServiceForm service={service} />
     </div>
   );
 }

@@ -7,10 +7,15 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { Input } from '@bds/components/ui/Input/Input';
 import { Button } from '@bds/components/ui/Button/Button';
 
+function toSlug(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
 interface EditClientFormProps {
   client: {
     id: string;
     name: string;
+    slug?: string;
     status: string;
     contact_name: string | null;
     contact_email: string | null;
@@ -59,10 +64,12 @@ export function EditClientForm({ client }: EditClientFormProps) {
 
     try {
       const supabase = createClient();
+      const newSlug = toSlug(name);
       const { error: updateError } = await supabase
         .from('clients')
         .update({
           name,
+          slug: newSlug,
           status,
           contact_name: contactName || null,
           contact_email: contactEmail || null,
@@ -76,7 +83,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
         return;
       }
 
-      router.push(`/admin/clients/${client.id}`);
+      router.push(`/admin/clients/${newSlug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');
@@ -171,7 +178,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
           <Button type="submit" variant="primary" size="md" disabled={loading}>
             {loading ? 'Saving...' : 'Save changes'}
           </Button>
-          <a href={`/admin/clients/${client.id}`}>
+          <a href={`/admin/clients/${client.slug}`}>
             <Button type="button" variant="outline" size="md">
               Cancel
             </Button>

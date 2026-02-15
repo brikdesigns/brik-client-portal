@@ -1,11 +1,11 @@
 import { Skeleton } from '@/components/skeleton';
 
-export default function DashboardLoading() {
+export default function PaymentsLoading() {
   return (
     <div>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <Skeleton variant="text" width={240} height={28} />
+        <Skeleton variant="text" width={140} height={28} />
         <div style={{ marginTop: '8px' }}>
           <Skeleton variant="text" width={200} height={16} />
         </div>
@@ -21,16 +21,12 @@ export default function DashboardLoading() {
         }}
       >
         {[1, 2, 3].map((i) => (
-          <Skeleton key={i} variant="rectangular" height={90} />
+          <Skeleton key={i} variant="rectangular" height={80} />
         ))}
       </div>
 
-      {/* 2-column content */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
-        {[1, 2].map((i) => (
-          <Skeleton key={i} variant="rectangular" height={300} />
-        ))}
-      </div>
+      {/* Table */}
+      <Skeleton variant="rectangular" height={300} />
     </div>
   );
 }

@@ -15,6 +15,7 @@ export default async function AdminServicesPage() {
     .select(`
       id,
       name,
+      slug,
       description,
       service_type,
       billing_frequency,
@@ -100,7 +101,7 @@ export default async function AdminServicesPage() {
                   header: 'Service',
                   accessor: (s) => (
                     <a
-                      href={`/admin/services/${s.id}`}
+                      href={`/admin/services/${s.slug}`}
                       style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
                     >
                       {s.name}
@@ -171,7 +172,7 @@ export default async function AdminServicesPage() {
                   header: 'Service',
                   accessor: (s) => (
                     <a
-                      href={`/admin/services/${s.id}`}
+                      href={`/admin/services/${s.slug}`}
                       style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
                     >
                       {s.name}

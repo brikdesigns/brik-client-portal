@@ -13,6 +13,7 @@ export default async function AdminClientsPage() {
     .select(`
       id,
       name,
+      slug,
       status,
       contact_email,
       contact_name,
@@ -46,7 +47,7 @@ export default async function AdminClientsPage() {
               header: 'Client',
               accessor: (c) => (
                 <a
-                  href={`/admin/clients/${c.id}`}
+                  href={`/admin/clients/${c.slug}`}
                   style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
                 >
                   {c.name}

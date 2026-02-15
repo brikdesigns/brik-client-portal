@@ -35,6 +35,10 @@ interface Category {
   slug: string;
 }
 
+function toSlug(text: string): string {
+  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
 export default function NewServicePage() {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -73,6 +77,7 @@ export default function NewServicePage() {
 
       const { error: insertError } = await supabase.from('services').insert({
         name,
+        slug: toSlug(name),
         description: description || null,
         category_id: categoryId || null,
         service_type: serviceType,

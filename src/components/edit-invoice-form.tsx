@@ -42,9 +42,10 @@ interface EditInvoiceFormProps {
     invoice_url: string | null;
   };
   clientName: string;
+  clientSlug?: string;
 }
 
-export function EditInvoiceForm({ invoice, clientName }: EditInvoiceFormProps) {
+export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoiceFormProps) {
   const [description, setDescription] = useState(invoice.description ?? '');
   const [amount, setAmount] = useState((invoice.amount_cents / 100).toString());
   const [status, setStatus] = useState(invoice.status);
@@ -116,7 +117,7 @@ export function EditInvoiceForm({ invoice, clientName }: EditInvoiceFormProps) {
         }}
       >
         Client: <a
-          href={`/admin/clients/${invoice.client_id}`}
+          href={`/admin/clients/${clientSlug || invoice.client_id}`}
           style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none' }}
         >
           {clientName}

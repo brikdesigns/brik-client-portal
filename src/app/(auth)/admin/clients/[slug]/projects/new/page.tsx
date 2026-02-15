@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
@@ -9,7 +9,8 @@ import { Button } from '@bds/components/ui/Button/Button';
 
 export default function NewProjectPage() {
   const params = useParams();
-  const clientId = params.id as string;
+  const clientSlug = params.slug as string;
+  const [clientId, setClientId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
@@ -18,8 +19,18 @@ export default function NewProjectPage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    async function resolveClient() {
+      const supabase = createClient();
+      const { data } = await supabase.from('clients').select('id').eq('slug', clientSlug).single();
+      if (data) setClientId(data.id);
+    }
+    resolveClient();
+  }, [clientSlug]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!clientId) return;
     setError('');
     setLoading(true);
 
@@ -40,7 +51,7 @@ export default function NewProjectPage() {
         return;
       }
 
-      router.push(`/admin/clients/${clientId}`);
+      router.push(`/admin/clients/${clientSlug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');
@@ -154,7 +165,7 @@ export default function NewProjectPage() {
             <Button type="submit" variant="primary" size="md" disabled={loading}>
               {loading ? 'Creating...' : 'Create project'}
             </Button>
-            <a href={`/admin/clients/${clientId}`}>
+            <a href={`/admin/clients/${clientSlug}`}>
               <Button type="button" variant="outline" size="md">
                 Cancel
               </Button>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
@@ -31,7 +31,8 @@ const selectStyle = {
 
 export default function NewInvoicePage() {
   const params = useParams();
-  const clientId = params.id as string;
+  const clientSlug = params.slug as string;
+  const [clientId, setClientId] = useState<string | null>(null);
   const [description, setDescription] = useState('');
   const [amount, setAmount] = useState('');
   const [status, setStatus] = useState('draft');
@@ -42,8 +43,18 @@ export default function NewInvoicePage() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    async function resolveClient() {
+      const supabase = createClient();
+      const { data } = await supabase.from('clients').select('id').eq('slug', clientSlug).single();
+      if (data) setClientId(data.id);
+    }
+    resolveClient();
+  }, [clientSlug]);
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
+    if (!clientId) return;
     setError('');
 
     const amountFloat = parseFloat(amount);
@@ -74,7 +85,7 @@ export default function NewInvoicePage() {
         return;
       }
 
-      router.push(`/admin/clients/${clientId}`);
+      router.push(`/admin/clients/${clientSlug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');
@@ -186,7 +197,7 @@ export default function NewInvoicePage() {
             <Button type="submit" variant="primary" size="md" disabled={loading}>
               {loading ? 'Creating...' : 'Create invoice'}
             </Button>
-            <a href={`/admin/clients/${clientId}`}>
+            <a href={`/admin/clients/${clientSlug}`}>
               <Button type="button" variant="outline" size="md">
                 Cancel
               </Button>

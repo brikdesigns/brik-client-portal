@@ -1,13 +1,13 @@
 import { Skeleton } from '@/components/skeleton';
 
-export default function AdminLoading() {
+export default function InvoicesLoading() {
   return (
     <div>
       {/* Header */}
       <div style={{ marginBottom: '32px' }}>
-        <Skeleton variant="text" width={180} height={28} />
+        <Skeleton variant="text" width={140} height={28} />
         <div style={{ marginTop: '8px' }}>
-          <Skeleton variant="text" width={280} height={16} />
+          <Skeleton variant="text" width={220} height={16} />
         </div>
       </div>
 
@@ -15,18 +15,18 @@ export default function AdminLoading() {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
           gap: '16px',
           marginBottom: '32px',
         }}
       >
         {[1, 2, 3, 4].map((i) => (
-          <Skeleton key={i} variant="rectangular" height={100} />
+          <Skeleton key={i} variant="rectangular" height={80} />
         ))}
       </div>
 
       {/* Table */}
-      <Skeleton variant="rectangular" height={300} />
+      <Skeleton variant="rectangular" height={350} />
     </div>
   );
 }

@@ -42,21 +42,31 @@ export default function AssignServicePage() {
   const [serviceId, setServiceId] = useState('');
   const [notes, setNotes] = useState('');
   const [services, setServices] = useState<Service[]>([]);
+  const [clientId, setClientId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const params = useParams();
-  const clientId = params.id as string;
+  const clientSlug = params.slug as string;
 
   useEffect(() => {
     async function loadServices() {
       const supabase = createClient();
 
+      // Resolve client ID from slug
+      const { data: clientData } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('slug', clientSlug)
+        .single();
+      if (!clientData) return;
+      setClientId(clientData.id);
+
       // Get services not already assigned to this client
       const { data: assigned } = await supabase
         .from('client_services')
         .select('service_id')
-        .eq('client_id', clientId);
+        .eq('client_id', clientData.id);
 
       const assignedIds = (assigned ?? []).map((a) => a.service_id);
 
@@ -74,11 +84,11 @@ export default function AssignServicePage() {
       if (data) setServices(data as unknown as Service[]);
     }
     loadServices();
-  }, [clientId]);
+  }, [clientSlug]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    if (!serviceId) return;
+    if (!serviceId || !clientId) return;
     setError('');
     setLoading(true);
 
@@ -96,7 +106,7 @@ export default function AssignServicePage() {
         return;
       }
 
-      router.push(`/admin/clients/${clientId}`);
+      router.push(`/admin/clients/${clientSlug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');
@@ -230,10 +240,10 @@ export default function AssignServicePage() {
           )}
 
           <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-            <Button type="submit" variant="primary" size="md" disabled={loading || !serviceId}>
+            <Button type="submit" variant="primary" size="md" disabled={loading || !serviceId || !clientId}>
               {loading ? 'Assigning...' : 'Assign service'}
             </Button>
-            <a href={`/admin/clients/${clientId}`}>
+            <a href={`/admin/clients/${clientSlug}`}>
               <Button type="button" variant="outline" size="md">
                 Cancel
               </Button>
