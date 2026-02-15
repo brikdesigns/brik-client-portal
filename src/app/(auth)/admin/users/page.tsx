@@ -87,7 +87,16 @@ export default async function AdminUsersPage() {
                 u.last_login_at
                   ? new Date(u.last_login_at).toLocaleDateString()
                   : 'Never',
-              style: { color: 'var(--_color---text--muted)', fontSize: '13px' },
+              style: { color: 'var(--_color---text--muted)' },
+            },
+            {
+              header: '',
+              accessor: (u) => (
+                <Button variant="primary" size="sm" asLink href={`/admin/users/${u.id}`}>
+                  View Details
+                </Button>
+              ),
+              style: { textAlign: 'right' },
             },
           ]}
         />
