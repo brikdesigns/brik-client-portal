@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader } from '@/components/page-header';
-import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
 import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
@@ -111,10 +111,10 @@ export default async function ClientDetailPage({ params }: Props) {
           marginBottom: '24px',
         }}
       >
-        <StatCard label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
-        <StatCard label="Projects" value={projects.length} />
-        <StatCard label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
-        <StatCard label="Portal users" value={users.length} />
+        <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
+        <CardSummary label="Projects" value={projects.length} />
+        <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
+        <CardSummary label="Portal users" value={users.length} />
       </div>
 
       {/* Services */}

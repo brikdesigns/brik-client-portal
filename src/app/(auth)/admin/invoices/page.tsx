@@ -1,8 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
-import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
@@ -51,10 +51,10 @@ export default async function AdminInvoicesPage() {
           marginBottom: '24px',
         }}
       >
-        <StatCard label="Open" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
-        <StatCard label="Draft" value={draftInvoices.length} />
-        <StatCard label="Paid" value={`${paidInvoices.length} (${formatCurrency(totalPaid)})`} />
-        <StatCard label="Total invoices" value={all.length} />
+        <CardSummary label="Open" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
+        <CardSummary label="Draft" value={draftInvoices.length} />
+        <CardSummary label="Paid" value={`${paidInvoices.length} (${formatCurrency(totalPaid)})`} />
+        <CardSummary label="Total invoices" value={all.length} />
       </div>
 
       {/* Open invoices */}

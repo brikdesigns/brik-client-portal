@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
-import { StatCard } from '@/components/stat-card';
 
 interface SyncResponse {
   dry_run: boolean;
@@ -156,10 +156,10 @@ export default function StripeSyncPage() {
               marginBottom: '24px',
             }}
           >
-            <StatCard label="Matched" value={result.summary.matched} />
-            <StatCard label="Unmatched (Stripe)" value={result.summary.unmatched_stripe} />
-            <StatCard label="Unmatched (portal)" value={result.summary.unmatched_portal} />
-            {result.summary.errors > 0 && <StatCard label="Errors" value={result.summary.errors} />}
+            <CardSummary label="Matched" value={result.summary.matched} />
+            <CardSummary label="Unmatched (Stripe)" value={result.summary.unmatched_stripe} />
+            <CardSummary label="Unmatched (portal)" value={result.summary.unmatched_portal} />
+            {result.summary.errors > 0 && <CardSummary label="Errors" value={result.summary.errors} />}
           </div>
 
           {/* Matched */}

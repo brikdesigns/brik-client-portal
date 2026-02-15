@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
-import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
 
@@ -41,7 +41,7 @@ export default async function AdminOverviewPage() {
         }}
       >
         {stats.map((stat) => (
-          <StatCard key={stat.label} label={stat.label} value={stat.value} />
+          <CardSummary key={stat.label} label={stat.label} value={stat.value} />
         ))}
       </div>
 

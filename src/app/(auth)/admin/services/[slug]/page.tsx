@@ -1,9 +1,9 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
-import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
@@ -123,9 +123,9 @@ export default async function ServiceDetailPage({ params }: Props) {
           marginBottom: '24px',
         }}
       >
-        <StatCard label="Active clients" value={activeAssignments} />
-        <StatCard label="Total assigned" value={assignments.length} />
-        <StatCard
+        <CardSummary label="Active clients" value={activeAssignments} />
+        <CardSummary label="Total assigned" value={assignments.length} />
+        <CardSummary
           label="Price"
           value={
             service.base_price_cents

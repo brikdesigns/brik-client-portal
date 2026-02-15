@@ -1,9 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
-import { StatCard } from '@/components/stat-card';
 import { ServiceCard } from '@/components/service-card';
 import { EmptyState } from '@/components/empty-state';
-import { formatCurrency } from '@/lib/format';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -102,9 +101,9 @@ export default async function DashboardPage() {
 
         {/* Right: Stats */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <StatCard label="Amount due" value={formatCurrency(totalDue)} />
-          <StatCard label="Open invoices" value={openInvoices.length} />
-          <StatCard label="Active services" value={activeServiceCount} />
+          <CardSummary label="Amount due" value={totalDue / 100} type="price" />
+          <CardSummary label="Open invoices" value={openInvoices.length} />
+          <CardSummary label="Active services" value={activeServiceCount} />
         </div>
       </div>
     </div>
