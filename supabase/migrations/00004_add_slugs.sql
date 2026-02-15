@@ -72,6 +72,8 @@ CREATE INDEX IF NOT EXISTS idx_clients_slug ON public.clients(slug);
 -- ============================================
 -- VERIFY
 -- ============================================
-SELECT 'services' AS table_name, id, name, slug FROM public.services ORDER BY name
-UNION ALL
-SELECT 'clients', id, name, slug FROM public.clients ORDER BY name;
+SELECT table_name, name, slug FROM (
+  SELECT 'services' AS table_name, name, slug FROM public.services
+  UNION ALL
+  SELECT 'clients', name, slug FROM public.clients
+) t ORDER BY table_name, name;
