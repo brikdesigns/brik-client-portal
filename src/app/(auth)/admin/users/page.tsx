@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { RoleTag } from '@/components/status-badges';
 import { InviteUserForm } from '@/components/invite-user-form';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -77,11 +78,7 @@ export default async function AdminUsersPage() {
             },
             {
               header: 'Role',
-              accessor: (u) => (
-                <Badge status={u.role === 'admin' ? 'info' : 'default'}>
-                  {u.role}
-                </Badge>
-              ),
+              accessor: (u) => <RoleTag role={u.role} />,
             },
             {
               header: 'Client',

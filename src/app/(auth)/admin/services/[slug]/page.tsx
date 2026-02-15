@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
-import { ServiceStatusBadge, ServiceTypeBadge } from '@/components/status-badges';
+import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -87,7 +87,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         badge={
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
             {category && <ServiceBadge category={category.slug} size={20} />}
-            <ServiceTypeBadge type={service.service_type} />
+            <ServiceTypeTag type={service.service_type} />
             <span
               style={{
                 fontSize: '12px',

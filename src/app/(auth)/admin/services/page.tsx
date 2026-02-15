@@ -4,7 +4,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge, categoryConfig } from '@/components/service-badge';
-import { ServiceTypeBadge } from '@/components/status-badges';
+import { ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 
 export default async function AdminServicesPage() {
@@ -111,7 +111,7 @@ export default async function AdminServicesPage() {
                 },
                 {
                   header: 'Type',
-                  accessor: (s) => <ServiceTypeBadge type={s.service_type} />,
+                  accessor: (s) => <ServiceTypeTag type={s.service_type} />,
                 },
                 {
                   header: 'Price',
@@ -182,7 +182,7 @@ export default async function AdminServicesPage() {
                 },
                 {
                   header: 'Type',
-                  accessor: (s) => <ServiceTypeBadge type={s.service_type} />,
+                  accessor: (s) => <ServiceTypeTag type={s.service_type} />,
                 },
                 {
                   header: 'Price',

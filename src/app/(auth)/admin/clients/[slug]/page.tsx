@@ -5,7 +5,7 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader } from '@/components/page-header';
 import { StatCard } from '@/components/stat-card';
 import { DataTable } from '@/components/data-table';
-import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeBadge } from '@/components/status-badges';
+import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
 import { formatCurrency } from '@/lib/format';
 
@@ -152,7 +152,7 @@ export default async function ClientDetailPage({ params }: Props) {
             {
               header: 'Type',
               accessor: (cs) =>
-                cs.services ? <ServiceTypeBadge type={cs.services.service_type} /> : '—',
+                cs.services ? <ServiceTypeTag type={cs.services.service_type} /> : '—',
             },
             {
               header: 'Price',

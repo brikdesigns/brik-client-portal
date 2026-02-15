@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Badge, type BadgeStatus } from '@bds/components/ui/Badge/Badge';
+import { Tag } from '@bds/components/ui/Tag/Tag';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCircleCheck,
@@ -127,19 +128,17 @@ const invoiceStatusMap: Record<string, StatusConfig> = {
   },
 };
 
-// ── Service Type ────────────────────────────────────────────────────
-const serviceTypeMap: Record<string, StatusConfig> = {
-  one_time: { label: 'One-time', variant: 'neutral' },
-  recurring: {
-    label: 'Recurring',
-    variant: 'info',
-    icon: <FontAwesomeIcon icon={faRotate} style={iconSize} />,
-  },
-  add_on: {
-    label: 'Add-on',
-    variant: 'warning',
-    icon: <FontAwesomeIcon icon={faCircle} style={iconSize} />,
-  },
+// ── Tags (nouns: types, classifications, roles) ────────────────────
+
+const serviceTypeLabels: Record<string, string> = {
+  one_time: 'One-time',
+  recurring: 'Recurring',
+  add_on: 'Add-on',
+};
+
+const roleLabels: Record<string, string> = {
+  admin: 'Admin',
+  client: 'Client',
 };
 
 // ── Exported Components ─────────────────────────────────────────────
@@ -160,6 +159,13 @@ export function InvoiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={invoiceStatusMap} />;
 }
 
-export function ServiceTypeBadge({ type }: { type: string }) {
-  return <StatusBadgeBase status={type} map={serviceTypeMap} />;
+export function ServiceTypeTag({ type }: { type: string }) {
+  return <Tag>{serviceTypeLabels[type] ?? type}</Tag>;
 }
+
+export function RoleTag({ role }: { role: string }) {
+  return <Tag>{roleLabels[role] ?? role}</Tag>;
+}
+
+/** @deprecated Use ServiceTypeTag instead */
+export const ServiceTypeBadge = ServiceTypeTag;
