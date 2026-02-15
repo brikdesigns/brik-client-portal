@@ -1,4 +1,12 @@
 import type { CSSProperties, ReactNode } from 'react';
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableRow,
+  TableHead,
+  TableCell,
+} from '@bds/components/ui/Table/Table';
 import { EmptyState } from './empty-state';
 
 interface Column<T> {
@@ -15,29 +23,6 @@ interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
 }
 
-const tableStyle: CSSProperties = {
-  width: '100%',
-  borderCollapse: 'collapse',
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '14px',
-};
-
-const thStyle: CSSProperties = {
-  textAlign: 'left',
-  padding: '8px 12px',
-  borderBottom: '1px solid var(--_color---border--secondary, #e0e0e0)',
-  color: 'var(--_color---text--secondary)',
-  fontSize: '12px',
-  fontWeight: 600,
-  textTransform: 'uppercase',
-  letterSpacing: '0.5px',
-};
-
-const tdBaseStyle: CSSProperties = {
-  padding: '10px 12px',
-  borderBottom: '1px solid var(--_color---border--secondary, #e0e0e0)',
-};
-
 export function DataTable<T>({
   columns,
   data,
@@ -51,32 +36,32 @@ export function DataTable<T>({
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <table style={tableStyle}>
-        <thead>
-          <tr>
-            {columns.map((col) => (
-              <th key={col.header} style={thStyle}>
+      <Table>
+        <TableHeader>
+          <TableRow>
+            {columns.map((col, i) => (
+              <TableHead key={col.header || i}>
                 {col.header}
-              </th>
+              </TableHead>
             ))}
-          </tr>
-        </thead>
-        <tbody>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
           {data.map((row) => (
-            <tr
+            <TableRow
               key={rowKey(row)}
               onClick={onRowClick ? () => onRowClick(row) : undefined}
               style={onRowClick ? { cursor: 'pointer' } : undefined}
             >
-              {columns.map((col) => (
-                <td key={col.header} style={{ ...tdBaseStyle, ...col.style }}>
+              {columns.map((col, i) => (
+                <TableCell key={col.header || i} style={col.style}>
                   {col.accessor(row)}
-                </td>
+                </TableCell>
               ))}
-            </tr>
+            </TableRow>
           ))}
-        </tbody>
-      </table>
+        </TableBody>
+      </Table>
     </div>
   );
 }
