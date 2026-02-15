@@ -42,6 +42,9 @@ coverage/
 *.tsbuildinfo
 next-env.d.ts
 
+# Local asset drop zone (source files, not committed)
+updates/
+
 # Misc
 *.log
 *.cache
