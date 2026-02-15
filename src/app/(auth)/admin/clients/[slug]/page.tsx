@@ -239,8 +239,8 @@ export default async function ClientDetailPage({ params }: Props) {
               accessor: (inv) =>
                 inv.invoice_url ? (
                   <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                    <Button variant="secondary" size="sm">
-                      View
+                    <Button variant="primary" size="sm">
+                      View Details
                     </Button>
                   </a>
                 ) : null,

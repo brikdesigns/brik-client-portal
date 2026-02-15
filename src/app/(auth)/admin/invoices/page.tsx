@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Link } from '@bds/components/ui/Link/Link';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge } from '@/components/status-badges';
@@ -25,13 +26,6 @@ export default async function AdminInvoicesPage() {
   const paidInvoices = all.filter((i) => i.status === 'paid');
   const totalOpen = openInvoices.reduce((sum, i) => sum + i.amount_cents, 0);
   const totalPaid = paidInvoices.reduce((sum, i) => sum + i.amount_cents, 0);
-
-  const linkStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '13px',
-    color: 'var(--_color---system--link, #0034ea)',
-    textDecoration: 'none' as const,
-  };
 
   type InvoiceRow = (typeof all)[number];
 
@@ -81,9 +75,9 @@ export default async function AdminInvoicesPage() {
                 accessor: (inv) => {
                   const client = inv.clients as unknown as { id: string; name: string; slug: string } | null;
                   return client ? (
-                    <a href={`/admin/clients/${client.slug}`} style={linkStyle}>
+                    <Link href={`/admin/clients/${client.slug}`} size="small">
                       {client.name}
-                    </a>
+                    </Link>
                   ) : '—';
                 },
                 style: { fontWeight: 500 },
@@ -111,9 +105,18 @@ export default async function AdminInvoicesPage() {
               {
                 header: '',
                 accessor: (inv) => (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
-                    Edit
-                  </Button>
+                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
+                      Edit
+                    </Button>
+                    {inv.invoice_url && (
+                      <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                        <Button variant="primary" size="sm">
+                          View Details
+                        </Button>
+                      </a>
+                    )}
+                  </div>
                 ),
                 style: { textAlign: 'right' },
               },
@@ -145,9 +148,9 @@ export default async function AdminInvoicesPage() {
               accessor: (inv) => {
                 const client = inv.clients as unknown as { id: string; name: string; slug: string } | null;
                 return client ? (
-                  <a href={`/admin/clients/${client.slug}`} style={linkStyle}>
+                  <Link href={`/admin/clients/${client.slug}`} size="small">
                     {client.name}
-                  </a>
+                  </Link>
                 ) : '—';
               },
               style: { fontWeight: 500 },
@@ -187,8 +190,8 @@ export default async function AdminInvoicesPage() {
                   </Button>
                   {inv.invoice_url && (
                     <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                      <Button variant="secondary" size="sm">
-                        View
+                      <Button variant="primary" size="sm">
+                        View Details
                       </Button>
                     </a>
                   )}

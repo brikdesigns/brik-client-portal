@@ -30,16 +30,10 @@ export default async function AdminServicesPage() {
     .order('sort_order')
     .order('name');
 
-  const [{ data: categories }, { data: clientServices }] = await Promise.all([
-    supabase
-      .from('service_categories')
-      .select('id, name, slug, color_token, sort_order')
-      .order('sort_order'),
-    supabase
-      .from('client_services')
-      .select('id, status, clients(id, name, slug)')
-      .eq('status', 'active'),
-  ]);
+  const { data: categories } = await supabase
+    .from('service_categories')
+    .select('id, name, slug, color_token, sort_order')
+    .order('sort_order');
 
   // Group services by category
   const grouped = (categories ?? []).map((cat) => ({
@@ -52,20 +46,6 @@ export default async function AdminServicesPage() {
 
   const totalActive = (services ?? []).filter((s) => s.active).length;
   const totalServices = (services ?? []).length;
-
-  // Active services per client
-  const perClient = new Map<string, { name: string; slug: string; count: number }>();
-  for (const cs of clientServices ?? []) {
-    const client = cs.clients as unknown as { id: string; name: string; slug: string } | null;
-    if (!client) continue;
-    const existing = perClient.get(client.id);
-    if (existing) {
-      existing.count++;
-    } else {
-      perClient.set(client.id, { name: client.name, slug: client.slug, count: 1 });
-    }
-  }
-  const clientStats = Array.from(perClient.values()).sort((a, b) => b.count - a.count);
 
   return (
     <div>
@@ -92,25 +72,22 @@ export default async function AdminServicesPage() {
         }
       />
 
-      {clientStats.length > 0 && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-            marginBottom: '32px',
-          }}
-        >
-          {clientStats.map((cs) => (
-            <CardSummary
-              key={cs.slug}
-              label={cs.name}
-              value={cs.count}
-              textLink={{ label: 'View client', href: `/admin/clients/${cs.slug}` }}
-            />
-          ))}
-        </div>
-      )}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gap: '16px',
+          marginBottom: '32px',
+        }}
+      >
+        {grouped.map((cat) => (
+          <CardSummary
+            key={cat.id}
+            label={cat.name}
+            value={cat.services.filter((s) => s.active).length}
+          />
+        ))}
+      </div>
 
       {grouped.map((cat) => (
         <div key={cat.id} style={{ marginBottom: '32px' }}>
@@ -197,8 +174,8 @@ export default async function AdminServicesPage() {
                 {
                   header: '',
                   accessor: (s) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
-                      View
+                    <Button variant="primary" size="sm" asLink href={`/admin/services/${s.slug}`}>
+                      View Details
                     </Button>
                   ),
                   style: { textAlign: 'right' },
@@ -269,8 +246,8 @@ export default async function AdminServicesPage() {
                 {
                   header: '',
                   accessor: (s) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
-                      View
+                    <Button variant="primary" size="sm" asLink href={`/admin/services/${s.slug}`}>
+                      View Details
                     </Button>
                   ),
                   style: { textAlign: 'right' },
