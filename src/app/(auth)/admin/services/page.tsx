@@ -51,11 +51,9 @@ export default async function AdminServicesPage() {
         title="Services"
         subtitle={`${totalActive} active of ${totalServices} total services in the catalog.`}
         action={
-          <a href="/admin/services/new">
-            <Button variant="primary" size="md">
-              Add service
-            </Button>
-          </a>
+          <Button variant="primary" size="md" asLink href="/admin/services/new">
+            Add service
+          </Button>
         }
       />
 
