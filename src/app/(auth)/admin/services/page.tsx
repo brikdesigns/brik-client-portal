@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -29,10 +30,16 @@ export default async function AdminServicesPage() {
     .order('sort_order')
     .order('name');
 
-  const { data: categories } = await supabase
-    .from('service_categories')
-    .select('id, name, slug, color_token, sort_order')
-    .order('sort_order');
+  const [{ data: categories }, { data: clientServices }] = await Promise.all([
+    supabase
+      .from('service_categories')
+      .select('id, name, slug, color_token, sort_order')
+      .order('sort_order'),
+    supabase
+      .from('client_services')
+      .select('id, status, clients(id, name, slug)')
+      .eq('status', 'active'),
+  ]);
 
   // Group services by category
   const grouped = (categories ?? []).map((cat) => ({
@@ -45,6 +52,20 @@ export default async function AdminServicesPage() {
 
   const totalActive = (services ?? []).filter((s) => s.active).length;
   const totalServices = (services ?? []).length;
+
+  // Active services per client
+  const perClient = new Map<string, { name: string; slug: string; count: number }>();
+  for (const cs of clientServices ?? []) {
+    const client = cs.clients as unknown as { id: string; name: string; slug: string } | null;
+    if (!client) continue;
+    const existing = perClient.get(client.id);
+    if (existing) {
+      existing.count++;
+    } else {
+      perClient.set(client.id, { name: client.name, slug: client.slug, count: 1 });
+    }
+  }
+  const clientStats = Array.from(perClient.values()).sort((a, b) => b.count - a.count);
 
   return (
     <div>
@@ -70,6 +91,26 @@ export default async function AdminServicesPage() {
           </div>
         }
       />
+
+      {clientStats.length > 0 && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+            marginBottom: '32px',
+          }}
+        >
+          {clientStats.map((cs) => (
+            <CardSummary
+              key={cs.slug}
+              label={cs.name}
+              value={cs.count}
+              textLink={{ label: 'View client', href: `/admin/clients/${cs.slug}` }}
+            />
+          ))}
+        </div>
+      )}
 
       {grouped.map((cat) => (
         <div key={cat.id} style={{ marginBottom: '32px' }}>
@@ -111,14 +152,7 @@ export default async function AdminServicesPage() {
               columns={[
                 {
                   header: 'Service',
-                  accessor: (s) => (
-                    <a
-                      href={`/admin/services/${s.slug}`}
-                      style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
-                    >
-                      {s.name}
-                    </a>
-                  ),
+                  accessor: (s) => s.name,
                   style: { fontWeight: 500 },
                 },
                 {
@@ -160,6 +194,15 @@ export default async function AdminServicesPage() {
                     />
                   ),
                 },
+                {
+                  header: '',
+                  accessor: (s) => (
+                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
+                      View
+                    </Button>
+                  ),
+                  style: { textAlign: 'right' },
+                },
               ]}
             />
           </Card>
@@ -187,14 +230,7 @@ export default async function AdminServicesPage() {
               columns={[
                 {
                   header: 'Service',
-                  accessor: (s) => (
-                    <a
-                      href={`/admin/services/${s.slug}`}
-                      style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
-                    >
-                      {s.name}
-                    </a>
-                  ),
+                  accessor: (s) => s.name,
                   style: { fontWeight: 500 },
                 },
                 {
@@ -229,6 +265,15 @@ export default async function AdminServicesPage() {
                       title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
                     />
                   ),
+                },
+                {
+                  header: '',
+                  accessor: (s) => (
+                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
+                      View
+                    </Button>
+                  ),
+                  style: { textAlign: 'right' },
                 },
               ]}
             />

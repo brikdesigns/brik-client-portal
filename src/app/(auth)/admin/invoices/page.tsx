@@ -111,10 +111,11 @@ export default async function AdminInvoicesPage() {
               {
                 header: '',
                 accessor: (inv) => (
-                  <a href={`/admin/invoices/${inv.id}/edit`} style={linkStyle}>
+                  <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
                     Edit
-                  </a>
+                  </Button>
                 ),
+                style: { textAlign: 'right' },
               },
             ]}
           />
@@ -180,17 +181,20 @@ export default async function AdminInvoicesPage() {
             {
               header: '',
               accessor: (inv) => (
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <a href={`/admin/invoices/${inv.id}/edit`} style={linkStyle}>
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
                     Edit
-                  </a>
+                  </Button>
                   {inv.invoice_url && (
-                    <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={linkStyle}>
-                      View
+                    <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                      <Button variant="secondary" size="sm">
+                        View
+                      </Button>
                     </a>
                   )}
                 </div>
               ),
+              style: { textAlign: 'right' },
             },
           ]}
         />

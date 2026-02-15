@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
@@ -237,10 +238,13 @@ export default async function ClientDetailPage({ params }: Props) {
               header: '',
               accessor: (inv) =>
                 inv.invoice_url ? (
-                  <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={linkStyle}>
-                    View
+                  <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                    <Button variant="secondary" size="sm">
+                      View
+                    </Button>
                   </a>
                 ) : null,
+              style: { textAlign: 'right' },
             },
           ]}
         />

@@ -45,14 +45,7 @@ export default async function AdminClientsPage() {
           columns={[
             {
               header: 'Client',
-              accessor: (c) => (
-                <a
-                  href={`/admin/clients/${c.slug}`}
-                  style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
-                >
-                  {c.name}
-                </a>
-              ),
+              accessor: (c) => c.name,
               style: { fontWeight: 500 },
             },
             {
@@ -77,6 +70,15 @@ export default async function AdminClientsPage() {
             {
               header: 'Status',
               accessor: (c) => <ClientStatusBadge status={c.status} />,
+            },
+            {
+              header: '',
+              accessor: (c) => (
+                <Button variant="secondary" size="sm" asLink href={`/admin/clients/${c.slug}`}>
+                  View
+                </Button>
+              ),
+              style: { textAlign: 'right' },
             },
           ]}
         />

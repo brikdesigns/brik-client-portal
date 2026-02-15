@@ -1,19 +1,13 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Button } from '@bds/components/ui/Button/Button';
 import { RoleTag } from '@/components/status-badges';
-import { InviteUserForm } from '@/components/invite-user-form';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 
 export default async function AdminUsersPage() {
   const supabase = await createClient();
-
-  const { data: clients } = await supabase
-    .from('clients')
-    .select('id, name')
-    .eq('status', 'active')
-    .order('name');
 
   const { data: users } = await supabase
     .from('profiles')
@@ -31,22 +25,15 @@ export default async function AdminUsersPage() {
 
   return (
     <div>
-      <PageHeader title="Users" subtitle="Manage portal access and send invitations." />
-
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <h2
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--small, 18px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: '0 0 16px',
-          }}
-        >
-          Invite a user
-        </h2>
-        <InviteUserForm clients={clients ?? []} />
-      </Card>
+      <PageHeader
+        title="Users"
+        subtitle="Manage portal access and send invitations."
+        action={
+          <Button variant="primary" size="md" asLink href="/admin/users/invite">
+            Invite user
+          </Button>
+        }
+      />
 
       <Card variant="elevated" padding="lg">
         <h2

@@ -16,10 +16,10 @@ export default async function AdminOverviewPage() {
   ]);
 
   const stats = [
-    { label: 'Active clients', value: clientsRes.count ?? 0 },
-    { label: 'Projects', value: projectsRes.count ?? 0 },
-    { label: 'Open invoices', value: invoicesRes.count ?? 0 },
-    { label: 'Portal users', value: usersRes.count ?? 0 },
+    { label: 'Active clients', value: clientsRes.count ?? 0, href: '/admin/clients' },
+    { label: 'Projects', value: projectsRes.count ?? 0, href: '/admin/clients' },
+    { label: 'Open invoices', value: invoicesRes.count ?? 0, href: '/admin/invoices' },
+    { label: 'Portal users', value: usersRes.count ?? 0, href: '/admin/users' },
   ];
 
   const { data: recentProjects } = await supabase
@@ -41,7 +41,12 @@ export default async function AdminOverviewPage() {
         }}
       >
         {stats.map((stat) => (
-          <CardSummary key={stat.label} label={stat.label} value={stat.value} />
+          <CardSummary
+            key={stat.label}
+            label={stat.label}
+            value={stat.value}
+            textLink={{ label: 'View details', href: stat.href }}
+          />
         ))}
       </div>
 
