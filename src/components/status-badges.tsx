@@ -1,65 +1,163 @@
-import { Badge } from '@bds/components/ui/Badge/Badge';
+import type { ReactNode } from 'react';
+import { Badge, type BadgeStatus } from '@bds/components/ui/Badge/Badge';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import {
+  faCircleCheck,
+  faCircle,
+  faRotate,
+  faTriangleExclamation,
+  faCircleXmark,
+  faPencil,
+  faEye,
+} from '@fortawesome/free-solid-svg-icons';
+import { faCircle as faCircleRegular } from '@fortawesome/free-regular-svg-icons';
 
-type BadgeVariant = 'positive' | 'warning' | 'info' | 'error' | 'default';
+const iconSize = { width: 12, height: 12 };
 
 interface StatusConfig {
   label: string;
-  variant: BadgeVariant;
+  variant: BadgeStatus;
+  icon?: ReactNode;
 }
 
 function StatusBadgeBase({ status, map }: { status: string; map: Record<string, StatusConfig> }) {
-  const config = map[status] ?? { label: status, variant: 'default' as const };
-  return <Badge status={config.variant}>{config.label}</Badge>;
+  const config = map[status] ?? { label: status, variant: 'neutral' as const };
+  return (
+    <Badge status={config.variant} icon={config.icon}>
+      {config.label}
+    </Badge>
+  );
 }
 
-const projectStatusMap: Record<string, StatusConfig> = {
-  active: { label: 'Active', variant: 'positive' },
-  completed: { label: 'Completed', variant: 'info' },
-  on_hold: { label: 'On hold', variant: 'warning' },
-  cancelled: { label: 'Cancelled', variant: 'default' },
-};
-
+// ── Client / User Status ────────────────────────────────────────────
 const clientStatusMap: Record<string, StatusConfig> = {
-  active: { label: 'Active', variant: 'positive' },
-  inactive: { label: 'Inactive', variant: 'warning' },
-  archived: { label: 'Archived', variant: 'default' },
+  active: {
+    label: 'Active',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  inactive: {
+    label: 'Inactive',
+    variant: 'neutral',
+  },
+  archived: {
+    label: 'Archived',
+    variant: 'neutral',
+  },
 };
 
+// ── Service Status ──────────────────────────────────────────────────
+const serviceStatusMap: Record<string, StatusConfig> = {
+  active: {
+    label: 'Active',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  paused: {
+    label: 'Inactive',
+    variant: 'neutral',
+  },
+  cancelled: {
+    label: 'Canceled',
+    variant: 'error',
+    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+  },
+  completed: {
+    label: 'Complete',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+};
+
+// ── Project Status ──────────────────────────────────────────────────
+const projectStatusMap: Record<string, StatusConfig> = {
+  not_started: {
+    label: 'Not Started',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
+  },
+  active: {
+    label: 'In Progress',
+    variant: 'progress',
+    icon: <FontAwesomeIcon icon={faRotate} style={iconSize} />,
+  },
+  completed: {
+    label: 'Complete',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  on_hold: {
+    label: 'Needs Attention',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
+  },
+  cancelled: {
+    label: 'Canceled',
+    variant: 'error',
+    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+  },
+};
+
+// ── Invoice / Billing Status ────────────────────────────────────────
 const invoiceStatusMap: Record<string, StatusConfig> = {
-  paid: { label: 'Paid', variant: 'positive' },
-  open: { label: 'Open', variant: 'warning' },
-  draft: { label: 'Draft', variant: 'default' },
-  void: { label: 'Void', variant: 'default' },
-  uncollectible: { label: 'Uncollectible', variant: 'error' },
+  draft: {
+    label: 'Draft',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faPencil} style={iconSize} />,
+  },
+  open: {
+    label: 'Open',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faEye} style={iconSize} />,
+  },
+  paid: {
+    label: 'Paid',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  void: {
+    label: 'Needs Attention',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
+  },
+  uncollectible: {
+    label: 'Not Paid',
+    variant: 'error',
+    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+  },
 };
 
-export function ProjectStatusBadge({ status }: { status: string }) {
-  return <StatusBadgeBase status={status} map={projectStatusMap} />;
-}
+// ── Service Type ────────────────────────────────────────────────────
+const serviceTypeMap: Record<string, StatusConfig> = {
+  one_time: { label: 'One-time', variant: 'neutral' },
+  recurring: {
+    label: 'Recurring',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faRotate} style={iconSize} />,
+  },
+  add_on: {
+    label: 'Add-on',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faCircle} style={iconSize} />,
+  },
+};
+
+// ── Exported Components ─────────────────────────────────────────────
 
 export function ClientStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={clientStatusMap} />;
 }
 
-export function InvoiceStatusBadge({ status }: { status: string }) {
-  return <StatusBadgeBase status={status} map={invoiceStatusMap} />;
-}
-
-const serviceStatusMap: Record<string, StatusConfig> = {
-  active: { label: 'Active', variant: 'positive' },
-  paused: { label: 'Paused', variant: 'warning' },
-  cancelled: { label: 'Cancelled', variant: 'default' },
-  completed: { label: 'Completed', variant: 'info' },
-};
-
-const serviceTypeMap: Record<string, StatusConfig> = {
-  one_time: { label: 'One-time', variant: 'default' },
-  recurring: { label: 'Recurring', variant: 'info' },
-  add_on: { label: 'Add-on', variant: 'warning' },
-};
-
 export function ServiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={serviceStatusMap} />;
+}
+
+export function ProjectStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={projectStatusMap} />;
+}
+
+export function InvoiceStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={invoiceStatusMap} />;
 }
 
 export function ServiceTypeBadge({ type }: { type: string }) {
