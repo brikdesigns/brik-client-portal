@@ -138,7 +138,7 @@ export default async function ServiceDetailPage({ params }: Props) {
       {/* Service details */}
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
         <h2 style={sectionHeadingStyle}>Details</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '24px' }}>
           <div>
             <p style={detailLabelStyle}>Category</p>
             <p style={detailValueStyle}>{category?.name ?? 'Uncategorized'}</p>
@@ -150,9 +150,33 @@ export default async function ServiceDetailPage({ params }: Props) {
             </p>
           </div>
           <div>
-            <p style={detailLabelStyle}>Stripe Product</p>
+            <p style={detailLabelStyle}>Stripe product</p>
             <p style={detailValueStyle}>
-              {service.stripe_product_id || '—'}
+              {service.stripe_product_id ? (
+                <a
+                  href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                >
+                  {service.stripe_product_id} &#x2197;
+                </a>
+              ) : '—'}
+            </p>
+          </div>
+          <div>
+            <p style={detailLabelStyle}>Stripe price</p>
+            <p style={detailValueStyle}>
+              {service.stripe_price_id ? (
+                <a
+                  href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                >
+                  {service.stripe_price_id} &#x2197;
+                </a>
+              ) : '—'}
             </p>
           </div>
         </div>

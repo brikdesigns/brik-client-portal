@@ -22,6 +22,7 @@ export default async function AdminServicesPage() {
       base_price_cents,
       active,
       category_id,
+      stripe_product_id,
       service_categories(id, name, slug, color_token),
       client_services(id)
     `)
@@ -51,9 +52,22 @@ export default async function AdminServicesPage() {
         title="Services"
         subtitle={`${totalActive} active of ${totalServices} total services in the catalog.`}
         action={
-          <Button variant="primary" size="md" asLink href="/admin/services/new">
-            Add service
-          </Button>
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+            <a
+              href="/admin/services/stripe-sync"
+              style={{
+                fontFamily: 'var(--_typography---font-family--body)',
+                fontSize: '13px',
+                color: 'var(--_color---system--link, #0034ea)',
+                textDecoration: 'none',
+              }}
+            >
+              Stripe sync
+            </a>
+            <Button variant="primary" size="md" asLink href="/admin/services/new">
+              Add service
+            </Button>
+          </div>
         }
       />
 
@@ -129,6 +143,23 @@ export default async function AdminServicesPage() {
                   header: 'Status',
                   accessor: (s) => <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />,
                 },
+                {
+                  header: 'Stripe',
+                  accessor: (s) => (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: s.stripe_product_id
+                          ? 'var(--services--green-dark, #4caf50)'
+                          : 'var(--_color---border--secondary, #e0e0e0)',
+                      }}
+                      title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
+                    />
+                  ),
+                },
               ]}
             />
           </Card>
@@ -181,6 +212,23 @@ export default async function AdminServicesPage() {
                 {
                   header: 'Status',
                   accessor: (s) => <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />,
+                },
+                {
+                  header: 'Stripe',
+                  accessor: (s) => (
+                    <span
+                      style={{
+                        display: 'inline-block',
+                        width: '8px',
+                        height: '8px',
+                        borderRadius: '50%',
+                        backgroundColor: s.stripe_product_id
+                          ? 'var(--services--green-dark, #4caf50)'
+                          : 'var(--_color---border--secondary, #e0e0e0)',
+                      }}
+                      title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
+                    />
+                  ),
                 },
               ]}
             />
