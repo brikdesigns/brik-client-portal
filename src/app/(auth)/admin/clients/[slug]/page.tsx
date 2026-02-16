@@ -4,7 +4,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
@@ -77,31 +77,38 @@ export default async function ClientDetailPage({ params }: Props) {
     <div>
       <PageHeader
         title={client.name}
-        badge={<ClientStatusBadge status={client.status} />}
-        subtitle={
-          [client.contact_name, client.contact_email].filter(Boolean).join(' · ') || undefined
+        breadcrumbs={
+          <Breadcrumb
+            items={[
+              { label: 'Clients', href: '/admin/clients' },
+              { label: client.name },
+            ]}
+          />
         }
-        action={
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <a href={`/admin/clients/${client.slug}/edit`} style={linkStyle}>Edit</a>
-            <a href="/admin/clients" style={linkStyle}>Back to clients</a>
-          </div>
+        actions={
+          <Button variant="primary" size="sm" asLink href={`/admin/clients/${client.slug}/edit`}>
+            Edit client
+          </Button>
         }
+        metadata={[
+          { label: 'Status', value: <ClientStatusBadge status={client.status} /> },
+          { label: 'Contact', value: client.contact_name || '—' },
+          { label: 'Email', value: client.contact_email || '—' },
+          {
+            label: 'Website',
+            value: client.website_url ? (
+              <a
+                href={client.website_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
+              >
+                {client.website_url}
+              </a>
+            ) : '—',
+          },
+        ]}
       />
-
-      {/* Contact website link */}
-      {client.website_url && (
-        <div style={{ marginTop: '-24px', marginBottom: '24px' }}>
-          <a
-            href={client.website_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={linkStyle}
-          >
-            {client.website_url}
-          </a>
-        </div>
-      )}
 
       {/* Stat cards */}
       <div

@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
@@ -63,55 +63,43 @@ export default async function ServiceDetailPage({ params }: Props) {
     margin: '0 0 16px',
   };
 
-  const detailLabelStyle = {
-    fontFamily: 'var(--_typography---font-family--label)',
-    fontSize: '12px',
-    fontWeight: 600,
-    color: 'var(--_color---text--secondary)',
-    textTransform: 'uppercase' as const,
-    letterSpacing: '0.5px',
-    margin: '0 0 4px',
-  };
-
-  const detailValueStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    color: 'var(--_color---text--primary)',
-    margin: 0,
-  };
-
   return (
     <div>
       <PageHeader
         title={service.name}
-        badge={
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            {category && <ServiceBadge category={category.slug} size={20} />}
-            <ServiceTypeTag type={service.service_type} />
-            <span
-              style={{
-                fontSize: '12px',
-                fontWeight: 500,
-                color: service.active
-                  ? 'var(--services--green-dark)'
-                  : 'var(--_color---text--muted)',
-              }}
-            >
-              {service.active ? 'Active' : 'Inactive'}
-            </span>
-          </div>
+        breadcrumbs={
+          <Breadcrumb
+            items={[
+              { label: 'Services', href: '/admin/services' },
+              { label: service.name },
+            ]}
+          />
         }
         subtitle={service.description || undefined}
-        action={
-          <div style={{ display: 'flex', gap: '16px' }}>
-            <a href={`/admin/services/${service.slug}/edit`} style={linkStyle}>
-              Edit
-            </a>
-            <a href="/admin/services" style={linkStyle}>
-              Back to services
-            </a>
-          </div>
+        actions={
+          <Button variant="primary" size="sm" asLink href={`/admin/services/${service.slug}/edit`}>
+            Edit service
+          </Button>
         }
+        metadata={[
+          {
+            label: 'Category',
+            value: category ? (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <ServiceBadge category={category.slug} size={14} />
+                {category.name}
+              </span>
+            ) : 'Uncategorized',
+          },
+          { label: 'Type', value: <ServiceTypeTag type={service.service_type} /> },
+          { label: 'Status', value: service.active ? 'Active' : 'Inactive' },
+          {
+            label: 'Price',
+            value: service.base_price_cents
+              ? `${formatCurrency(service.base_price_cents)}${service.billing_frequency === 'monthly' ? '/mo' : ''}`
+              : '—',
+          },
+        ]}
       />
 
       {/* Stats */}
@@ -125,65 +113,62 @@ export default async function ServiceDetailPage({ params }: Props) {
       >
         <CardSummary label="Active clients" value={activeAssignments} />
         <CardSummary label="Total assigned" value={assignments.length} />
-        <CardSummary
-          label="Price"
-          value={
-            service.base_price_cents
-              ? `${formatCurrency(service.base_price_cents)}${service.billing_frequency === 'monthly' ? '/mo' : ''}`
-              : 'N/A'
-          }
-        />
       </div>
 
-      {/* Service details */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <h2 style={sectionHeadingStyle}>Details</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '24px' }}>
-          <div>
-            <p style={detailLabelStyle}>Category</p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {category && <ServiceBadge category={category.slug} size={14} />}
-              <p style={detailValueStyle}>{category?.name ?? 'Uncategorized'}</p>
+      {/* Stripe integration */}
+      {(service.stripe_product_id || service.stripe_price_id) && (
+        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+          <h2 style={sectionHeadingStyle}>Stripe</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+            <div>
+              <p style={{
+                fontFamily: 'var(--_typography---font-family--label)',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--_color---text--secondary)',
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.5px',
+                margin: '0 0 4px',
+              }}>Product</p>
+              <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px', color: 'var(--_color---text--primary)', margin: 0 }}>
+                {service.stripe_product_id ? (
+                  <a
+                    href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                  >
+                    {service.stripe_product_id} &#x2197;
+                  </a>
+                ) : '—'}
+              </p>
+            </div>
+            <div>
+              <p style={{
+                fontFamily: 'var(--_typography---font-family--label)',
+                fontSize: '12px',
+                fontWeight: 600,
+                color: 'var(--_color---text--secondary)',
+                textTransform: 'uppercase' as const,
+                letterSpacing: '0.5px',
+                margin: '0 0 4px',
+              }}>Price</p>
+              <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px', color: 'var(--_color---text--primary)', margin: 0 }}>
+                {service.stripe_price_id ? (
+                  <a
+                    href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                  >
+                    {service.stripe_price_id} &#x2197;
+                  </a>
+                ) : '—'}
+              </p>
             </div>
           </div>
-          <div>
-            <p style={detailLabelStyle}>Billing</p>
-            <p style={detailValueStyle}>
-              {service.billing_frequency === 'monthly' ? 'Monthly' : 'One-time'}
-            </p>
-          </div>
-          <div>
-            <p style={detailLabelStyle}>Stripe product</p>
-            <p style={detailValueStyle}>
-              {service.stripe_product_id ? (
-                <a
-                  href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
-                >
-                  {service.stripe_product_id} &#x2197;
-                </a>
-              ) : '—'}
-            </p>
-          </div>
-          <div>
-            <p style={detailLabelStyle}>Stripe price</p>
-            <p style={detailValueStyle}>
-              {service.stripe_price_id ? (
-                <a
-                  href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
-                >
-                  {service.stripe_price_id} &#x2197;
-                </a>
-              ) : '—'}
-            </p>
-          </div>
-        </div>
-      </Card>
+        </Card>
+      )}
 
       {/* Client assignments */}
       <Card variant="elevated" padding="lg">

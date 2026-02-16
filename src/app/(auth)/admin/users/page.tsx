@@ -28,7 +28,7 @@ export default async function AdminUsersPage() {
       <PageHeader
         title="Users"
         subtitle="Manage portal access and send invitations."
-        action={
+        actions={
           <Button variant="primary" size="md" asLink href="/admin/users/invite">
             Invite user
           </Button>

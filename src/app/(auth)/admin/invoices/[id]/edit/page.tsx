@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { EditInvoiceForm } from '@/components/edit-invoice-form';
 
 interface Props {
@@ -31,6 +31,15 @@ export default async function EditInvoicePage({ params }: Props) {
     <div>
       <PageHeader
         title="Edit invoice"
+        breadcrumbs={
+          <Breadcrumb
+            items={[
+              { label: 'Invoices', href: '/admin/invoices' },
+              { label: client?.name ?? 'Unknown' },
+              { label: 'Edit invoice' },
+            ]}
+          />
+        }
         subtitle={invoice.description || 'Invoice'}
       />
       <EditInvoiceForm

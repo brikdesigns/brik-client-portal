@@ -52,23 +52,15 @@ export default async function AdminServicesPage() {
       <PageHeader
         title="Services"
         subtitle={`${totalActive} active of ${totalServices} total services in the catalog.`}
-        action={
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-            <a
-              href="/admin/services/stripe-sync"
-              style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                color: 'var(--_color---system--link, #0034ea)',
-                textDecoration: 'none',
-              }}
-            >
+        actions={
+          <>
+            <Button variant="secondary" size="md" asLink href="/admin/services/stripe-sync">
               Stripe sync
-            </a>
+            </Button>
             <Button variant="primary" size="md" asLink href="/admin/services/new">
               Add service
             </Button>
-          </div>
+          </>
         }
       />
 

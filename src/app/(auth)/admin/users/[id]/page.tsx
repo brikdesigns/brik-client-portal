@@ -3,8 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
-import { Link } from '@bds/components/ui/Link/Link';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { RoleTag } from '@/components/status-badges';
 
 interface Props {
@@ -83,66 +82,39 @@ export default async function UserDetailPage({ params }: Props) {
     <div>
       <PageHeader
         title={user.full_name || user.email}
-        badge={<RoleTag role={user.role} />}
-        subtitle={user.full_name ? user.email : undefined}
-        action={
-          <Link href="/admin/users" size="small">
-            Back to users
-          </Link>
+        breadcrumbs={
+          <Breadcrumb
+            items={[
+              { label: 'Users', href: '/admin/users' },
+              { label: user.full_name || user.email },
+            ]}
+          />
         }
-      />
-
-      {/* Profile info */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <h2 style={sectionHeadingStyle}>Profile</h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '24px',
-          }}
-        >
-          <div>
-            <p style={labelStyle}>Full name</p>
-            <p style={fieldStyle}>{user.full_name || '—'}</p>
-          </div>
-          <div>
-            <p style={labelStyle}>Email</p>
-            <p style={fieldStyle}>{user.email}</p>
-          </div>
-          <div>
-            <p style={labelStyle}>Role</p>
-            <div style={{ marginTop: '2px' }}><RoleTag role={user.role} /></div>
-          </div>
-          <div>
-            <p style={labelStyle}>Status</p>
-            <div style={{ marginTop: '2px' }}>
+        subtitle={user.full_name ? user.email : undefined}
+        metadata={[
+          { label: 'Role', value: <RoleTag role={user.role} /> },
+          {
+            label: 'Status',
+            value: (
               <Badge status={user.is_active ? 'positive' : 'warning'}>
                 {user.is_active ? 'Active' : 'Disabled'}
               </Badge>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Client assignment */}
-      {user.role === 'client' && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-          <h2 style={sectionHeadingStyle}>Client assignment</h2>
-          {client ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <p style={fieldStyle}>{client.name}</p>
-              <Button variant="secondary" size="sm" asLink href={`/admin/clients/${client.slug}`}>
-                View Details
-              </Button>
-            </div>
-          ) : (
-            <p style={{ ...fieldStyle, color: 'var(--_color---text--muted)' }}>
-              No client assigned
-            </p>
-          )}
-        </Card>
-      )}
+            ),
+          },
+          {
+            label: 'Client',
+            value: client ? (
+              <a
+                href={`/admin/clients/${client.slug}`}
+                style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
+              >
+                {client.name}
+              </a>
+            ) : '—',
+          },
+          { label: 'Last login', value: formatDateTime(user.last_login_at) },
+        ]}
+      />
 
       {/* Activity */}
       <Card variant="elevated" padding="lg">

@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
-import { PageHeader } from '@/components/page-header';
+import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 
 interface SyncResponse {
@@ -81,7 +81,14 @@ export default function StripeSyncPage() {
       <PageHeader
         title="Stripe product sync"
         subtitle="Match Stripe products to portal services by name and populate Stripe IDs."
-        action={<a href="/admin/services" style={linkStyle}>Back to services</a>}
+        breadcrumbs={
+          <Breadcrumb
+            items={[
+              { label: 'Services', href: '/admin/services' },
+              { label: 'Stripe sync' },
+            ]}
+          />
+        }
       />
 
       {/* Initial / error state */}

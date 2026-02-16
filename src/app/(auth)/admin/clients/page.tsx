@@ -28,12 +28,10 @@ export default async function AdminClientsPage() {
       <PageHeader
         title="Clients"
         subtitle="Manage client accounts and portal access."
-        action={
-          <a href="/admin/clients/new">
-            <Button variant="primary" size="md">
-              Add client
-            </Button>
-          </a>
+        actions={
+          <Button variant="primary" size="md" asLink href="/admin/clients/new">
+            Add client
+          </Button>
         }
       />
 

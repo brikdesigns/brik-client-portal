@@ -1,53 +1,22 @@
-import type { ReactNode } from 'react';
+import { PageHeader as BDSPageHeader, type PageHeaderProps, type MetadataItem } from '@bds/components/ui/PageHeader/PageHeader';
+import { Breadcrumb, type BreadcrumbItem } from '@bds/components/ui/Breadcrumb/Breadcrumb';
 
-interface PageHeaderProps {
-  title: string;
-  subtitle?: string;
-  action?: ReactNode;
-  badge?: ReactNode;
-}
+// Re-export types for convenience
+export type { PageHeaderProps, MetadataItem, BreadcrumbItem };
 
-export function PageHeader({ title, subtitle, action, badge }: PageHeaderProps) {
-  const hasAction = !!action;
+// Re-export Breadcrumb for easy access
+export { Breadcrumb };
 
-  return (
-    <div
-      style={{
-        display: hasAction ? 'flex' : undefined,
-        justifyContent: hasAction ? 'space-between' : undefined,
-        alignItems: hasAction ? 'flex-start' : undefined,
-        marginBottom: '32px',
-      }}
-    >
-      <div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <h1
-            style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: 'var(--_typography---heading--large, 28px)',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
-              margin: 0,
-            }}
-          >
-            {title}
-          </h1>
-          {badge}
-        </div>
-        {subtitle && (
-          <p
-            style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: 'var(--_typography---body--md-base, 14px)',
-              color: 'var(--_color---text--secondary)',
-              margin: '8px 0 0',
-            }}
-          >
-            {subtitle}
-          </p>
-        )}
-      </div>
-      {action}
-    </div>
-  );
+/**
+ * Portal-specific PageHeader wrapper
+ *
+ * Wraps the BDS PageHeader component and removes the default 80px horizontal padding.
+ * The portal layouts (admin + dashboard) already provide 32px padding on the main element,
+ * so we strip the BDS default padding to prevent double-padding (32px + 80px = 112px).
+ *
+ * This wrapper allows all consuming pages to continue importing from '@/components/page-header'
+ * without needing to change import paths.
+ */
+export function PageHeader(props: PageHeaderProps) {
+  return <BDSPageHeader {...props} style={{ padding: 0, ...props.style }} />;
 }
