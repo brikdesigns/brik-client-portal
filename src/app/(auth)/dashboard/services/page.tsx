@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
 import { ServiceCard } from '@/components/service-card';
 import { ServiceCategoryLabel } from '@/components/service-badge';
@@ -24,6 +25,20 @@ export default async function ServicesPage() {
   const services = clientServices ?? [];
   const activeCount = services.filter((cs) => cs.status === 'active').length;
 
+  // Calculate monthly cost from active monthly services
+  const monthlyCost = services
+    .filter((cs) => cs.status === 'active')
+    .reduce((sum, cs) => {
+      const svc = cs.services as unknown as {
+        billing_frequency: string | null;
+        base_price_cents: number | null;
+      } | null;
+      if (svc?.billing_frequency === 'monthly' && svc.base_price_cents) {
+        return sum + svc.base_price_cents;
+      }
+      return sum;
+    }, 0);
+
   const subtitle = activeCount > 0
     ? `You have ${activeCount} active service${activeCount !== 1 ? 's' : ''}.`
     : 'No active services.';
@@ -31,6 +46,23 @@ export default async function ServicesPage() {
   return (
     <div>
       <PageHeader title="Services" subtitle={subtitle} />
+
+      {/* Summary cards */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
+          marginBottom: '32px',
+        }}
+      >
+        <CardSummary label="Total services" value={services.length} />
+        <CardSummary label="Active" value={activeCount} />
+        <CardSummary
+          label="Monthly cost"
+          value={monthlyCost > 0 ? formatCurrency(monthlyCost) : '$0'}
+        />
+      </div>
 
       {services.length > 0 ? (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>

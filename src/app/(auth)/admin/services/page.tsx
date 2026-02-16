@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Counter } from '@bds/components/ui/Counter/Counter';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge, categoryConfig } from '@/components/service-badge';
@@ -103,15 +104,7 @@ export default async function AdminServicesPage() {
             >
               {cat.name}
             </h2>
-            <span
-              style={{
-                fontFamily: 'var(--_typography---font-family--label)',
-                fontSize: '12px',
-                color: 'var(--_color---text--muted)',
-              }}
-            >
-              {cat.services.length}
-            </span>
+            <Counter count={cat.services.length} status="brand" size="sm" />
           </div>
           <Card variant="elevated" padding="lg">
             <DataTable

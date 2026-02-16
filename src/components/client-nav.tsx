@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -46,14 +47,17 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
       >
         {/* Left: Logo + Nav */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
-          <Image
-            src="/images/brik-logo.svg"
-            alt="Brik Designs"
-            width={80}
-            height={28}
-            priority
-            className="portal-logo"
-          />
+          <Link href="/dashboard">
+            <Image
+              src="/images/brik-logo.svg"
+              alt="Brik Designs"
+              width={80}
+              height={28}
+              priority
+              className="portal-logo"
+              style={{ cursor: 'pointer' }}
+            />
+          </Link>
           <nav style={{ display: 'flex', gap: '4px' }}>
             {navItems.map((item) => {
               const active = isActive(item.href);
@@ -87,46 +91,25 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
         {/* Right: User info + actions */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
           {isAdmin && (
-            <Link
-              href="/admin"
-              style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                color: 'var(--brand--primary, #e35335)',
-                textDecoration: 'none',
-                fontWeight: 500,
-              }}
-            >
+            <Button variant="secondary" size="sm" asLink href="/admin">
               Admin
-            </Link>
+            </Button>
           )}
-          <div style={{ textAlign: 'right' }}>
+          <ThemeToggle />
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <p
               style={{
                 fontFamily: 'var(--_typography---font-family--body)',
                 fontSize: '13px',
-                color: 'var(--_color---text--primary)',
+                color: 'var(--_color---text--secondary)',
                 margin: 0,
                 fontWeight: 500,
               }}
             >
               {userName}
             </p>
-            {clientName && (
-              <p
-                style={{
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '11px',
-                  color: 'var(--_color---text--muted)',
-                  margin: 0,
-                }}
-              >
-                {clientName}
-              </p>
-            )}
+            <SignOutButton />
           </div>
-          <ThemeToggle />
-          <SignOutButton />
         </div>
       </div>
     </header>

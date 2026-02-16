@@ -24,7 +24,14 @@ export default async function DashboardLayout({
         clientName={clientName}
         isAdmin={profile?.role === 'admin'}
       />
-      <main style={{ padding: '32px', maxWidth: '1100px', margin: '0 auto' }}>
+      <main
+        style={{
+          padding: '24px 16px',
+          maxWidth: '1100px',
+          margin: '0 auto',
+        }}
+        className="dashboard-main"
+      >
         {children}
       </main>
     </div>

@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
+import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge } from '@/components/status-badges';
@@ -14,7 +15,9 @@ export default async function PaymentsPage() {
     .order('invoice_date', { ascending: false });
 
   const openInvoices = invoices?.filter((i) => i.status === 'open') ?? [];
+  const paidInvoices = invoices?.filter((i) => i.status === 'paid') ?? [];
   const totalDue = openInvoices.reduce((sum, inv) => sum + inv.amount_cents, 0);
+  const totalPaid = paidInvoices.reduce((sum, inv) => sum + inv.amount_cents, 0);
 
   const subtitle = totalDue > 0
     ? `You have ${openInvoices.length} open invoice${openInvoices.length !== 1 ? 's' : ''} totaling ${formatCurrency(totalDue)}.`
@@ -23,6 +26,20 @@ export default async function PaymentsPage() {
   return (
     <div>
       <PageHeader title="Payments" subtitle={subtitle} />
+
+      {/* Summary cards */}
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
+          marginBottom: '32px',
+        }}
+      >
+        <CardSummary label="Amount due" value={formatCurrency(totalDue)} />
+        <CardSummary label="Open invoices" value={openInvoices.length} />
+        <CardSummary label="Paid" value={`${paidInvoices.length} (${formatCurrency(totalPaid)})`} />
+      </div>
 
       <Card variant="elevated" padding="lg">
         <DataTable
