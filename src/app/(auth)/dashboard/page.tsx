@@ -3,6 +3,7 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
 import { ServiceCard } from '@/components/service-card';
 import { EmptyState } from '@/components/empty-state';
+import { formatCurrency } from '@/lib/format';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -46,66 +47,62 @@ export default async function DashboardPage() {
         subtitle="Here's a snapshot of your account."
       />
 
+      {/* Summary cards */}
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 300px',
-          gap: '24px',
-          alignItems: 'start',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
+          marginBottom: '32px',
         }}
       >
-        {/* Left: Services */}
-        <div>
-          <h2
-            style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: 'var(--_typography---heading--small, 18px)',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
-              margin: '0 0 16px',
-            }}
-          >
-            Services
-          </h2>
-          {clientServices.length > 0 ? (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {clientServices.map((cs) => {
-                const svc = cs.services as unknown as {
-                  id: string;
-                  name: string;
-                  description: string | null;
-                  service_type: string;
-                  billing_frequency: string | null;
-                  base_price_cents: number | null;
-                  service_categories: { slug: string; name: string } | null;
-                } | null;
-
-                if (!svc) return null;
-
-                return (
-                  <ServiceCard
-                    key={cs.id}
-                    name={svc.name}
-                    description={svc.description}
-                    categorySlug={svc.service_categories?.slug ?? 'service'}
-                    serviceType={svc.service_type}
-                    href={`/dashboard/services`}
-                  />
-                );
-              })}
-            </div>
-          ) : (
-            <EmptyState>No active services. Contact us to get started.</EmptyState>
-          )}
-        </div>
-
-        {/* Right: Stats */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <CardSummary label="Amount due" value={totalDue / 100} type="price" />
-          <CardSummary label="Open invoices" value={openInvoices.length} />
-          <CardSummary label="Active services" value={activeServiceCount} />
-        </div>
+        <CardSummary label="Amount due" value={formatCurrency(totalDue)} />
+        <CardSummary label="Open invoices" value={openInvoices.length} />
+        <CardSummary label="Active services" value={activeServiceCount} />
       </div>
+
+      {/* Services */}
+      <h2
+        style={{
+          fontFamily: 'var(--_typography---font-family--heading)',
+          fontSize: 'var(--_typography---heading--small, 18px)',
+          fontWeight: 600,
+          color: 'var(--_color---text--primary)',
+          margin: '0 0 16px',
+        }}
+      >
+        Services
+      </h2>
+      {clientServices.length > 0 ? (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {clientServices.map((cs) => {
+            const svc = cs.services as unknown as {
+              id: string;
+              name: string;
+              description: string | null;
+              service_type: string;
+              billing_frequency: string | null;
+              base_price_cents: number | null;
+              service_categories: { slug: string; name: string } | null;
+            } | null;
+
+            if (!svc) return null;
+
+            return (
+              <ServiceCard
+                key={cs.id}
+                name={svc.name}
+                description={svc.description}
+                categorySlug={svc.service_categories?.slug ?? 'service'}
+                serviceType={svc.service_type}
+                href={`/dashboard/services`}
+              />
+            );
+          })}
+        </div>
+      ) : (
+        <EmptyState>No active services. Contact us to get started.</EmptyState>
+      )}
     </div>
   );
 }

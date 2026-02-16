@@ -26,7 +26,6 @@ export default async function DashboardLayout({
       />
       <main
         style={{
-          padding: '24px 16px',
           maxWidth: '1100px',
           margin: '0 auto',
         }}
