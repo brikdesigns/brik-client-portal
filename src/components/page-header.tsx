@@ -24,11 +24,11 @@ export function PageHeader(props: PageHeaderProps) {
     <BDSPageHeader
       {...props}
       style={{
+        ...props.style,
         paddingLeft: 0,
         paddingRight: 0,
         paddingTop: 'var(--_space---padding--lg)',
         paddingBottom: 'var(--_space---padding--lg)',
-        ...props.style,
       }}
     />
   );

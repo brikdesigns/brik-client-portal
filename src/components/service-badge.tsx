@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
 
 interface ServiceBadgeProps {
   category: string; // slug: brand, marketing, information, product, service
@@ -92,13 +91,12 @@ export function ServiceBadge({ category, serviceName, size = 28 }: ServiceBadgeP
           overflow: 'hidden',
         }}
       >
-        <Image
+        <img
           src={iconPath}
           alt={serviceName}
           width={size * 0.6}
           height={size * 0.6}
-          style={{ objectFit: 'contain' }}
-          unoptimized
+          style={{ objectFit: 'contain', display: 'block' }}
           onError={() => setImageError(true)}
         />
       </div>
