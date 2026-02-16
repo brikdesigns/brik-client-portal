@@ -27,8 +27,8 @@ export function PageHeader(props: PageHeaderProps) {
         ...props.style,
         paddingLeft: 0,
         paddingRight: 0,
-        paddingTop: 'var(--_space---padding--lg)',
-        paddingBottom: 'var(--_space---padding--lg)',
+        paddingTop: 'var(--_space---xl)',
+        paddingBottom: 'var(--_space---xl)',
       }}
     />
   );
