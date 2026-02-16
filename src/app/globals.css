@@ -94,6 +94,7 @@
   /* Border */
   --_color---border--primary: var(--grayscale--darkest);
   --_color---border--secondary: var(--grayscale--lighter);
+  --_color---border--muted: var(--grayscale--lighter);
   --_color---border--brand: var(--brand--primary);
   --_color---border--input: var(--grayscale--light);
   --_color---border--inverse: var(--grayscale--white);
@@ -185,6 +186,7 @@
   /* Border */
   --_color---border--primary: var(--grayscale--darkest);
   --_color---border--secondary: var(--grayscale--darker);
+  --_color---border--muted: var(--grayscale--darker);
   --_color---border--brand: var(--brand--primary);
   --_color---border--input: var(--grayscale--dark);
   --_color---border--inverse: var(--grayscale--black);

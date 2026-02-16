@@ -18,7 +18,11 @@ const config: Config = {
         'brik-page': 'var(--_color---page--primary)',
         'brik-page-accent': 'var(--_color---page--accent)',
         'brik-border': 'var(--_color---border--secondary)',
+        'brik-border-muted': 'var(--_color---border--muted)',
         'brik-link': 'var(--_color---system--link)',
+      },
+      borderColor: {
+        DEFAULT: 'var(--_color---border--muted)',
       },
       fontFamily: {
         'bds-heading': 'var(--_typography---font-family--heading)',
