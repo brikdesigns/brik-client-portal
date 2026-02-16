@@ -29,8 +29,8 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
   return (
     <header
       style={{
-        backgroundColor: 'var(--_color---surface--primary, white)',
-        borderBottom: '1px solid var(--_color---border--secondary, #e0e0e0)',
+        backgroundColor: 'var(--_color---surface--primary)',
+        borderBottom: '1px solid var(--_color---border--secondary)',
         padding: '0 32px',
       }}
     >
@@ -68,10 +68,10 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
                     fontSize: '14px',
                     fontWeight: active ? 600 : 400,
                     color: active
-                      ? 'var(--_color---text--primary, #1b1b1b)'
-                      : 'var(--_color---text--secondary, #828282)',
+                      ? 'var(--_color---text--primary)'
+                      : 'var(--_color---text--secondary)',
                     backgroundColor: active
-                      ? 'var(--_color---page--secondary, #f2f2f2)'
+                      ? 'var(--_color---page--secondary)'
                       : 'transparent',
                     textDecoration: 'none',
                     transition: 'background-color 0.15s, color 0.15s',

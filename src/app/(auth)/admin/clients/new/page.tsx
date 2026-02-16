@@ -141,7 +141,7 @@ export default function NewClientPage() {
                   fontSize: '14px',
                   padding: '8px 12px',
                   borderRadius: 'var(--_border-radius---sm, 4px)',
-                  border: '1px solid var(--_color---border--input, #bdbdbd)',
+                  border: '1px solid var(--_color---border--input)',
                   backgroundColor: 'var(--_color---background--input, white)',
                   color: 'var(--_color---text--primary)',
                   resize: 'vertical',

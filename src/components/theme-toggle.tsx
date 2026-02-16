@@ -48,7 +48,7 @@ export function ThemeToggle() {
         width: '32px',
         height: '32px',
         borderRadius: '6px',
-        border: '1px solid var(--_color---border--secondary, #e0e0e0)',
+        border: '1px solid var(--_color---border--secondary)',
         backgroundColor: 'transparent',
         cursor: 'pointer',
         color: 'var(--_color---text--secondary, #828282)',

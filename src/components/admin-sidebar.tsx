@@ -30,8 +30,8 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
     <aside
       style={{
         width: '260px',
-        backgroundColor: 'var(--_color---surface--primary, white)',
-        borderRight: '1px solid var(--_color---border--secondary, #e0e0e0)',
+        backgroundColor: 'var(--_color---surface--primary)',
+        borderRight: '1px solid var(--_color---border--secondary)',
         display: 'flex',
         flexDirection: 'column',
         position: 'fixed',
@@ -45,7 +45,7 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
       <div
         style={{
           padding: '24px 24px 20px',
-          borderBottom: '1px solid var(--_color---border--secondary, #e0e0e0)',
+          borderBottom: '1px solid var(--_color---border--secondary)',
         }}
       >
         <Image
@@ -76,10 +76,10 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
                 fontSize: '14px',
                 fontWeight: active ? 600 : 400,
                 color: active
-                  ? 'var(--_color---text--primary, #1b1b1b)'
-                  : 'var(--_color---text--secondary, #828282)',
+                  ? 'var(--_color---text--primary)'
+                  : 'var(--_color---text--secondary)',
                 backgroundColor: active
-                  ? 'var(--_color---page--secondary, #f2f2f2)'
+                  ? 'var(--_color---page--secondary)'
                   : 'transparent',
                 textDecoration: 'none',
                 marginBottom: '4px',
@@ -92,8 +92,8 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
                   height: '8px',
                   borderRadius: '2px',
                   backgroundColor: active
-                    ? 'var(--brand--primary, #e35335)'
-                    : 'var(--_color---border--secondary, #e0e0e0)',
+                    ? 'var(--brand--primary)'
+                    : 'var(--_color---border--secondary)',
                   flexShrink: 0,
                 }}
               />
@@ -107,14 +107,14 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
       <div
         style={{
           padding: '16px 24px',
-          borderTop: '1px solid var(--_color---border--secondary, #e0e0e0)',
+          borderTop: '1px solid var(--_color---border--secondary)',
         }}
       >
         <p
           style={{
             fontFamily: 'var(--_typography---font-family--body)',
             fontSize: '13px',
-            color: 'var(--_color---text--secondary, #828282)',
+            color: 'var(--_color---text--secondary)',
             margin: '0 0 8px',
             overflow: 'hidden',
             textOverflow: 'ellipsis',

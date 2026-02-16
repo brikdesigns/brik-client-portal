@@ -173,7 +173,7 @@ export default async function AdminServicesPage() {
                         borderRadius: '50%',
                         backgroundColor: s.stripe_product_id
                           ? 'var(--services--green-dark, #4caf50)'
-                          : 'var(--_color---border--secondary, #e0e0e0)',
+                          : 'var(--_color---border--secondary)',
                       }}
                       title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
                     />
@@ -245,7 +245,7 @@ export default async function AdminServicesPage() {
                         borderRadius: '50%',
                         backgroundColor: s.stripe_product_id
                           ? 'var(--services--green-dark, #4caf50)'
-                          : 'var(--_color---border--secondary, #e0e0e0)',
+                          : 'var(--_color---border--secondary)',
                       }}
                       title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
                     />
