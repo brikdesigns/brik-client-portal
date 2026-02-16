@@ -92,7 +92,7 @@ export default async function AdminUsersPage() {
             {
               header: '',
               accessor: (u) => (
-                <Button variant="primary" size="sm" asLink href={`/admin/users/${u.id}`}>
+                <Button variant="secondary" size="sm" asLink href={`/admin/users/${u.id}`}>
                   View Details
                 </Button>
               ),

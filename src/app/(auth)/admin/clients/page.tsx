@@ -75,7 +75,7 @@ export default async function AdminClientsPage() {
               header: '',
               accessor: (c) => (
                 <Button variant="secondary" size="sm" asLink href={`/admin/clients/${c.slug}`}>
-                  View
+                  View Details
                 </Button>
               ),
               style: { textAlign: 'right' },

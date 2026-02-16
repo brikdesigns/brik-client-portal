@@ -141,7 +141,10 @@ export default async function ServiceDetailPage({ params }: Props) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '24px' }}>
           <div>
             <p style={detailLabelStyle}>Category</p>
-            <p style={detailValueStyle}>{category?.name ?? 'Uncategorized'}</p>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {category && <ServiceBadge category={category.slug} size={14} />}
+              <p style={detailValueStyle}>{category?.name ?? 'Uncategorized'}</p>
+            </div>
           </div>
           <div>
             <p style={detailLabelStyle}>Billing</p>

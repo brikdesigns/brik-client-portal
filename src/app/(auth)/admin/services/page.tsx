@@ -128,6 +128,14 @@ export default async function AdminServicesPage() {
               emptyMessage="No services in this category."
               columns={[
                 {
+                  header: '',
+                  accessor: (s) => {
+                    const cat = s.service_categories as unknown as { slug: string } | null;
+                    return cat ? <ServiceBadge category={cat.slug} size={16} /> : null;
+                  },
+                  style: { width: '32px', padding: '10px 4px 10px 12px' },
+                },
+                {
                   header: 'Service',
                   accessor: (s) => s.name,
                   style: { fontWeight: 500 },
@@ -174,7 +182,7 @@ export default async function AdminServicesPage() {
                 {
                   header: '',
                   accessor: (s) => (
-                    <Button variant="primary" size="sm" asLink href={`/admin/services/${s.slug}`}>
+                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
                       View Details
                     </Button>
                   ),
@@ -246,7 +254,7 @@ export default async function AdminServicesPage() {
                 {
                   header: '',
                   accessor: (s) => (
-                    <Button variant="primary" size="sm" asLink href={`/admin/services/${s.slug}`}>
+                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
                       View Details
                     </Button>
                   ),

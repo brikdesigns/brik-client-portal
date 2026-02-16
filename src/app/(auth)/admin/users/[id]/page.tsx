@@ -133,7 +133,7 @@ export default async function UserDetailPage({ params }: Props) {
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <p style={fieldStyle}>{client.name}</p>
               <Button variant="secondary" size="sm" asLink href={`/admin/clients/${client.slug}`}>
-                View Client
+                View Details
               </Button>
             </div>
           ) : (
