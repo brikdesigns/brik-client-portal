@@ -92,6 +92,64 @@ Git submodule at `./brik-bds/`. Uses **Brik Designs company brand** — NOT any 
 | Badge | `@bds/components/ui/Badge/Badge` | Status indicators |
 | Link | `@bds/components/ui/Link/Link` | Navigation |
 | ThemeProvider | `@bds/components/providers/ThemeProvider` | Theme wrapper |
+| Table | `@bds/components/ui/Table/Table` | Data tables (requires 'use client') |
+| Counter | `@bds/components/ui/Counter/Counter` | Numeric badges |
+| SidebarNavigation | `@bds/components/ui/SidebarNavigation/SidebarNavigation` | Admin sidebar |
+
+### Component Integration Checklist
+
+**Before integrating a BDS component into the portal, follow this checklist:**
+
+1. **Read Storybook Documentation**
+   - [ ] Open component's `.mdx` file in brik-bds
+   - [ ] Review "Framework Compatibility" section
+   - [ ] Check for Next.js-specific notes
+
+2. **Verify TypeScript Exports**
+   - [ ] Check component's `index.ts` exports match actual exports
+   - [ ] Verify type definitions are exported with `export type`
+
+3. **Check Client/Server Requirements**
+   - [ ] Does component use React Context, hooks, or browser APIs?
+   - [ ] If yes, ensure component has `'use client'` directive at top of file
+   - [ ] If not, component can be used in server components
+
+4. **Test Build Locally**
+
+   ```bash
+   npm run build
+   ```
+
+   - [ ] Build completes without TypeScript errors
+   - [ ] No "isolatedModules" errors
+   - [ ] No missing export errors
+
+5. **Integration Pattern**
+   - [ ] For navigation components: wrap with Next.js `Link` and `usePathname`
+   - [ ] For form components: integrate with form library state
+   - [ ] For data components: test with actual Supabase queries
+
+6. **Common Issues to Check**
+
+   | Issue | Check | Fix |
+   |-------|-------|-----|
+   | Build fails with Context error | Component needs 'use client' | Add to component file |
+   | Export not found | index.ts out of sync | Update barrel export |
+   | Type error in portal | Using wrong prop types | Check .mdx docs for correct API |
+   | Navigation doesn't work | Using href instead of Link | Wrap in Next.js Link |
+
+### Component Integration Feedback Loop
+
+**When you find an issue integrating a BDS component:**
+
+1. ✅ **Fix it in the portal** (immediate unblock)
+2. ✅ **Document the issue** (what broke, why it broke)
+3. ✅ **Fix it in BDS** (prevent next project from hitting it)
+4. ✅ **Update Storybook docs** (add to .mdx compatibility notes)
+5. ✅ **Commit and push BDS changes**
+6. ✅ **Update portal submodule reference**
+
+This creates a virtuous cycle: Portal → Discovers Issue → Improves BDS → Better for Next Project
 
 ## Project Structure
 
