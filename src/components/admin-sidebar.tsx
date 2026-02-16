@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 
@@ -102,6 +103,24 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
           );
         })}
       </nav>
+
+      {/* View Client Portal */}
+      <div
+        style={{
+          padding: '12px 24px',
+          borderTop: '1px solid var(--_color---border--secondary)',
+        }}
+      >
+        <Button
+          variant="secondary"
+          size="sm"
+          asLink
+          href="/dashboard"
+          style={{ width: '100%' }}
+        >
+          View as Client
+        </Button>
+      </div>
 
       {/* User & Sign out */}
       <div
