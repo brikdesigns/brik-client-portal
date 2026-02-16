@@ -30,7 +30,7 @@ export function ServiceCard({
         borderRadius: '8px',
       }}
     >
-      <ServiceBadge category={categorySlug} size={40} />
+      <ServiceBadge category={categorySlug} serviceName={name} size={40} />
 
       <div style={{ flex: 1, minWidth: 0 }}>
         <p
