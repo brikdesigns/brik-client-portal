@@ -26,7 +26,29 @@ const serviceIconOverrides: Record<string, string> = {
   'Logo Update': 'brand-logo',
   'Premium Logo Design': 'brand-logo',
   'Standard Logo Design': 'brand-logo',
-  // Add more mappings as needed
+
+  // Marketing services
+  'Comprehensive Marketing Audit & Consultation': 'marketing-consulting',
+  'Custom Large E-Commerce Web Development and Design': 'marketing-web-design',
+  'Custom Large Web Development and Design': 'marketing-web-design',
+  'Custom Standard E-Commerce Web Development and Design': 'marketing-web-design',
+  'Custom Standard Web Development and Design': 'marketing-web-design',
+  'Email Drip Campaign (Up to 6 Emails)': 'marketing-email',
+  'Landing Pages': 'marketing-landing-pages',
+  'Patient Experience Mapping': 'patient-experience',
+  'Social Media Graphic Designs': 'marketing-social-graphics',
+  'Swag and Merchandise Design': 'marketing-swag',
+  'Website Experience Mapping': 'website-experience',
+
+  // Service (Back Office) category mappings
+  'Automated Workflow and AI Integration': 'back-office-automation-ai',
+  'CRM Setup and Data Cleanup': 'back-office-crm-data',
+  'Customer Journey Mapping': 'back-office-journey-mapping',
+  'Digital File Organization': 'back-office-digital-file-organization',
+  'Software and Subscription Audit': 'back-office-audit',
+  'Software Automation Setup': 'back-office-automated-workflow',
+  'Standard Operating Procedures (SOP) Creation': 'back-office-business-solutions',
+  'Training Setup & Organization': 'back-office-consulting',
 };
 
 /**
