@@ -6,11 +6,14 @@ import { usePathname } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { ClientSwitcher } from '@/components/client-switcher';
 
 interface ClientNavProps {
   userName: string;
   clientName?: string | null;
   isAdmin?: boolean;
+  clients?: Array<{ id: string; name: string }>;
+  currentClientId?: string | null;
 }
 
 const navItems = [
@@ -19,7 +22,7 @@ const navItems = [
   { label: 'Payments', href: '/dashboard/payments' },
 ];
 
-export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
+export function ClientNav({ userName, clientName, isAdmin, clients = [], currentClientId }: ClientNavProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {
@@ -94,6 +97,13 @@ export function ClientNav({ userName, clientName, isAdmin }: ClientNavProps) {
             <Button variant="secondary" size="sm" asLink href="/admin">
               Admin
             </Button>
+          )}
+          {clients.length > 0 && (
+            <ClientSwitcher
+              clients={clients}
+              currentClientId={currentClientId || null}
+              isAdmin={isAdmin || false}
+            />
           )}
           <ThemeToggle />
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

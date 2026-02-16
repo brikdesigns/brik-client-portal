@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { ClientNav } from '@/components/client-nav';
+import { getCurrentClientId, getUserClients } from '@/lib/current-client';
 
 export default async function DashboardLayout({
   children,
@@ -11,11 +12,17 @@ export default async function DashboardLayout({
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name, role, clients(name)')
+    .select('full_name, role')
     .eq('id', user!.id)
     .single();
 
-  const clientName = (profile?.clients as unknown as { name: string } | null)?.name;
+  // Get current client from cookie and available clients
+  const currentClientId = await getCurrentClientId(user!.id);
+  const clients = await getUserClients(user!.id);
+
+  // Get current client name for display
+  const currentClient = clients.find((c) => c.id === currentClientId);
+  const clientName = currentClient?.name;
 
   return (
     <div style={{ minHeight: '100vh', backgroundColor: 'var(--_color---page--secondary, #f2f2f2)' }}>
@@ -23,6 +30,8 @@ export default async function DashboardLayout({
         userName={profile?.full_name || user!.email || 'User'}
         clientName={clientName}
         isAdmin={profile?.role === 'admin'}
+        clients={clients}
+        currentClientId={currentClientId}
       />
       <main
         style={{

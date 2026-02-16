@@ -7,9 +7,26 @@ import { ServiceCategoryLabel } from '@/components/service-badge';
 import { ServiceStatusBadge } from '@/components/status-badges';
 import { EmptyState } from '@/components/empty-state';
 import { formatCurrency } from '@/lib/format';
+import { getCurrentClientId } from '@/lib/current-client';
 
 export default async function ServicesPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Get current client from cookie
+  const currentClientId = await getCurrentClientId(user!.id);
+
+  // If no client selected, show empty state
+  if (!currentClientId) {
+    return (
+      <div>
+        <PageHeader title="Services" subtitle="Select a client to view services." />
+        <Card variant="elevated" padding="lg">
+          <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
+        </Card>
+      </div>
+    );
+  }
 
   const { data: clientServices } = await supabase
     .from('client_services')
@@ -20,6 +37,7 @@ export default async function ServicesPage() {
         service_categories(slug, name)
       )
     `)
+    .eq('client_id', currentClientId)
     .order('created_at', { ascending: false });
 
   const services = clientServices ?? [];

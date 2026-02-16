@@ -4,6 +4,7 @@ import { PageHeader } from '@/components/page-header';
 import { ServiceCard } from '@/components/service-card';
 import { EmptyState } from '@/components/empty-state';
 import { formatCurrency } from '@/lib/format';
+import { getCurrentClientId } from '@/lib/current-client';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -11,9 +12,25 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('client_id, full_name')
+    .select('full_name')
     .eq('id', user!.id)
     .single();
+
+  // Get current client from cookie
+  const currentClientId = await getCurrentClientId(user!.id);
+
+  // If no client selected, show empty state
+  if (!currentClientId) {
+    return (
+      <div>
+        <PageHeader
+          title={`Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`}
+          subtitle="Select a client to view your dashboard."
+        />
+        <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
+      </div>
+    );
+  }
 
   const [servicesRes, invoicesRes] = await Promise.all([
     supabase
@@ -25,11 +42,13 @@ export default async function DashboardPage() {
           service_categories(slug, name)
         )
       `)
+      .eq('client_id', currentClientId)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
     supabase
       .from('invoices')
       .select('id, amount_cents, status')
+      .eq('client_id', currentClientId)
       .order('invoice_date', { ascending: false }),
   ]);
 

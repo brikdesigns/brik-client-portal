@@ -5,13 +5,32 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
+import { EmptyState } from '@/components/empty-state';
+import { getCurrentClientId } from '@/lib/current-client';
 
 export default async function PaymentsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  // Get current client from cookie
+  const currentClientId = await getCurrentClientId(user!.id);
+
+  // If no client selected, show empty state
+  if (!currentClientId) {
+    return (
+      <div>
+        <PageHeader title="Payments" subtitle="Select a client to view payments." />
+        <Card variant="elevated" padding="lg">
+          <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
+        </Card>
+      </div>
+    );
+  }
 
   const { data: invoices } = await supabase
     .from('invoices')
     .select('id, amount_cents, currency, status, description, invoice_date, due_date, paid_at, invoice_url')
+    .eq('client_id', currentClientId)
     .order('invoice_date', { ascending: false });
 
   const openInvoices = invoices?.filter((i) => i.status === 'open') ?? [];

@@ -24,7 +24,10 @@ export default async function ClientDetailPage({ params }: Props) {
       id, name, slug, status, contact_name, contact_email, website_url, notes, created_at,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
-      profiles(id, full_name, email, is_active, last_login_at),
+      client_users(
+        id, role,
+        profiles(id, full_name, email, is_active, last_login_at)
+      ),
       client_services(
         id, status, started_at, notes,
         services(id, name, slug, service_type, billing_frequency, base_price_cents,
@@ -41,7 +44,23 @@ export default async function ClientDetailPage({ params }: Props) {
 
   const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
   const invoices = (client.invoices as { id: string; description: string | null; amount_cents: number; status: string; due_date: string | null; invoice_url: string | null }[]) ?? [];
-  const users = (client.profiles as { id: string; full_name: string | null; email: string; is_active: boolean; last_login_at: string | null }[]) ?? [];
+
+  // Extract users from client_users junction table
+  const clientUsers = ((client as unknown as Record<string, unknown>).client_users as {
+    id: string;
+    role: string;
+    profiles: { id: string; full_name: string | null; email: string; is_active: boolean; last_login_at: string | null } | null;
+  }[]) ?? [];
+
+  const users = clientUsers.map((cu) => ({
+    id: cu.profiles?.id || '',
+    full_name: cu.profiles?.full_name || null,
+    email: cu.profiles?.email || '',
+    is_active: cu.profiles?.is_active || false,
+    last_login_at: cu.profiles?.last_login_at || null,
+    role: cu.role,
+  }));
+
   const clientServices = ((client as unknown as Record<string, unknown>).client_services as {
     id: string;
     status: string;
@@ -122,7 +141,7 @@ export default async function ClientDetailPage({ params }: Props) {
         <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
         <CardSummary label="Projects" value={projects.length} />
         <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
-        <CardSummary label="Portal users" value={users.length} />
+        <CardSummary label="Members" value={users.length} />
       </div>
 
       {/* Services */}
@@ -257,13 +276,16 @@ export default async function ClientDetailPage({ params }: Props) {
         />
       </Card>
 
-      {/* Portal users */}
+      {/* Portal users (Members) */}
       <Card variant="elevated" padding="lg">
-        <h2 style={sectionHeadingStyle}>Portal users</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Members</h2>
+          <a href={`/admin/clients/${client.slug}/members/new`} style={linkStyle}>Add member</a>
+        </div>
         <DataTable
           data={users}
           rowKey={(u) => u.id}
-          emptyMessage="No portal users assigned to this client."
+          emptyMessage="No members assigned to this client."
           columns={[
             {
               header: 'Name',
@@ -274,6 +296,14 @@ export default async function ClientDetailPage({ params }: Props) {
               header: 'Email',
               accessor: (u) => u.email,
               style: { color: 'var(--_color---text--secondary)' },
+            },
+            {
+              header: 'Role',
+              accessor: (u) => (
+                <Badge status="neutral">
+                  {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                </Badge>
+              ),
             },
             {
               header: 'Status',

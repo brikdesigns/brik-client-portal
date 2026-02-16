@@ -7,6 +7,7 @@ import { SidebarNavigation, type SidebarNavItem } from '@bds/components/ui/Sideb
 import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { setCurrentClientIdInBrowser } from '@/lib/current-client';
 
 interface AdminSidebarProps {
   userName: string;
@@ -40,6 +41,14 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
     active: isActive(item.href),
   }));
 
+  // Brik Designs client ID (default for "View as Client")
+  const BRIK_DESIGNS_ID = 'b0000000-0000-0000-0000-000000000001';
+
+  function handleViewAsClient() {
+    setCurrentClientIdInBrowser(BRIK_DESIGNS_ID);
+    window.location.href = '/dashboard';
+  }
+
   return (
     <>
       <style jsx global>{`
@@ -67,8 +76,7 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
           <Button
             variant="secondary"
             size="sm"
-            asLink
-            href="/dashboard"
+            onClick={handleViewAsClient}
             style={{ width: '100%' }}
           >
             View as Client
