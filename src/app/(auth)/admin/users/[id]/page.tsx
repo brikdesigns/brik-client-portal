@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
@@ -114,6 +115,13 @@ export default async function UserDetailPage({ params }: Props) {
           },
           { label: 'Last login', value: formatDateTime(user.last_login_at) },
         ]}
+        action={
+          <Link href={`/admin/users/${id}/edit`}>
+            <Button variant="primary" size="md">
+              Edit User
+            </Button>
+          </Link>
+        }
       />
 
       {/* Activity */}
