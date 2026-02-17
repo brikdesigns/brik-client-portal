@@ -11,7 +11,8 @@
     "db:diff": "supabase db diff --use-migra",
     "db:status": "supabase migration list",
     "db:seed": "supabase db reset --db-only",
-    "prepare": "husky"
+    "prepare": "husky",
+    "db:push-api": "node scripts/apply-migration-with-api.mjs"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",

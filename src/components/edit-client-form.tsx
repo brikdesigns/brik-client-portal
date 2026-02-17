@@ -17,11 +17,13 @@ interface EditClientFormProps {
     name: string;
     slug?: string;
     status: string;
+    contact_id: string | null;
     contact_name: string | null;
     contact_email: string | null;
     website_url: string | null;
     notes: string | null;
   };
+  users: Array<{ id: string; full_name: string | null; email: string }>;
 }
 
 const labelStyle = {
@@ -46,11 +48,10 @@ const selectStyle = {
   boxSizing: 'border-box' as const,
 };
 
-export function EditClientForm({ client }: EditClientFormProps) {
+export function EditClientForm({ client, users }: EditClientFormProps) {
   const [name, setName] = useState(client.name);
   const [status, setStatus] = useState(client.status);
-  const [contactName, setContactName] = useState(client.contact_name ?? '');
-  const [contactEmail, setContactEmail] = useState(client.contact_email ?? '');
+  const [contactId, setContactId] = useState(client.contact_id ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(client.website_url ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');
   const [error, setError] = useState('');
@@ -71,8 +72,7 @@ export function EditClientForm({ client }: EditClientFormProps) {
           name,
           slug: newSlug,
           status,
-          contact_name: contactName || null,
-          contact_email: contactEmail || null,
+          contact_id: contactId || null,
           website_url: websiteUrl || null,
           notes: notes || null,
         })
@@ -116,21 +116,20 @@ export function EditClientForm({ client }: EditClientFormProps) {
               <option value="archived">Archived</option>
             </select>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Input
-              label="Contact name"
-              type="text"
-              value={contactName}
-              onChange={(e) => setContactName(e.target.value)}
-              fullWidth
-            />
-            <Input
-              label="Contact email"
-              type="email"
-              value={contactEmail}
-              onChange={(e) => setContactEmail(e.target.value)}
-              fullWidth
-            />
+          <div>
+            <label style={labelStyle}>Contact</label>
+            <select
+              value={contactId}
+              onChange={(e) => setContactId(e.target.value)}
+              style={selectStyle}
+            >
+              <option value="">— No Contact —</option>
+              {users.map((user) => (
+                <option key={user.id} value={user.id}>
+                  {user.full_name || user.email}
+                </option>
+              ))}
+            </select>
           </div>
           <Input
             label="Website"

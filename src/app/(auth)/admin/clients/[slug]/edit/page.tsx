@@ -8,17 +8,23 @@ interface Props {
 
 export default async function EditClientPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: client, error } = await supabase
     .from('clients')
-    .select('id, name, slug, status, contact_name, contact_email, website_url, notes')
+    .select('id, name, slug, status, contact_id, contact_name, contact_email, website_url, notes')
     .eq('slug', slug)
     .single();
 
   if (error || !client) {
     notFound();
   }
+
+  // Fetch all users for the contact dropdown
+  const { data: users } = await supabase
+    .from('profiles')
+    .select('id, full_name, email')
+    .order('full_name');
 
   return (
     <div>
@@ -46,7 +52,7 @@ export default async function EditClientPage({ params }: Props) {
         </p>
       </div>
 
-      <EditClientForm client={client} />
+      <EditClientForm client={client} users={users ?? []} />
     </div>
   );
 }
