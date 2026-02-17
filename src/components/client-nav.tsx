@@ -19,6 +19,7 @@ interface ClientNavProps {
 const navItems = [
   { label: 'Overview', href: '/dashboard' },
   { label: 'Services', href: '/dashboard/services' },
+  { label: 'Projects', href: '/dashboard/projects' },
   { label: 'Payments', href: '/dashboard/payments' },
 ];
 

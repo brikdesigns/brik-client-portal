@@ -17,6 +17,7 @@ const baseNavItems = [
   { label: 'Overview', href: '/admin' },
   { label: 'Clients', href: '/admin/clients' },
   { label: 'Services', href: '/admin/services' },
+  { label: 'Projects', href: '/admin/projects' },
   { label: 'Invoices', href: '/admin/invoices' },
   { label: 'Users', href: '/admin/users' },
 ];
