@@ -218,22 +218,3 @@
   transition: filter 0.3s ease;
 }
 
-/* Dashboard layout responsive padding */
-.dashboard-main {
-  /* Mobile: 24px vertical, 16px horizontal */
-  padding: 24px 16px;
-}
-
-@media (min-width: 768px) {
-  .dashboard-main {
-    /* Tablet and up: remove vertical padding, keep minimal horizontal */
-    padding: 0 24px;
-  }
-}
-
-@media (min-width: 1100px) {
-  .dashboard-main {
-    /* Desktop (at max-width): remove all padding */
-    padding: 0;
-  }
-}

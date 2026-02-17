@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { ClientNav } from '@/components/client-nav';
+import { PortalSidebar } from '@/components/portal-sidebar';
 import { getCurrentClientId, getUserClients } from '@/lib/current-client';
 
 export default async function DashboardLayout({
@@ -20,25 +20,23 @@ export default async function DashboardLayout({
   const currentClientId = await getCurrentClientId(user!.id);
   const clients = await getUserClients(user!.id);
 
-  // Get current client name for display
-  const currentClient = clients.find((c) => c.id === currentClientId);
-  const clientName = currentClient?.name;
-
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--_color---page--secondary, #f2f2f2)' }}>
-      <ClientNav
+    <div style={{ display: 'flex', minHeight: '100vh' }}>
+      <PortalSidebar
+        role="client"
         userName={profile?.full_name || user!.email || 'User'}
-        clientName={clientName}
         isAdmin={profile?.role === 'admin'}
         clients={clients}
         currentClientId={currentClientId}
       />
       <main
         style={{
-          maxWidth: '1100px',
-          margin: '0 auto',
+          flex: 1,
+          backgroundColor: 'var(--_color---page--secondary, #f2f2f2)',
+          padding: '32px',
+          marginLeft: '260px',
+          minHeight: '100vh',
         }}
-        className="dashboard-main"
       >
         {children}
       </main>

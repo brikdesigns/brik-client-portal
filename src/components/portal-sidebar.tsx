@@ -7,13 +7,10 @@ import { SidebarNavigation, type SidebarNavItem } from '@bds/components/ui/Sideb
 import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { ClientSwitcher } from '@/components/client-switcher';
 import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 
-interface AdminSidebarProps {
-  userName: string;
-}
-
-const baseNavItems = [
+const adminNavItems = [
   { label: 'Overview', href: '/admin' },
   { label: 'Clients', href: '/admin/clients' },
   { label: 'Services', href: '/admin/services' },
@@ -22,22 +19,39 @@ const baseNavItems = [
   { label: 'Users', href: '/admin/users' },
 ];
 
-/**
- * Next.js-compatible wrapper for BDS SidebarNavigation
- *
- * Uses Next.js Link for client-side navigation and usePathname for active state.
- * Wraps the BDS SidebarNavigation component with portal-specific content.
- */
-export function AdminSidebar({ userName }: AdminSidebarProps) {
+const clientNavItems = [
+  { label: 'Overview', href: '/dashboard' },
+  { label: 'Services', href: '/dashboard/services' },
+  { label: 'Projects', href: '/dashboard/projects' },
+  { label: 'Payments', href: '/dashboard/payments' },
+];
+
+interface PortalSidebarProps {
+  role: 'admin' | 'client';
+  userName: string;
+  isAdmin?: boolean;
+  clients?: Array<{ id: string; name: string }>;
+  currentClientId?: string | null;
+}
+
+export function PortalSidebar({
+  role,
+  userName,
+  isAdmin = false,
+  clients = [],
+  currentClientId,
+}: PortalSidebarProps) {
   const pathname = usePathname();
 
+  const baseItems = role === 'admin' ? adminNavItems : clientNavItems;
+  const homeHref = role === 'admin' ? '/admin' : '/dashboard';
+
   function isActive(href: string) {
-    if (href === '/admin') return pathname === '/admin';
+    if (href === homeHref) return pathname === homeHref;
     return pathname.startsWith(href);
   }
 
-  // Map navigation items with active state
-  const navItems: SidebarNavItem[] = baseNavItems.map((item) => ({
+  const navItems: SidebarNavItem[] = baseItems.map((item) => ({
     ...item,
     active: isActive(item.href),
   }));
@@ -50,17 +64,35 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
     window.location.href = '/dashboard';
   }
 
+  const footerActions = role === 'admin' ? (
+    <Button
+      variant="secondary"
+      size="sm"
+      onClick={handleViewAsClient}
+      style={{ width: '100%' }}
+    >
+      View as Client
+    </Button>
+  ) : isAdmin ? (
+    <Button
+      variant="secondary"
+      size="sm"
+      asLink
+      href="/admin"
+      style={{ width: '100%' }}
+    >
+      Back to Admin
+    </Button>
+  ) : null;
+
   return (
     <>
       <style jsx global>{`
-        /* Override BDS sidebar nav links to work with Next.js */
-        aside nav a {
-          cursor: pointer;
-        }
+        aside nav a { cursor: pointer; }
       `}</style>
       <SidebarNavigation
         logo={
-          <Link href="/admin">
+          <Link href={homeHref}>
             <Image
               src="/images/brik-logo.svg"
               alt="Brik Designs"
@@ -74,14 +106,16 @@ export function AdminSidebar({ userName }: AdminSidebarProps) {
         }
         navItems={navItems}
         footerActions={
-          <Button
-            variant="secondary"
-            size="sm"
-            onClick={handleViewAsClient}
-            style={{ width: '100%' }}
-          >
-            View as Client
-          </Button>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {role === 'client' && clients.length > 1 && (
+              <ClientSwitcher
+                clients={clients}
+                currentClientId={currentClientId || null}
+                isAdmin={isAdmin}
+              />
+            )}
+            {footerActions}
+          </div>
         }
         userSection={
           <>

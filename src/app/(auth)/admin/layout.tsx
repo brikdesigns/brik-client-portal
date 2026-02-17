@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { AdminSidebar } from '@/components/admin-sidebar';
+import { PortalSidebar } from '@/components/portal-sidebar';
 
 export default async function AdminLayout({
   children,
@@ -27,8 +27,10 @@ export default async function AdminLayout({
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <AdminSidebar
+      <PortalSidebar
+        role="admin"
         userName={profile?.full_name || user.email || 'Admin'}
+        isAdmin
       />
       <main
         style={{
