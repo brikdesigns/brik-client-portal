@@ -8,7 +8,7 @@ interface Props {
 
 export default async function EditServicePage({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: service, error } = await supabase
     .from('services')

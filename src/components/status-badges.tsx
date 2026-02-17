@@ -4,7 +4,6 @@ import { Tag } from '@bds/components/ui/Tag/Tag';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCircleCheck,
-  faCircle,
   faRotate,
   faTriangleExclamation,
   faCircleXmark,

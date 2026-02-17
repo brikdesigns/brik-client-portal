@@ -6,7 +6,7 @@ import { DataTable } from '@/components/data-table';
 import { ClientStatusBadge } from '@/components/status-badges';
 
 export default async function AdminClientsPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: clients } = await supabase
     .from('clients')

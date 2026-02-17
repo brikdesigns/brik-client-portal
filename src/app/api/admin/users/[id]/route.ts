@@ -37,6 +37,7 @@ export async function PATCH(
         email: body.email,
         role: body.role,
         is_active: body.is_active,
+        client_id: body.client_id || null,
         updated_at: new Date().toISOString(),
       })
       .eq('id', id)

@@ -12,7 +12,7 @@ interface SyncResult {
 
 export async function POST(request: Request) {
   // ── Admin auth check (same pattern as invite/route.ts) ──
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

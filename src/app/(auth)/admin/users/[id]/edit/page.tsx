@@ -11,15 +11,22 @@ export default async function EditUserPage({ params }: Props) {
   const { id } = await params;
   const supabase = createClient();
 
+  // Fetch user data
   const { data: user, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, is_active')
+    .select('id, full_name, email, role, is_active, client_id')
     .eq('id', id)
     .single();
 
   if (error || !user) {
     notFound();
   }
+
+  // Fetch all clients for the dropdown
+  const { data: clients } = await supabase
+    .from('clients')
+    .select('id, name')
+    .order('name');
 
   return (
     <div>
@@ -37,7 +44,7 @@ export default async function EditUserPage({ params }: Props) {
         subtitle={user.email}
       />
 
-      <EditUserForm user={user} />
+      <EditUserForm user={user} clients={clients ?? []} />
     </div>
   );
 }

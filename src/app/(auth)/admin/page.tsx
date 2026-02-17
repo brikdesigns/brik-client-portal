@@ -6,7 +6,7 @@ import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
 
 export default async function AdminOverviewPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const [clientsRes, projectsRes, invoicesRes, usersRes] = await Promise.all([
     supabase.from('clients').select('id', { count: 'exact', head: true }),

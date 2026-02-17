@@ -23,13 +23,6 @@ interface SyncResponse {
 
 type SyncState = 'idle' | 'previewing' | 'previewed' | 'syncing' | 'complete' | 'error';
 
-const linkStyle = {
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '13px',
-  color: 'var(--_color---system--link, #0034ea)',
-  textDecoration: 'none' as const,
-};
-
 const sectionHeadingStyle = {
   fontFamily: 'var(--_typography---font-family--heading)',
   fontSize: 'var(--_typography---heading--small, 18px)',

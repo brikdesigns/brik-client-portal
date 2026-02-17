@@ -13,10 +13,12 @@ interface EditUserFormProps {
     email: string;
     role: string;
     is_active: boolean;
+    client_id: string | null;
   };
+  clients: Array<{ id: string; name: string }>;
 }
 
-export function EditUserForm({ user }: EditUserFormProps) {
+export function EditUserForm({ user, clients }: EditUserFormProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,6 +28,7 @@ export function EditUserForm({ user }: EditUserFormProps) {
     email: user.email,
     role: user.role,
     is_active: user.is_active,
+    client_id: user.client_id || '',
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -140,6 +143,26 @@ export function EditUserForm({ user }: EditUserFormProps) {
             >
               <option value="active">Active</option>
               <option value="disabled">Disabled</option>
+            </select>
+          </div>
+
+          {/* Client */}
+          <div>
+            <label htmlFor="client_id" style={labelStyle}>
+              Client
+            </label>
+            <select
+              id="client_id"
+              value={formData.client_id}
+              onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+              style={selectStyle}
+            >
+              <option value="">— No Client —</option>
+              {clients.map((client) => (
+                <option key={client.id} value={client.id}>
+                  {client.name}
+                </option>
+              ))}
             </select>
           </div>
 

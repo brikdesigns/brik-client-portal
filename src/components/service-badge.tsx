@@ -113,6 +113,7 @@ export function ServiceBadge({ category, serviceName, size = 28 }: ServiceBadgeP
           overflow: 'hidden',
         }}
       >
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={iconPath}
           alt={serviceName}

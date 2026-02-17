@@ -5,12 +5,12 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { Counter } from '@bds/components/ui/Counter/Counter';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
-import { ServiceBadge, categoryConfig } from '@/components/service-badge';
+import { ServiceBadge } from '@/components/service-badge';
 import { ServiceTypeTag, ClientStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 
 export default async function AdminServicesPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: services } = await supabase
     .from('services')

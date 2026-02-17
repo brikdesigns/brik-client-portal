@@ -5,7 +5,7 @@ import { ProjectStatusBadge } from '@/components/status-badges';
 import { EmptyState } from '@/components/empty-state';
 
 export default async function ProjectsPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: projects } = await supabase
     .from('projects')

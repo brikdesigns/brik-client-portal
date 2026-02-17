@@ -4,7 +4,7 @@ import { InviteUserForm } from '@/components/invite-user-form';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 
 export default async function InviteUserPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: clients } = await supabase
     .from('clients')

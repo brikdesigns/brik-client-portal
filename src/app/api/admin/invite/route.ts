@@ -5,7 +5,7 @@ import { sendInviteEmail, logEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
   // Verify the requesting user is an admin
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

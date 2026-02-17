@@ -9,7 +9,7 @@ import { EmptyState } from '@/components/empty-state';
 import { getCurrentClientId } from '@/lib/current-client';
 
 export default async function PaymentsPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   // Get current client from cookie

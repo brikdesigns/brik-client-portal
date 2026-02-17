@@ -9,7 +9,7 @@ import { InvoiceStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 
 export default async function AdminInvoicesPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: invoices } = await supabase
     .from('invoices')

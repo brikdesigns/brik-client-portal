@@ -13,7 +13,7 @@ interface Props {
 
 export default async function UserDetailPage({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: user, error } = await supabase
     .from('profiles')
@@ -115,10 +115,10 @@ export default async function UserDetailPage({ params }: Props) {
           },
           { label: 'Last login', value: formatDateTime(user.last_login_at) },
         ]}
-        action={
+        actions={
           <Link href={`/admin/users/${id}/edit`}>
-            <Button variant="primary" size="md">
-              Edit User
+            <Button variant="secondary" size="md">
+              Edit
             </Button>
           </Link>
         }

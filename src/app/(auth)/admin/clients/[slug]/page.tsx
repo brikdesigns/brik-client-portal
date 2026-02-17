@@ -16,7 +16,7 @@ interface Props {
 
 export default async function ClientDetailPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: client, error } = await supabase
     .from('clients')
@@ -24,10 +24,6 @@ export default async function ClientDetailPage({ params }: Props) {
       id, name, slug, status, contact_name, contact_email, website_url, notes, created_at,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
-      client_users(
-        id, role,
-        profiles(id, full_name, email, is_active, last_login_at)
-      ),
       client_services(
         id, status, started_at, notes,
         services(id, name, slug, service_type, billing_frequency, base_price_cents,
@@ -42,24 +38,34 @@ export default async function ClientDetailPage({ params }: Props) {
     notFound();
   }
 
+  // Fetch client_users separately since it references auth.users, not profiles
+  const { data: clientUsers } = await supabase
+    .from('client_users')
+    .select('id, user_id, role')
+    .eq('client_id', client.id);
+
+  // Fetch profiles for these users
+  const userIds = clientUsers?.map(cu => cu.user_id) || [];
+  const { data: userProfiles } = await supabase
+    .from('profiles')
+    .select('id, full_name, email, is_active, last_login_at')
+    .in('id', userIds);
+
   const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
   const invoices = (client.invoices as { id: string; description: string | null; amount_cents: number; status: string; due_date: string | null; invoice_url: string | null }[]) ?? [];
 
-  // Extract users from client_users junction table
-  const clientUsers = ((client as unknown as Record<string, unknown>).client_users as {
-    id: string;
-    role: string;
-    profiles: { id: string; full_name: string | null; email: string; is_active: boolean; last_login_at: string | null } | null;
-  }[]) ?? [];
-
-  const users = clientUsers.map((cu) => ({
-    id: cu.profiles?.id || '',
-    full_name: cu.profiles?.full_name || null,
-    email: cu.profiles?.email || '',
-    is_active: cu.profiles?.is_active || false,
-    last_login_at: cu.profiles?.last_login_at || null,
-    role: cu.role,
-  }));
+  // Map client_users with profiles
+  const users = (clientUsers || []).map((cu) => {
+    const profile = userProfiles?.find(p => p.id === cu.user_id);
+    return {
+      id: profile?.id || '',
+      full_name: profile?.full_name || null,
+      email: profile?.email || '',
+      is_active: profile?.is_active || false,
+      last_login_at: profile?.last_login_at || null,
+      role: cu.role,
+    };
+  });
 
   const clientServices = ((client as unknown as Record<string, unknown>).client_services as {
     id: string;
@@ -141,7 +147,7 @@ export default async function ClientDetailPage({ params }: Props) {
         <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
         <CardSummary label="Projects" value={projects.length} />
         <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
-        <CardSummary label="Members" value={users.length} />
+        <CardSummary label="Users" value={users.length} />
       </div>
 
       {/* Services */}
@@ -276,11 +282,11 @@ export default async function ClientDetailPage({ params }: Props) {
         />
       </Card>
 
-      {/* Portal users (Members) */}
+      {/* Portal users */}
       <Card variant="elevated" padding="lg">
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Members</h2>
-          <a href={`/admin/clients/${client.slug}/members/new`} style={linkStyle}>Add member</a>
+          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Users</h2>
+          <a href={`/admin/clients/${client.slug}/members/new`} style={linkStyle}>Add user</a>
         </div>
         <DataTable
           data={users}

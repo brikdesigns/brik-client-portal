@@ -7,7 +7,7 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 
 export default async function AdminUsersPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data: users } = await supabase
     .from('profiles')
@@ -92,8 +92,8 @@ export default async function AdminUsersPage() {
             {
               header: '',
               accessor: (u) => (
-                <Button variant="secondary" size="sm" asLink href={`/admin/users/${u.id}`}>
-                  View Details
+                <Button variant="secondary" size="sm" asLink href={`/admin/users/${u.id}/edit`}>
+                  Edit
                 </Button>
               ),
               style: { textAlign: 'right' },

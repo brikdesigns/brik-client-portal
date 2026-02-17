@@ -22,7 +22,7 @@ const navItems = [
   { label: 'Payments', href: '/dashboard/payments' },
 ];
 
-export function ClientNav({ userName, clientName, isAdmin, clients = [], currentClientId }: ClientNavProps) {
+export function ClientNav({ userName, isAdmin, clients = [], currentClientId }: ClientNavProps) {
   const pathname = usePathname();
 
   function isActive(href: string) {

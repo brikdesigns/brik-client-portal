@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
-import { ServiceCard } from '@/components/service-card';
 import { ServiceCategoryLabel } from '@/components/service-badge';
 import { ServiceStatusBadge } from '@/components/status-badges';
 import { EmptyState } from '@/components/empty-state';
@@ -10,7 +9,7 @@ import { formatCurrency } from '@/lib/format';
 import { getCurrentClientId } from '@/lib/current-client';
 
 export default async function ServicesPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   // Get current client from cookie

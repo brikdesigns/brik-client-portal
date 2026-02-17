@@ -7,7 +7,7 @@ import { formatCurrency } from '@/lib/format';
 import { getCurrentClientId } from '@/lib/current-client';
 
 export default async function DashboardPage() {
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: profile } = await supabase
