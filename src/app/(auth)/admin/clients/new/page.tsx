@@ -4,7 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 
 function toSlug(text: string): string {
@@ -82,7 +82,7 @@ export default function NewClientPage() {
       <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Input
+            <TextInput
               label="Company name"
               type="text"
               placeholder="Acme Corp"
@@ -92,7 +92,7 @@ export default function NewClientPage() {
               fullWidth
             />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <Input
+              <TextInput
                 label="Contact name"
                 type="text"
                 placeholder="Jane Smith"
@@ -100,7 +100,7 @@ export default function NewClientPage() {
                 onChange={(e) => setContactName(e.target.value)}
                 fullWidth
               />
-              <Input
+              <TextInput
                 label="Contact email"
                 type="email"
                 placeholder="jane@acme.com"
@@ -109,7 +109,7 @@ export default function NewClientPage() {
                 fullWidth
               />
             </div>
-            <Input
+            <TextInput
               label="Website"
               type="url"
               placeholder="https://acme.com"

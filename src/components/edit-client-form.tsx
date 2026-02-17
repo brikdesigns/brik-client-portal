@@ -4,7 +4,8 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 
 function toSlug(text: string): string {
@@ -26,26 +27,27 @@ interface EditClientFormProps {
   users: Array<{ id: string; full_name: string | null; email: string }>;
 }
 
-const labelStyle = {
-  display: 'block' as const,
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontSize: 'var(--_typography---label--sm, 12px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--secondary)',
-  marginBottom: '6px',
-};
-
-const selectStyle = {
+const textareaStyle = {
   width: '100%',
   fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '14px',
-  padding: '8px 12px',
-  borderRadius: 'var(--_border-radius---sm, 4px)',
-  border: '1px solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input, white)',
+  fontSize: 'var(--_typography---body--sm)',
+  lineHeight: 'var(--font-line-height--150)',
+  padding: 'var(--_space---input)',
+  borderRadius: 'var(--_border-radius---input)',
+  border: 'var(--_border-width---sm) solid var(--_color---border--input)',
+  backgroundColor: 'var(--_color---background--input)',
   color: 'var(--_color---text--primary)',
-  height: '40px',
+  resize: 'vertical' as const,
   boxSizing: 'border-box' as const,
+};
+
+const textareaLabelStyle = {
+  display: 'block' as const,
+  marginBottom: 'var(--_space---sm, 8px)',
+  fontFamily: 'var(--_typography---font-family--label)',
+  fontWeight: 'var(--font-weight--semi-bold)' as string,
+  fontSize: 'var(--_typography---label--md-base)',
+  color: 'var(--_color---text--primary)',
 };
 
 export function EditClientForm({ client, users }: EditClientFormProps) {
@@ -96,7 +98,7 @@ export function EditClientForm({ client, users }: EditClientFormProps) {
     <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Input
+          <TextInput
             label="Company name"
             type="text"
             value={name}
@@ -104,58 +106,46 @@ export function EditClientForm({ client, users }: EditClientFormProps) {
             required
             fullWidth
           />
-          <div>
-            <label style={labelStyle}>Status</label>
-            <select
-              value={status}
-              onChange={(e) => setStatus(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="active">Active</option>
-              <option value="inactive">Inactive</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-          <div>
-            <label style={labelStyle}>Contact</label>
-            <select
-              value={contactId}
-              onChange={(e) => setContactId(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="">— No Contact —</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.full_name || user.email}
-                </option>
-              ))}
-            </select>
-          </div>
-          <Input
+
+          <Select
+            label="Status"
+            value={status}
+            onChange={(e) => setStatus(e.target.value)}
+            options={[
+              { label: 'Active', value: 'active' },
+              { label: 'Inactive', value: 'inactive' },
+              { label: 'Archived', value: 'archived' },
+            ]}
+            fullWidth
+          />
+
+          <Select
+            label="Contact"
+            value={contactId}
+            onChange={(e) => setContactId(e.target.value)}
+            placeholder="— No Contact —"
+            options={users.map((user) => ({
+              label: user.full_name || user.email,
+              value: user.id,
+            }))}
+            fullWidth
+          />
+
+          <TextInput
             label="Website"
             type="url"
             value={websiteUrl}
             onChange={(e) => setWebsiteUrl(e.target.value)}
             fullWidth
           />
+
           <div>
-            <label style={labelStyle}>Notes</label>
+            <label style={textareaLabelStyle}>Notes</label>
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={3}
-              style={{
-                width: '100%',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '14px',
-                padding: '8px 12px',
-                borderRadius: 'var(--_border-radius---sm, 4px)',
-                border: '1px solid var(--_color---border--input)',
-                backgroundColor: 'var(--_color---background--input, white)',
-                color: 'var(--_color---text--primary)',
-                resize: 'vertical',
-                boxSizing: 'border-box',
-              }}
+              style={textareaStyle}
             />
           </div>
         </div>
@@ -165,7 +155,7 @@ export function EditClientForm({ client, users }: EditClientFormProps) {
             style={{
               color: 'var(--system--red, #eb5757)',
               fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
+              fontSize: 'var(--_typography---body--sm)',
               margin: '16px 0 0',
             }}
           >

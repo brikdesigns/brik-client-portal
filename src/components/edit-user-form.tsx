@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card } from '@bds/components/ui/Card/Card';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 
 interface EditUserFormProps {
@@ -57,116 +58,68 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
     }
   }
 
-  const labelStyle = {
-    fontFamily: 'var(--_typography---font-family--label)',
-    fontSize: 'var(--_typography---body--sm, 14px)',
-    fontWeight: 500,
-    color: 'var(--_color---text--primary)',
-    marginBottom: '8px',
-    display: 'block',
-  };
-
-  const selectStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: 'var(--_typography---body--md, 16px)',
-    padding: '12px 16px',
-    border: '1px solid var(--_color---border--default)',
-    borderRadius: 'var(--_layout---border-radius--md, 8px)',
-    backgroundColor: 'var(--_color---surface--raised)',
-    color: 'var(--_color---text--primary)',
-    width: '100%',
-    cursor: 'pointer',
-  };
-
   return (
     <form onSubmit={handleSubmit}>
       <Card variant="elevated" padding="lg">
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Full Name */}
-          <div>
-            <label htmlFor="full_name" style={labelStyle}>
-              Full Name
-            </label>
-            <Input
-              id="full_name"
-              type="text"
-              value={formData.full_name}
-              onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-              placeholder="Enter full name"
-              required
-            />
-          </div>
+          <TextInput
+            label="Full Name"
+            id="full_name"
+            type="text"
+            value={formData.full_name}
+            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+            placeholder="Enter full name"
+            required
+            fullWidth
+          />
 
-          {/* Email */}
-          <div>
-            <label htmlFor="email" style={labelStyle}>
-              Email
-            </label>
-            <Input
-              id="email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="user@example.com"
-              required
-            />
-          </div>
+          <TextInput
+            label="Email"
+            id="email"
+            type="email"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            placeholder="user@example.com"
+            required
+            fullWidth
+          />
 
-          {/* Role */}
-          <div>
-            <label htmlFor="role" style={labelStyle}>
-              Role
-            </label>
-            <select
-              id="role"
-              value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-              style={selectStyle}
-            >
-              <option value="admin">Admin</option>
-              <option value="client">Client</option>
-            </select>
-          </div>
+          <Select
+            label="Role"
+            value={formData.role}
+            onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            options={[
+              { label: 'Admin', value: 'admin' },
+              { label: 'Client', value: 'client' },
+            ]}
+            fullWidth
+          />
 
-          {/* Status */}
-          <div>
-            <label htmlFor="is_active" style={labelStyle}>
-              Status
-            </label>
-            <select
-              id="is_active"
-              value={formData.is_active ? 'active' : 'disabled'}
-              onChange={(e) =>
-                setFormData({ ...formData, is_active: e.target.value === 'active' })
-              }
-              style={selectStyle}
-            >
-              <option value="active">Active</option>
-              <option value="disabled">Disabled</option>
-            </select>
-          </div>
+          <Select
+            label="Status"
+            value={formData.is_active ? 'active' : 'disabled'}
+            onChange={(e) =>
+              setFormData({ ...formData, is_active: e.target.value === 'active' })
+            }
+            options={[
+              { label: 'Active', value: 'active' },
+              { label: 'Disabled', value: 'disabled' },
+            ]}
+            fullWidth
+          />
 
-          {/* Client */}
-          <div>
-            <label htmlFor="client_id" style={labelStyle}>
-              Client
-            </label>
-            <select
-              id="client_id"
-              value={formData.client_id}
-              onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
-              style={selectStyle}
-            >
-              <option value="">— No Client —</option>
-              {clients.map((client) => (
-                <option key={client.id} value={client.id}>
-                  {client.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Client"
+            value={formData.client_id}
+            onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+            placeholder="— No Client —"
+            options={clients.map((client) => ({
+              label: client.name,
+              value: client.id,
+            }))}
+            fullWidth
+          />
 
-          {/* Error Message */}
           {error && (
             <div
               style={{
@@ -182,7 +135,6 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
             </div>
           )}
 
-          {/* Actions */}
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
             <Button
               type="button"

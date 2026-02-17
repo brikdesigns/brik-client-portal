@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 
 export function LoginForm() {
@@ -69,7 +69,7 @@ export function LoginForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div style={{ marginBottom: '16px' }}>
-        <Input
+        <TextInput
           label="Email"
           type="email"
           placeholder="you@example.com"
@@ -81,7 +81,7 @@ export function LoginForm() {
       </div>
 
       <div style={{ marginBottom: '24px' }}>
-        <Input
+        <TextInput
           label="Password"
           type="password"
           placeholder="Enter your password"

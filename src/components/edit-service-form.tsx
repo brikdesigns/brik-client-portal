@@ -4,29 +4,31 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 
-const labelStyle = {
-  display: 'block' as const,
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontSize: 'var(--_typography---label--sm, 12px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--secondary)',
-  marginBottom: '6px',
-};
-
-const selectStyle = {
+const textareaStyle = {
   width: '100%',
   fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '14px',
-  padding: '8px 12px',
-  borderRadius: 'var(--_border-radius---sm, 4px)',
-  border: '1px solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input, white)',
+  fontSize: 'var(--_typography---body--sm)',
+  lineHeight: 'var(--font-line-height--150)',
+  padding: 'var(--_space---input)',
+  borderRadius: 'var(--_border-radius---input)',
+  border: 'var(--_border-width---sm) solid var(--_color---border--input)',
+  backgroundColor: 'var(--_color---background--input)',
   color: 'var(--_color---text--primary)',
-  height: '40px',
+  resize: 'vertical' as const,
   boxSizing: 'border-box' as const,
+};
+
+const textareaLabelStyle = {
+  display: 'block' as const,
+  marginBottom: 'var(--_space---sm, 8px)',
+  fontFamily: 'var(--_typography---font-family--label)',
+  fontWeight: 'var(--font-weight--semi-bold)' as string,
+  fontSize: 'var(--_typography---label--md-base)',
+  color: 'var(--_color---text--primary)',
 };
 
 interface Category {
@@ -128,7 +130,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
     <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Input
+          <TextInput
             label="Service name"
             type="text"
             value={name}
@@ -137,66 +139,51 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
             fullWidth
           />
           <div>
-            <label style={labelStyle}>Description</label>
+            <label style={textareaLabelStyle}>Description</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              style={{
-                width: '100%',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '14px',
-                padding: '8px 12px',
-                borderRadius: 'var(--_border-radius---sm, 4px)',
-                border: '1px solid var(--_color---border--input)',
-                backgroundColor: 'var(--_color---background--input, white)',
-                color: 'var(--_color---text--primary)',
-                resize: 'vertical',
-                boxSizing: 'border-box',
-              }}
+              style={textareaStyle}
             />
           </div>
-          <div>
-            <label style={labelStyle}>Category</label>
-            <select
-              value={categoryId}
-              onChange={(e) => setCategoryId(e.target.value)}
-              style={selectStyle}
-            >
-              <option value="">No category</option>
-              {categories.map((cat) => (
-                <option key={cat.id} value={cat.id}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+
+          <Select
+            label="Category"
+            value={categoryId}
+            onChange={(e) => setCategoryId(e.target.value)}
+            placeholder="No category"
+            options={categories.map((cat) => ({
+              label: cat.name,
+              value: cat.id,
+            }))}
+            fullWidth
+          />
+
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <div>
-              <label style={labelStyle}>Service type</label>
-              <select
-                value={serviceType}
-                onChange={(e) => setServiceType(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="one_time">One-time</option>
-                <option value="recurring">Recurring</option>
-                <option value="add_on">Add-on</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Billing frequency</label>
-              <select
-                value={billingFrequency}
-                onChange={(e) => setBillingFrequency(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="one_time">One-time</option>
-                <option value="monthly">Monthly</option>
-              </select>
-            </div>
+            <Select
+              label="Service type"
+              value={serviceType}
+              onChange={(e) => setServiceType(e.target.value)}
+              options={[
+                { label: 'One-time', value: 'one_time' },
+                { label: 'Recurring', value: 'recurring' },
+                { label: 'Add-on', value: 'add_on' },
+              ]}
+              fullWidth
+            />
+            <Select
+              label="Billing frequency"
+              value={billingFrequency}
+              onChange={(e) => setBillingFrequency(e.target.value)}
+              options={[
+                { label: 'One-time', value: 'one_time' },
+                { label: 'Monthly', value: 'monthly' },
+              ]}
+              fullWidth
+            />
           </div>
-          <Input
+          <TextInput
             label="Base price (USD)"
             type="number"
             value={basePrice}
@@ -204,14 +191,14 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
             fullWidth
           />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Input
+            <TextInput
               label="Stripe product ID"
               type="text"
               value={stripeProductId}
               onChange={(e) => setStripeProductId(e.target.value)}
               fullWidth
             />
-            <Input
+            <TextInput
               label="Stripe price ID"
               type="text"
               value={stripePriceId}

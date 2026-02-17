@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 
 export function ForgotPasswordForm() {
@@ -67,7 +67,7 @@ export function ForgotPasswordForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div style={{ marginBottom: '24px' }}>
-        <Input
+        <TextInput
           label="Email"
           type="email"
           placeholder="you@example.com"

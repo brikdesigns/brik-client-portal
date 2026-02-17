@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 
 export function ResetPasswordForm() {
@@ -52,7 +52,7 @@ export function ResetPasswordForm() {
   return (
     <form onSubmit={handleSubmit}>
       <div style={{ marginBottom: '16px' }}>
-        <Input
+        <TextInput
           label="New password"
           type="password"
           placeholder="At least 8 characters"
@@ -63,7 +63,7 @@ export function ResetPasswordForm() {
         />
       </div>
       <div style={{ marginBottom: '24px' }}>
-        <Input
+        <TextInput
           label="Confirm password"
           type="password"
           placeholder="Re-enter your password"

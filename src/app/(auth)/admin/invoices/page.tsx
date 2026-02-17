@@ -2,7 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
-import { Link } from '@bds/components/ui/Link/Link';
+import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge } from '@/components/status-badges';
@@ -75,9 +75,9 @@ export default async function AdminInvoicesPage() {
                 accessor: (inv) => {
                   const client = inv.clients as unknown as { id: string; name: string; slug: string } | null;
                   return client ? (
-                    <Link href={`/admin/clients/${client.slug}`} size="small">
+                    <TextLink href={`/admin/clients/${client.slug}`} size="small">
                       {client.name}
-                    </Link>
+                    </TextLink>
                   ) : '—';
                 },
                 style: { fontWeight: 500 },
@@ -148,9 +148,9 @@ export default async function AdminInvoicesPage() {
               accessor: (inv) => {
                 const client = inv.clients as unknown as { id: string; name: string; slug: string } | null;
                 return client ? (
-                  <Link href={`/admin/clients/${client.slug}`} size="small">
+                  <TextLink href={`/admin/clients/${client.slug}`} size="small">
                     {client.name}
-                  </Link>
+                  </TextLink>
                 ) : '—';
               },
               style: { fontWeight: 500 },

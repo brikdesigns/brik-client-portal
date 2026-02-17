@@ -4,30 +4,9 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
-
-const labelStyle = {
-  display: 'block' as const,
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontSize: 'var(--_typography---label--sm, 12px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--secondary)',
-  marginBottom: '6px',
-};
-
-const selectStyle = {
-  width: '100%',
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '14px',
-  padding: '8px 12px',
-  borderRadius: 'var(--_border-radius---sm, 4px)',
-  border: '1px solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input, white)',
-  color: 'var(--_color---text--primary)',
-  height: '40px',
-  boxSizing: 'border-box' as const,
-};
 
 interface EditInvoiceFormProps {
   invoice: {
@@ -80,7 +59,6 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
         invoice_url: invoiceUrl || null,
       };
 
-      // Auto-set paid_at when marking as paid
       if (status === 'paid' && !invoice.paid_at) {
         updateData.paid_at = new Date().toISOString();
       } else if (status !== 'paid') {
@@ -126,7 +104,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
 
       <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-          <Input
+          <TextInput
             label="Description"
             type="text"
             placeholder="Website design — Phase 1"
@@ -135,7 +113,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
             fullWidth
           />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Input
+            <TextInput
               label="Amount (USD)"
               type="number"
               placeholder="2500.00"
@@ -144,30 +122,29 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
               required
               fullWidth
             />
-            <div>
-              <label style={labelStyle}>Status</label>
-              <select
-                value={status}
-                onChange={(e) => setStatus(e.target.value)}
-                style={selectStyle}
-              >
-                <option value="draft">Draft</option>
-                <option value="open">Open</option>
-                <option value="paid">Paid</option>
-                <option value="void">Void</option>
-                <option value="uncollectible">Uncollectible</option>
-              </select>
-            </div>
+            <Select
+              label="Status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              options={[
+                { label: 'Draft', value: 'draft' },
+                { label: 'Open', value: 'open' },
+                { label: 'Paid', value: 'paid' },
+                { label: 'Void', value: 'void' },
+                { label: 'Uncollectible', value: 'uncollectible' },
+              ]}
+              fullWidth
+            />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-            <Input
+            <TextInput
               label="Invoice date"
               type="date"
               value={invoiceDate}
               onChange={(e) => setInvoiceDate(e.target.value)}
               fullWidth
             />
-            <Input
+            <TextInput
               label="Due date"
               type="date"
               value={dueDate}
@@ -175,7 +152,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
               fullWidth
             />
           </div>
-          <Input
+          <TextInput
             label="Invoice URL (Stripe or PDF link)"
             type="url"
             placeholder="https://invoice.stripe.com/..."

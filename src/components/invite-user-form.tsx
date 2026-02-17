@@ -2,32 +2,13 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 
 interface InviteUserFormProps {
   clients: { id: string; name: string }[];
 }
-
-const selectStyle = {
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '14px',
-  padding: '8px 12px',
-  borderRadius: 'var(--_border-radius---sm, 4px)',
-  border: '1px solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input, white)',
-  color: 'var(--_color---text--primary)',
-  height: '40px',
-};
-
-const labelStyle = {
-  display: 'block' as const,
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontSize: 'var(--_typography---label--sm, 12px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--secondary)',
-  marginBottom: '6px',
-};
 
 export function InviteUserForm({ clients }: InviteUserFormProps) {
   const [email, setEmail] = useState('');
@@ -93,7 +74,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           marginBottom: '16px',
         }}
       >
-        <Input
+        <TextInput
           label="Email"
           type="email"
           placeholder="client@company.com"
@@ -102,7 +83,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           required
           fullWidth
         />
-        <Input
+        <TextInput
           label="Full name"
           type="text"
           placeholder="Jane Smith"
@@ -120,37 +101,31 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           alignItems: 'flex-end',
         }}
       >
-        <div>
-          <label style={labelStyle}>Role</label>
-          <select
-            value={role}
-            onChange={(e) => {
-              setRole(e.target.value as 'client' | 'admin');
-              if (e.target.value === 'admin') setClientId('');
-            }}
-            style={selectStyle}
-          >
-            <option value="client">Client</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
+        <Select
+          label="Role"
+          value={role}
+          onChange={(e) => {
+            setRole(e.target.value as 'client' | 'admin');
+            if (e.target.value === 'admin') setClientId('');
+          }}
+          options={[
+            { label: 'Client', value: 'client' },
+            { label: 'Admin', value: 'admin' },
+          ]}
+        />
 
         {role === 'client' && (
-          <div>
-            <label style={labelStyle}>Assign to client</label>
-            <select
-              value={clientId}
-              onChange={(e) => setClientId(e.target.value)}
-              style={{ ...selectStyle, width: '100%' }}
-            >
-              <option value="">Select a client...</option>
-              {clients.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <Select
+            label="Assign to client"
+            value={clientId}
+            onChange={(e) => setClientId(e.target.value)}
+            placeholder="Select a client..."
+            options={clients.map((c) => ({
+              label: c.name,
+              value: c.id,
+            }))}
+            fullWidth
+          />
         )}
 
         <Button type="submit" variant="primary" size="md" disabled={loading}>

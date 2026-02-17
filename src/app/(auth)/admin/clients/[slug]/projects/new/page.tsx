@@ -4,7 +4,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
-import { Input } from '@bds/components/ui/Input/Input';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 
 export default function NewProjectPage() {
@@ -89,7 +89,7 @@ export default function NewProjectPage() {
       <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            <Input
+            <TextInput
               label="Project name"
               type="text"
               placeholder="Website Redesign"
@@ -131,14 +131,14 @@ export default function NewProjectPage() {
               />
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <Input
+              <TextInput
                 label="Start date"
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
                 fullWidth
               />
-              <Input
+              <TextInput
                 label="End date"
                 type="date"
                 value={endDate}

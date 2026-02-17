@@ -4,29 +4,31 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { formatCurrency } from '@/lib/format';
 
-const labelStyle = {
-  display: 'block' as const,
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontSize: 'var(--_typography---label--sm, 12px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--secondary)',
-  marginBottom: '6px',
-};
-
-const selectStyle = {
+const textareaStyle = {
   width: '100%',
   fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '14px',
-  padding: '8px 12px',
-  borderRadius: 'var(--_border-radius---sm, 4px)',
-  border: '1px solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input, white)',
+  fontSize: 'var(--_typography---body--sm)',
+  lineHeight: 'var(--font-line-height--150)',
+  padding: 'var(--_space---input)',
+  borderRadius: 'var(--_border-radius---input)',
+  border: 'var(--_border-width---sm) solid var(--_color---border--input)',
+  backgroundColor: 'var(--_color---background--input)',
   color: 'var(--_color---text--primary)',
-  height: '40px',
+  resize: 'vertical' as const,
   boxSizing: 'border-box' as const,
+};
+
+const textareaLabelStyle = {
+  display: 'block' as const,
+  marginBottom: 'var(--_space---sm, 8px)',
+  fontFamily: 'var(--_typography---font-family--label)',
+  fontWeight: 'var(--font-weight--semi-bold)' as string,
+  fontSize: 'var(--_typography---label--md-base)',
+  color: 'var(--_color---text--primary)',
 };
 
 interface Service {
@@ -53,7 +55,6 @@ export default function AssignServicePage() {
     async function loadServices() {
       const supabase = createClient();
 
-      // Resolve client ID from slug
       const { data: clientData } = await supabase
         .from('clients')
         .select('id')
@@ -62,7 +63,6 @@ export default function AssignServicePage() {
       if (!clientData) return;
       setClientId(clientData.id);
 
-      // Get services not already assigned to this client
       const { data: assigned } = await supabase
         .from('client_services')
         .select('service_id')
@@ -147,24 +147,18 @@ export default function AssignServicePage() {
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={labelStyle}>Service</label>
-              <select
+              <Select
+                label="Service"
                 value={serviceId}
                 onChange={(e) => setServiceId(e.target.value)}
-                style={selectStyle}
+                placeholder="Select a service..."
+                options={services.map((s) => ({
+                  label: `${s.name}${s.service_categories ? ` (${s.service_categories.name})` : ''}${s.base_price_cents ? ` — ${formatCurrency(s.base_price_cents)}${s.billing_frequency === 'monthly' ? '/mo' : ''}` : ''}`,
+                  value: s.id,
+                }))}
                 required
-              >
-                <option value="">Select a service...</option>
-                {services.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name}
-                    {s.service_categories ? ` (${s.service_categories.name})` : ''}
-                    {s.base_price_cents
-                      ? ` — ${formatCurrency(s.base_price_cents)}${s.billing_frequency === 'monthly' ? '/mo' : ''}`
-                      : ''}
-                  </option>
-                ))}
-              </select>
+                fullWidth
+              />
               {services.length === 0 && (
                 <p
                   style={{
@@ -204,24 +198,13 @@ export default function AssignServicePage() {
             )}
 
             <div>
-              <label style={labelStyle}>Notes (optional)</label>
+              <label style={textareaLabelStyle}>Notes (optional)</label>
               <textarea
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Internal notes about this assignment..."
                 rows={2}
-                style={{
-                  width: '100%',
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '14px',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--_border-radius---sm, 4px)',
-                  border: '1px solid var(--_color---border--input)',
-                  backgroundColor: 'var(--_color---background--input, white)',
-                  color: 'var(--_color---text--primary)',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                }}
+                style={textareaStyle}
               />
             </div>
           </div>
