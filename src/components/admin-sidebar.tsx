@@ -7,7 +7,7 @@ import { SidebarNavigation, type SidebarNavItem } from '@bds/components/ui/Sideb
 import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
-import { setCurrentClientIdInBrowser } from '@/lib/current-client';
+import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 
 interface AdminSidebarProps {
   userName: string;

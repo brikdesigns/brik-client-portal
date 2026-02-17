@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { setCurrentClientIdInBrowser } from '@/lib/current-client';
+import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faCheck, faBuilding } from '@fortawesome/free-solid-svg-icons';
 

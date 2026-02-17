@@ -10,12 +10,12 @@ const BRIK_DESIGNS_ID = 'b0000000-0000-0000-0000-000000000001';
  * Falls back to: first available client, or Brik Designs for admins
  */
 export async function getCurrentClientId(userId: string): Promise<string | null> {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   const currentClientId = cookieStore.get(COOKIE_NAME)?.value;
 
   // If cookie exists, verify user has access to that client
   if (currentClientId) {
-    const supabase = await createClient();
+    const supabase = createClient();
     const { data } = await supabase
       .from('client_users')
       .select('client_id')
@@ -36,7 +36,7 @@ export async function getCurrentClientId(userId: string): Promise<string | null>
   }
 
   // For admins, default to Brik Designs if available
-  const supabase = await createClient();
+  const supabase = createClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -58,7 +58,7 @@ export async function getCurrentClientId(userId: string): Promise<string | null>
  * Set the current client ID cookie
  */
 export async function setCurrentClientId(clientId: string): Promise<void> {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   cookieStore.set(COOKIE_NAME, clientId, {
     maxAge: COOKIE_MAX_AGE,
     httpOnly: false, // Needs client-side access for switcher
@@ -71,7 +71,7 @@ export async function setCurrentClientId(clientId: string): Promise<void> {
  * Clear the current client ID cookie
  */
 export async function clearCurrentClientId(): Promise<void> {
-  const cookieStore = await cookies();
+  const cookieStore = cookies();
   cookieStore.delete(COOKIE_NAME);
 }
 
@@ -79,7 +79,7 @@ export async function clearCurrentClientId(): Promise<void> {
  * Get all clients the user has access to
  */
 export async function getUserClients(userId: string): Promise<Array<{ id: string; name: string }>> {
-  const supabase = await createClient();
+  const supabase = createClient();
 
   const { data } = await supabase
     .from('client_users')
@@ -104,29 +104,4 @@ export async function getUserClients(userId: string): Promise<Array<{ id: string
       name: client?.name || 'Unknown Client',
     };
   });
-}
-
-/**
- * Get the current client from cookie (client-side version using document.cookie)
- */
-export function getCurrentClientIdFromBrowser(): string | null {
-  if (typeof document === 'undefined') {
-    return null;
-  }
-
-  const cookies = document.cookie.split('; ');
-  const cookie = cookies.find((c) => c.startsWith(`${COOKIE_NAME}=`));
-  return cookie ? cookie.split('=')[1] : null;
-}
-
-/**
- * Set the current client cookie (client-side version)
- */
-export function setCurrentClientIdInBrowser(clientId: string): void {
-  if (typeof document === 'undefined') {
-    return;
-  }
-
-  const maxAge = COOKIE_MAX_AGE;
-  document.cookie = `${COOKIE_NAME}=${clientId}; max-age=${maxAge}; path=/; samesite=lax`;
 }
