@@ -48,3 +48,6 @@ updates/
 # Misc
 *.log
 *.cache
+
+# Local credentials reference
+.credentials.md
