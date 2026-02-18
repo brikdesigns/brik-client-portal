@@ -23,14 +23,6 @@ function toSlug(text: string): string {
     .replace(/^-|-$/g, '');
 }
 
-const textareaLabelStyle = {
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontWeight: 'var(--font-weight--semi-bold)' as unknown as number,
-  fontSize: 'var(--_typography---label--md-base)',
-  lineHeight: 'var(--font-line-height--100)',
-  color: 'var(--_color---text--primary)',
-};
-
 export default function NewClientPage() {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -77,12 +69,12 @@ export default function NewClientPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: 'var(--_space---xxl)' }}>
         <h1
           style={{
             fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
+            fontSize: 'var(--_typography---heading--large)',
+            fontWeight: 'var(--font-weight--semi-bold)' as unknown as number,
             color: 'var(--_color---text--primary)',
             margin: 0,
           }}
@@ -92,9 +84,9 @@ export default function NewClientPage() {
         <p
           style={{
             fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
+            fontSize: 'var(--_typography---body--md-base)',
             color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            margin: 'var(--_space---md) 0 0',
           }}
         >
           Complete this form to begin the new client workflow.
@@ -103,7 +95,13 @@ export default function NewClientPage() {
 
       <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--_space---gap--lg)',
+            }}
+          >
             <TextInput
               label="Business Name"
               type="text"
@@ -122,7 +120,13 @@ export default function NewClientPage() {
               fullWidth
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: 'var(--_space---gap--lg)',
+              }}
+            >
               <TextInput
                 label="Phone"
                 type="tel"
@@ -154,22 +158,14 @@ export default function NewClientPage() {
               fullWidth
             />
 
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 'var(--_space---gap--md)',
-                width: '100%',
-              }}
-            >
-              <label style={textareaLabelStyle}>Notes</label>
-              <TextArea
-                placeholder="Placeholder"
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                rows={5}
-              />
-            </div>
+            <TextArea
+              label="Notes"
+              placeholder="Internal notes about this client..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={5}
+              fullWidth
+            />
           </div>
 
           {error && (
@@ -177,15 +173,22 @@ export default function NewClientPage() {
               style={{
                 color: 'var(--system--red, #eb5757)',
                 fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                margin: '16px 0 0',
+                fontSize: 'var(--_typography---body--sm)',
+                margin: 'var(--_space---lg) 0 0',
               }}
             >
               {error}
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
+          <div
+            style={{
+              display: 'flex',
+              gap: 'var(--_space---gap--md)',
+              marginTop: 'var(--_space---xl)',
+              justifyContent: 'flex-end',
+            }}
+          >
             <a href="/admin/clients">
               <Button type="button" variant="outline" size="md">
                 Cancel
