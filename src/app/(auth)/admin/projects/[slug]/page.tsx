@@ -17,7 +17,7 @@ export default async function ProjectDetailPage({ params }: Props) {
     .from('projects')
     .select(`
       id, name, slug, status, description,
-      start_date, end_date, notion_page_id, created_at,
+      start_date, end_date, notion_page_id, clickup_task_id, created_at,
       clients(id, name, slug)
     `)
     .eq('slug', slug)
@@ -102,6 +102,36 @@ export default async function ProjectDetailPage({ params }: Props) {
             }}
           >
             Open in Notion &#x2197;
+          </a>
+        </Card>
+      )}
+
+      {/* ClickUp link */}
+      {project.clickup_task_id && (
+        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+          <h2
+            style={{
+              fontFamily: 'var(--_typography---font-family--heading)',
+              fontSize: 'var(--_typography---heading--small, 18px)',
+              fontWeight: 600,
+              color: 'var(--_color---text--primary)',
+              margin: '0 0 12px',
+            }}
+          >
+            ClickUp
+          </h2>
+          <a
+            href={`https://app.clickup.com/t/${project.clickup_task_id}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              fontFamily: 'var(--_typography---font-family--body)',
+              fontSize: '13px',
+              color: 'var(--_color---system--link, #0034ea)',
+              textDecoration: 'none',
+            }}
+          >
+            Open in ClickUp &#x2197;
           </a>
         </Card>
       )}
