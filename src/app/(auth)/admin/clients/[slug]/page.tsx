@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
+import { CardControl } from '@bds/components/ui/CardControl/CardControl';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
@@ -22,6 +23,7 @@ export default async function ClientDetailPage({ params }: Props) {
     .from('clients')
     .select(`
       id, name, slug, status, contact_name, contact_email, website_url, notes, created_at,
+      address, phone, industry,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
       client_services(
@@ -149,6 +151,36 @@ export default async function ClientDetailPage({ params }: Props) {
         <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
         <CardSummary label="Users" value={users.length} />
       </div>
+
+      {/* Onboarding — visible for prospects */}
+      {client.status === 'prospect' && (
+        <div style={{ marginBottom: 'var(--_space---xxl)' }}>
+          <h2 style={sectionHeadingStyle}>Onboarding</h2>
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 'var(--_space---gap--lg)',
+            }}
+          >
+            <CardControl
+              title="Marketing Analysis"
+              description="Evaluate the prospect's current marketing presence, competitors, and opportunities for growth."
+              action={<Button variant="primary" size="sm">Start</Button>}
+            />
+            <CardControl
+              title="Proposal"
+              description="Generate a tailored proposal based on the marketing analysis and recommended services."
+              action={<Button variant="primary" size="sm">Start</Button>}
+            />
+            <CardControl
+              title="Welcome to Brik"
+              description="Send the welcome package, onboard the client, and transition from prospect to active."
+              action={<Button variant="primary" size="sm">Start</Button>}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Services */}
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>

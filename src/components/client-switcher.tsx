@@ -87,13 +87,15 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
         <div
           style={{
             position: 'absolute',
-            top: 'calc(100% + 4px)',
-            right: 0,
+            bottom: 'calc(100% + 4px)',
+            left: 0,
             minWidth: '200px',
+            maxHeight: '300px',
+            overflowY: 'auto',
             backgroundColor: 'var(--_color---surface--primary)',
             border: '1px solid var(--_color---border--secondary)',
             borderRadius: '8px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             padding: '4px 0',
             zIndex: 1000,
           }}

@@ -31,6 +31,11 @@ function StatusBadgeBase({ status, map }: { status: string; map: Record<string, 
 
 // ── Client / User Status ────────────────────────────────────────────
 const clientStatusMap: Record<string, StatusConfig> = {
+  prospect: {
+    label: 'Prospect',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
+  },
   active: {
     label: 'Active',
     variant: 'positive',

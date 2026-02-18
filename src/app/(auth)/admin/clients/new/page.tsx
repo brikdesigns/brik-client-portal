@@ -57,11 +57,13 @@ export default function NewClientPage() {
 
     try {
       const supabase = createClient();
+      const slug = toSlug(name);
       const { error: insertError } = await supabase
         .from('clients')
         .insert({
           name,
-          slug: toSlug(name),
+          slug,
+          status: 'prospect',
           address: address || null,
           phone: phone || null,
           industry: industry || null,
@@ -74,7 +76,7 @@ export default function NewClientPage() {
         return;
       }
 
-      router.push('/admin/clients');
+      router.push(`/admin/clients/${slug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');

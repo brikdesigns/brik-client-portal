@@ -136,7 +136,6 @@ export function AddressAutocomplete({
         text,
         apiKey,
         limit: '5',
-        type: 'street',
         format: 'json',
       });
 
