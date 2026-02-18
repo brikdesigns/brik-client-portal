@@ -1,13 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
-import { Counter } from '@bds/components/ui/Counter/Counter';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
-import { ServiceBadge } from '@/components/service-badge';
-import { ServiceTypeTag, ClientStatusBadge } from '@/components/status-badges';
-import { formatCurrency } from '@/lib/format';
+import { ServicesFilterTable } from '@/components/services-filter-table';
 
 export default async function AdminServicesPage() {
   const supabase = createClient();
@@ -26,7 +21,7 @@ export default async function AdminServicesPage() {
       category_id,
       stripe_product_id,
       service_categories(id, name, slug, color_token),
-      client_services(id)
+      client_services(id, clients(id, name))
     `)
     .order('sort_order')
     .order('name');
@@ -36,17 +31,60 @@ export default async function AdminServicesPage() {
     .select('id, name, slug, color_token, sort_order')
     .order('sort_order');
 
-  // Group services by category
-  const grouped = (categories ?? []).map((cat) => ({
-    ...cat,
-    services: (services ?? []).filter((s) => s.category_id === cat.id),
+  // Transform services for the client component
+  const serviceRows = (services ?? []).map((s) => {
+    const cat = s.service_categories as unknown as {
+      id: string;
+      name: string;
+      slug: string;
+      color_token: string;
+    } | null;
+    const clientServices = s.client_services as unknown as {
+      id: string;
+      clients: { id: string; name: string } | null;
+    }[];
+    const clients = (clientServices ?? [])
+      .map((cs) => cs.clients)
+      .filter((c): c is { id: string; name: string } => c !== null);
+
+    return {
+      id: s.id,
+      name: s.name,
+      slug: s.slug,
+      service_type: s.service_type,
+      billing_frequency: s.billing_frequency,
+      base_price_cents: s.base_price_cents,
+      active: s.active,
+      stripe_product_id: s.stripe_product_id,
+      category: cat ? { id: cat.id, name: cat.name, slug: cat.slug } : null,
+      clients,
+      client_count: clients.length,
+    };
+  });
+
+  // Build filter options
+  const categoryOptions = (categories ?? []).map((cat) => ({
+    label: cat.name,
+    value: cat.id,
   }));
 
-  // Uncategorized services
-  const uncategorized = (services ?? []).filter((s) => !s.category_id);
+  // Get unique clients across all services
+  const clientMap = new Map<string, string>();
+  serviceRows.forEach((s) => {
+    s.clients.forEach((c) => clientMap.set(c.id, c.name));
+  });
+  const clientOptions = Array.from(clientMap.entries())
+    .map(([id, name]) => ({ label: name, value: id }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
-  const totalActive = (services ?? []).filter((s) => s.active).length;
-  const totalServices = (services ?? []).length;
+  const totalActive = serviceRows.filter((s) => s.active).length;
+  const totalServices = serviceRows.length;
+
+  // Category stats for summary cards
+  const grouped = (categories ?? []).map((cat) => ({
+    ...cat,
+    activeCount: serviceRows.filter((s) => s.category?.id === cat.id && s.active).length,
+  }));
 
   return (
     <div>
@@ -77,179 +115,16 @@ export default async function AdminServicesPage() {
           <CardSummary
             key={cat.id}
             label={cat.name}
-            value={cat.services.filter((s) => s.active).length}
+            value={cat.activeCount}
           />
         ))}
       </div>
 
-      {grouped.map((cat) => (
-        <div key={cat.id} style={{ marginBottom: '32px' }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              marginBottom: '12px',
-            }}
-          >
-            <ServiceBadge category={cat.slug} size={20} />
-            <h2
-              style={{
-                fontFamily: 'var(--_typography---font-family--heading)',
-                fontSize: '18px',
-                fontWeight: 600,
-                color: 'var(--_color---text--primary)',
-                margin: 0,
-              }}
-            >
-              {cat.name}
-            </h2>
-            <Counter count={cat.services.length} status="brand" size="sm" />
-          </div>
-          <Card variant="elevated" padding="lg">
-            <DataTable
-              data={cat.services}
-              rowKey={(s) => s.id}
-              emptyMessage="No services in this category."
-              columns={[
-                {
-                  header: '',
-                  accessor: (s) => {
-                    const cat = s.service_categories as unknown as { slug: string } | null;
-                    return cat ? <ServiceBadge category={cat.slug} size={16} /> : null;
-                  },
-                  style: { width: '32px', padding: '10px 4px 10px 12px' },
-                },
-                {
-                  header: 'Service',
-                  accessor: (s) => s.name,
-                  style: { fontWeight: 500 },
-                },
-                {
-                  header: 'Type',
-                  accessor: (s) => <ServiceTypeTag type={s.service_type} />,
-                },
-                {
-                  header: 'Price',
-                  accessor: (s) =>
-                    s.base_price_cents
-                      ? `${formatCurrency(s.base_price_cents)}${s.billing_frequency === 'monthly' ? '/mo' : ''}`
-                      : '—',
-                  style: { color: 'var(--_color---text--secondary)' },
-                },
-                {
-                  header: 'Clients',
-                  accessor: (s) =>
-                    Array.isArray(s.client_services) ? s.client_services.length : 0,
-                  style: { color: 'var(--_color---text--secondary)' },
-                },
-                {
-                  header: 'Status',
-                  accessor: (s) => <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />,
-                },
-                {
-                  header: 'Stripe',
-                  accessor: (s) => (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: s.stripe_product_id
-                          ? 'var(--services--green-dark, #4caf50)'
-                          : 'var(--_color---border--secondary)',
-                      }}
-                      title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
-                    />
-                  ),
-                },
-                {
-                  header: '',
-                  accessor: (s) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
-                      View Details
-                    </Button>
-                  ),
-                  style: { textAlign: 'right' },
-                },
-              ]}
-            />
-          </Card>
-        </div>
-      ))}
-
-      {uncategorized.length > 0 && (
-        <div style={{ marginBottom: '32px' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: '18px',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
-              margin: '0 0 12px',
-            }}
-          >
-            Uncategorized
-          </h2>
-          <Card variant="elevated" padding="lg">
-            <DataTable
-              data={uncategorized}
-              rowKey={(s) => s.id}
-              emptyMessage=""
-              columns={[
-                {
-                  header: 'Service',
-                  accessor: (s) => s.name,
-                  style: { fontWeight: 500 },
-                },
-                {
-                  header: 'Type',
-                  accessor: (s) => <ServiceTypeTag type={s.service_type} />,
-                },
-                {
-                  header: 'Price',
-                  accessor: (s) =>
-                    s.base_price_cents
-                      ? `${formatCurrency(s.base_price_cents)}${s.billing_frequency === 'monthly' ? '/mo' : ''}`
-                      : '—',
-                  style: { color: 'var(--_color---text--secondary)' },
-                },
-                {
-                  header: 'Status',
-                  accessor: (s) => <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />,
-                },
-                {
-                  header: 'Stripe',
-                  accessor: (s) => (
-                    <span
-                      style={{
-                        display: 'inline-block',
-                        width: '8px',
-                        height: '8px',
-                        borderRadius: '50%',
-                        backgroundColor: s.stripe_product_id
-                          ? 'var(--services--green-dark, #4caf50)'
-                          : 'var(--_color---border--secondary)',
-                      }}
-                      title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
-                    />
-                  ),
-                },
-                {
-                  header: '',
-                  accessor: (s) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${s.slug}`}>
-                      View Details
-                    </Button>
-                  ),
-                  style: { textAlign: 'right' },
-                },
-              ]}
-            />
-          </Card>
-        </div>
-      )}
+      <ServicesFilterTable
+        services={serviceRows}
+        categoryOptions={categoryOptions}
+        clientOptions={clientOptions}
+      />
     </div>
   );
 }
