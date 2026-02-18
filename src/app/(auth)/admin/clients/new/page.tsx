@@ -23,6 +23,17 @@ function toSlug(text: string): string {
     .replace(/^-|-$/g, '');
 }
 
+/**
+ * Format digits as (XXX)-XXX-XXXX
+ */
+function formatPhone(digits: string): string {
+  const d = digits.replace(/\D/g, '').slice(0, 10);
+  if (d.length === 0) return '';
+  if (d.length <= 3) return `(${d}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
+  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
+}
+
 export default function NewClientPage() {
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
@@ -33,6 +44,11 @@ export default function NewClientPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const raw = e.target.value.replace(/\D/g, '').slice(0, 10);
+    setPhone(formatPhone(raw));
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -130,9 +146,10 @@ export default function NewClientPage() {
               <TextInput
                 label="Phone"
                 type="tel"
+                inputMode="numeric"
                 placeholder="(555)-555-5555"
                 value={phone}
-                onChange={(e) => setPhone(e.target.value)}
+                onChange={handlePhoneChange}
                 iconBefore={<FontAwesomeIcon icon={faPhone} style={iconSize} />}
                 fullWidth
               />
