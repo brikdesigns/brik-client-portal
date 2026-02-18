@@ -7,7 +7,7 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
-import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
+import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag, ProposalStatusBadge } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
 import { DeleteClientButton } from '@/components/delete-client-button';
 import { formatCurrency } from '@/lib/format';
@@ -53,6 +53,15 @@ export default async function ClientDetailPage({ params }: Props) {
     .from('profiles')
     .select('id, full_name, email, is_active, last_login_at')
     .in('id', userIds);
+
+  // Fetch proposals for this client
+  const { data: proposals } = await supabase
+    .from('proposals')
+    .select('id, title, status, total_amount_cents, created_at')
+    .eq('client_id', client.id)
+    .order('created_at', { ascending: false });
+
+  const latestProposal = proposals?.[0] || null;
 
   const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
   const invoices = (client.invoices as { id: string; description: string | null; amount_cents: number; status: string; due_date: string | null; invoice_url: string | null }[]) ?? [];
@@ -176,8 +185,23 @@ export default async function ClientDetailPage({ params }: Props) {
             />
             <CardControl
               title="Proposal"
-              description="Generate a tailored proposal based on the marketing analysis and recommended services."
-              action={<Button variant="primary" size="sm">Start</Button>}
+              description={
+                latestProposal
+                  ? `${latestProposal.title} — ${formatCurrency(latestProposal.total_amount_cents)}`
+                  : 'Generate a tailored proposal based on the marketing analysis and recommended services.'
+              }
+              badge={latestProposal ? <ProposalStatusBadge status={latestProposal.status} /> : undefined}
+              action={
+                latestProposal ? (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/clients/${client.slug}/proposals/${latestProposal.id}`}>
+                    View
+                  </Button>
+                ) : (
+                  <Button variant="primary" size="sm" asLink href={`/admin/clients/${client.slug}/proposals/new`}>
+                    Start
+                  </Button>
+                )
+              }
             />
             <CardControl
               title="Welcome to Brik"

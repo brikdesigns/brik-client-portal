@@ -9,6 +9,8 @@ import {
   faCircleXmark,
   faPencil,
   faEye,
+  faPaperPlane,
+  faClock,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle as faCircleRegular } from '@fortawesome/free-regular-svg-icons';
 
@@ -132,6 +134,40 @@ const invoiceStatusMap: Record<string, StatusConfig> = {
   },
 };
 
+// ── Proposal Status ─────────────────────────────────────────────────
+const proposalStatusMap: Record<string, StatusConfig> = {
+  draft: {
+    label: 'Draft',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faPencil} style={iconSize} />,
+  },
+  sent: {
+    label: 'Sent',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faPaperPlane} style={iconSize} />,
+  },
+  viewed: {
+    label: 'Viewed',
+    variant: 'progress',
+    icon: <FontAwesomeIcon icon={faEye} style={iconSize} />,
+  },
+  accepted: {
+    label: 'Accepted',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  declined: {
+    label: 'Declined',
+    variant: 'error',
+    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+  },
+  expired: {
+    label: 'Expired',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faClock} style={iconSize} />,
+  },
+};
+
 // ── Tags (nouns: types, classifications, roles) ────────────────────
 
 const serviceTypeLabels: Record<string, string> = {
@@ -161,6 +197,10 @@ export function ProjectStatusBadge({ status }: { status: string }) {
 
 export function InvoiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={invoiceStatusMap} />;
+}
+
+export function ProposalStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={proposalStatusMap} />;
 }
 
 export function ServiceTypeTag({ type }: { type: string }) {
