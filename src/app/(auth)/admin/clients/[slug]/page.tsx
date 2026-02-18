@@ -9,6 +9,7 @@ import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
+import { DeleteClientButton } from '@/components/delete-client-button';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -113,9 +114,12 @@ export default async function ClientDetailPage({ params }: Props) {
           />
         }
         actions={
-          <Button variant="primary" size="sm" asLink href={`/admin/clients/${client.slug}/edit`}>
-            Edit client
-          </Button>
+          <div style={{ display: 'flex', gap: 'var(--_space---gap--md)' }}>
+            <DeleteClientButton clientId={client.id} clientName={client.name} />
+            <Button variant="primary" size="sm" asLink href={`/admin/clients/${client.slug}/edit`}>
+              Edit client
+            </Button>
+          </div>
         }
         metadata={[
           { label: 'Status', value: <ClientStatusBadge status={client.status} /> },
@@ -137,20 +141,22 @@ export default async function ClientDetailPage({ params }: Props) {
         ]}
       />
 
-      {/* Stat cards */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
-        }}
-      >
-        <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
-        <CardSummary label="Projects" value={projects.length} />
-        <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
-        <CardSummary label="Users" value={users.length} />
-      </div>
+      {/* Stat cards — hidden for prospects */}
+      {client.status !== 'prospect' && (
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '16px',
+            marginBottom: '24px',
+          }}
+        >
+          <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
+          <CardSummary label="Projects" value={projects.length} />
+          <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
+          <CardSummary label="Users" value={users.length} />
+        </div>
+      )}
 
       {/* Onboarding — visible for prospects */}
       {client.status === 'prospect' && (
@@ -182,183 +188,188 @@ export default async function ClientDetailPage({ params }: Props) {
         </div>
       )}
 
-      {/* Services */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
-          <a href={`/admin/clients/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
-        </div>
-        <DataTable
-          data={clientServices}
-          rowKey={(cs) => cs.id}
-          emptyMessage="No services assigned yet."
-          columns={[
-            {
-              header: '',
-              accessor: (cs) => {
-                const slug = cs.services?.service_categories?.slug;
-                return slug ? <ServiceBadge category={slug} size={16} /> : null;
-              },
-              style: { width: '32px', padding: '10px 4px 10px 12px' },
-            },
-            {
-              header: 'Service',
-              accessor: (cs) =>
-                cs.services ? (
-                  <a
-                    href={`/admin/services/${cs.services.slug}`}
-                    style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
-                  >
-                    {cs.services.name}
-                  </a>
-                ) : '—',
-              style: { fontWeight: 500 },
-            },
-            {
-              header: 'Type',
-              accessor: (cs) =>
-                cs.services ? <ServiceTypeTag type={cs.services.service_type} /> : '—',
-            },
-            {
-              header: 'Price',
-              accessor: (cs) =>
-                cs.services?.base_price_cents
-                  ? `${formatCurrency(cs.services.base_price_cents)}${cs.services.billing_frequency === 'monthly' ? '/mo' : ''}`
-                  : '—',
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-            {
-              header: 'Status',
-              accessor: (cs) => <ServiceStatusBadge status={cs.status} />,
-            },
-          ]}
-        />
-      </Card>
+      {/* Services, Projects, Invoices, Users — hidden for prospects */}
+      {client.status !== 'prospect' && (
+        <>
+          {/* Services */}
+          <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
+              <a href={`/admin/clients/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
+            </div>
+            <DataTable
+              data={clientServices}
+              rowKey={(cs) => cs.id}
+              emptyMessage="No services assigned yet."
+              columns={[
+                {
+                  header: '',
+                  accessor: (cs) => {
+                    const slug = cs.services?.service_categories?.slug;
+                    return slug ? <ServiceBadge category={slug} size={16} /> : null;
+                  },
+                  style: { width: '32px', padding: '10px 4px 10px 12px' },
+                },
+                {
+                  header: 'Service',
+                  accessor: (cs) =>
+                    cs.services ? (
+                      <a
+                        href={`/admin/services/${cs.services.slug}`}
+                        style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
+                      >
+                        {cs.services.name}
+                      </a>
+                    ) : '—',
+                  style: { fontWeight: 500 },
+                },
+                {
+                  header: 'Type',
+                  accessor: (cs) =>
+                    cs.services ? <ServiceTypeTag type={cs.services.service_type} /> : '—',
+                },
+                {
+                  header: 'Price',
+                  accessor: (cs) =>
+                    cs.services?.base_price_cents
+                      ? `${formatCurrency(cs.services.base_price_cents)}${cs.services.billing_frequency === 'monthly' ? '/mo' : ''}`
+                      : '—',
+                  style: { color: 'var(--_color---text--secondary)' },
+                },
+                {
+                  header: 'Status',
+                  accessor: (cs) => <ServiceStatusBadge status={cs.status} />,
+                },
+              ]}
+            />
+          </Card>
 
-      {/* Projects */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
-          <a href={`/admin/clients/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
-        </div>
-        <DataTable
-          data={projects}
-          rowKey={(p) => p.id}
-          emptyMessage="No projects yet."
-          columns={[
-            {
-              header: 'Name',
-              accessor: (p) => p.name,
-              style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
-            },
-            {
-              header: 'Status',
-              accessor: (p) => <ProjectStatusBadge status={p.status} />,
-            },
-            {
-              header: 'Start',
-              accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-            {
-              header: 'End',
-              accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-          ]}
-        />
-      </Card>
+          {/* Projects */}
+          <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
+              <a href={`/admin/clients/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
+            </div>
+            <DataTable
+              data={projects}
+              rowKey={(p) => p.id}
+              emptyMessage="No projects yet."
+              columns={[
+                {
+                  header: 'Name',
+                  accessor: (p) => p.name,
+                  style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
+                },
+                {
+                  header: 'Status',
+                  accessor: (p) => <ProjectStatusBadge status={p.status} />,
+                },
+                {
+                  header: 'Start',
+                  accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
+                  style: { color: 'var(--_color---text--secondary)' },
+                },
+                {
+                  header: 'End',
+                  accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
+                  style: { color: 'var(--_color---text--secondary)' },
+                },
+              ]}
+            />
+          </Card>
 
-      {/* Invoices */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
-          <a href={`/admin/clients/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
-        </div>
-        <DataTable
-          data={invoices}
-          rowKey={(inv) => inv.id}
-          emptyMessage="No invoices yet."
-          columns={[
-            {
-              header: 'Description',
-              accessor: (inv) => inv.description || 'Invoice',
-              style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
-            },
-            {
-              header: 'Amount',
-              accessor: (inv) => formatCurrency(inv.amount_cents),
-            },
-            {
-              header: 'Due',
-              accessor: (inv) => inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-            {
-              header: 'Status',
-              accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
-            },
-            {
-              header: '',
-              accessor: (inv) =>
-                inv.invoice_url ? (
-                  <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                    <Button variant="secondary" size="sm">
-                      View Details
-                    </Button>
-                  </a>
-                ) : null,
-              style: { textAlign: 'right' },
-            },
-          ]}
-        />
-      </Card>
+          {/* Invoices */}
+          <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
+              <a href={`/admin/clients/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
+            </div>
+            <DataTable
+              data={invoices}
+              rowKey={(inv) => inv.id}
+              emptyMessage="No invoices yet."
+              columns={[
+                {
+                  header: 'Description',
+                  accessor: (inv) => inv.description || 'Invoice',
+                  style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
+                },
+                {
+                  header: 'Amount',
+                  accessor: (inv) => formatCurrency(inv.amount_cents),
+                },
+                {
+                  header: 'Due',
+                  accessor: (inv) => inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
+                  style: { color: 'var(--_color---text--secondary)' },
+                },
+                {
+                  header: 'Status',
+                  accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
+                },
+                {
+                  header: '',
+                  accessor: (inv) =>
+                    inv.invoice_url ? (
+                      <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                        <Button variant="secondary" size="sm">
+                          View Details
+                        </Button>
+                      </a>
+                    ) : null,
+                  style: { textAlign: 'right' },
+                },
+              ]}
+            />
+          </Card>
 
-      {/* Portal users */}
-      <Card variant="elevated" padding="lg">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Users</h2>
-          <a href={`/admin/clients/${client.slug}/members/new`} style={linkStyle}>Add user</a>
-        </div>
-        <DataTable
-          data={users}
-          rowKey={(u) => u.id}
-          emptyMessage="No members assigned to this client."
-          columns={[
-            {
-              header: 'Name',
-              accessor: (u) => u.full_name || '—',
-              style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
-            },
-            {
-              header: 'Email',
-              accessor: (u) => u.email,
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-            {
-              header: 'Role',
-              accessor: (u) => (
-                <Badge status="neutral">
-                  {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
-                </Badge>
-              ),
-            },
-            {
-              header: 'Status',
-              accessor: (u) => (
-                <Badge status={u.is_active ? 'positive' : 'warning'}>
-                  {u.is_active ? 'Active' : 'Disabled'}
-                </Badge>
-              ),
-            },
-            {
-              header: 'Last login',
-              accessor: (u) => u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : 'Never',
-              style: { color: 'var(--_color---text--muted)', fontSize: '13px' },
-            },
-          ]}
-        />
-      </Card>
+          {/* Portal users */}
+          <Card variant="elevated" padding="lg">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Users</h2>
+              <a href={`/admin/clients/${client.slug}/members/new`} style={linkStyle}>Add user</a>
+            </div>
+            <DataTable
+              data={users}
+              rowKey={(u) => u.id}
+              emptyMessage="No members assigned to this client."
+              columns={[
+                {
+                  header: 'Name',
+                  accessor: (u) => u.full_name || '—',
+                  style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
+                },
+                {
+                  header: 'Email',
+                  accessor: (u) => u.email,
+                  style: { color: 'var(--_color---text--secondary)' },
+                },
+                {
+                  header: 'Role',
+                  accessor: (u) => (
+                    <Badge status="neutral">
+                      {u.role.charAt(0).toUpperCase() + u.role.slice(1)}
+                    </Badge>
+                  ),
+                },
+                {
+                  header: 'Status',
+                  accessor: (u) => (
+                    <Badge status={u.is_active ? 'positive' : 'warning'}>
+                      {u.is_active ? 'Active' : 'Disabled'}
+                    </Badge>
+                  ),
+                },
+                {
+                  header: 'Last login',
+                  accessor: (u) => u.last_login_at ? new Date(u.last_login_at).toLocaleDateString() : 'Never',
+                  style: { color: 'var(--_color---text--muted)', fontSize: '13px' },
+                },
+              ]}
+            />
+          </Card>
+        </>
+      )}
 
       {/* Notes */}
       {client.notes && (
