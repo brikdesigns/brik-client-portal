@@ -5,16 +5,37 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { TextArea } from '@bds/components/ui/TextArea/TextArea';
+import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { AddressAutocomplete } from '@/components/address-autocomplete';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faPhone } from '@fortawesome/free-solid-svg-icons';
+
+const iconSize = { width: 14, height: 14 };
 
 function toSlug(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9\s-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
 }
+
+const textareaLabelStyle = {
+  fontFamily: 'var(--_typography---font-family--label)',
+  fontWeight: 'var(--font-weight--semi-bold)' as unknown as number,
+  fontSize: 'var(--_typography---label--md-base)',
+  lineHeight: 'var(--font-line-height--100)',
+  color: 'var(--_color---text--primary)',
+};
 
 export default function NewClientPage() {
   const [name, setName] = useState('');
-  const [contactName, setContactName] = useState('');
-  const [contactEmail, setContactEmail] = useState('');
+  const [address, setAddress] = useState('');
+  const [phone, setPhone] = useState('');
+  const [industry, setIndustry] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
@@ -33,8 +54,9 @@ export default function NewClientPage() {
         .insert({
           name,
           slug: toSlug(name),
-          contact_name: contactName || null,
-          contact_email: contactEmail || null,
+          address: address || null,
+          phone: phone || null,
+          industry: industry || null,
           website_url: websiteUrl || null,
           notes: notes || null,
         });
@@ -65,7 +87,7 @@ export default function NewClientPage() {
             margin: 0,
           }}
         >
-          Add client
+          Add Client
         </h1>
         <p
           style={{
@@ -75,78 +97,77 @@ export default function NewClientPage() {
             margin: '8px 0 0',
           }}
         >
-          Create a new client account.
+          Complete this form to begin the new client workflow.
         </p>
       </div>
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
+      <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
         <form onSubmit={handleSubmit}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <TextInput
-              label="Company name"
+              label="Business Name"
               type="text"
-              placeholder="Acme Corp"
+              placeholder="Enter business name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               fullWidth
             />
+
+            <AddressAutocomplete
+              label="Business Address"
+              placeholder="Enter business address"
+              value={address}
+              onChange={setAddress}
+              fullWidth
+            />
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <TextInput
-                label="Contact name"
-                type="text"
-                placeholder="Jane Smith"
-                value={contactName}
-                onChange={(e) => setContactName(e.target.value)}
+                label="Phone"
+                type="tel"
+                placeholder="(555)-555-5555"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                iconBefore={<FontAwesomeIcon icon={faPhone} style={iconSize} />}
                 fullWidth
               />
-              <TextInput
-                label="Contact email"
-                type="email"
-                placeholder="jane@acme.com"
-                value={contactEmail}
-                onChange={(e) => setContactEmail(e.target.value)}
+              <Select
+                label="Industry"
+                value={industry}
+                onChange={(e) => setIndustry(e.target.value)}
+                placeholder="Select industry"
+                options={[
+                  { label: 'Dental', value: 'dental' },
+                  { label: 'Real Estate', value: 'real-estate' },
+                ]}
                 fullWidth
               />
             </div>
+
             <TextInput
-              label="Website"
+              label="Website URL"
               type="url"
-              placeholder="https://acme.com"
+              placeholder="Enter URL"
               value={websiteUrl}
               onChange={(e) => setWebsiteUrl(e.target.value)}
               fullWidth
             />
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: 'var(--_typography---font-family--label)',
-                  fontSize: 'var(--_typography---label--sm, 12px)',
-                  fontWeight: 600,
-                  color: 'var(--_color---text--secondary)',
-                  marginBottom: '6px',
-                }}
-              >
-                Notes
-              </label>
-              <textarea
+
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 'var(--_space---gap--md)',
+                width: '100%',
+              }}
+            >
+              <label style={textareaLabelStyle}>Notes</label>
+              <TextArea
+                placeholder="Placeholder"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
-                placeholder="Internal notes about this client..."
-                rows={3}
-                style={{
-                  width: '100%',
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '14px',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--_border-radius---sm, 4px)',
-                  border: '1px solid var(--_color---border--input)',
-                  backgroundColor: 'var(--_color---background--input, white)',
-                  color: 'var(--_color---text--primary)',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                }}
+                rows={5}
               />
             </div>
           </div>
@@ -164,15 +185,15 @@ export default function NewClientPage() {
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-            <Button type="submit" variant="primary" size="md" disabled={loading}>
-              {loading ? 'Creating...' : 'Create client'}
-            </Button>
+          <div style={{ display: 'flex', gap: '12px', marginTop: '24px', justifyContent: 'flex-end' }}>
             <a href="/admin/clients">
               <Button type="button" variant="outline" size="md">
                 Cancel
               </Button>
             </a>
+            <Button type="submit" variant="primary" size="md" disabled={loading}>
+              {loading ? 'Creating...' : 'Begin'}
+            </Button>
           </div>
         </form>
       </Card>
