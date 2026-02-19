@@ -107,9 +107,7 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
         actions={
           <AnalyzeButton
             reportId={report.id}
-            reportSetId={reportSet.id}
             reportType={reportType}
-            websiteUrl={client.website_url}
           />
         }
         tabs={

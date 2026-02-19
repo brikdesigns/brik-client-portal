@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { type Industry } from '@/lib/analysis/report-config';
-import { seedReports } from '@/lib/analysis/seed-reports';
+import { seedReports, type ClientData } from '@/lib/analysis/seed-reports';
 import { recalculateReportSetScore } from '@/lib/analysis/scoring';
 
 export async function POST(request: Request) {
@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   // Fetch client data
   const { data: client, error: clientError } = await supabase
     .from('clients')
-    .select('id, name, slug, industry, website_url, address')
+    .select('id, name, slug, industry, website_url, address, phone')
     .eq('id', client_id)
     .single();
 
@@ -68,11 +68,17 @@ export async function POST(request: Request) {
 
   // Seed reports + items
   const industry = (client.industry as Industry) || null;
+  const clientData: ClientData = {
+    name: client.name,
+    address: client.address,
+    websiteUrl: client.website_url,
+    phone: client.phone,
+    industry,
+  };
 
   const result = await seedReports(
     reportSet.id,
-    industry,
-    client.website_url,
+    clientData,
     async (report) => {
       const { data, error } = await supabase
         .from('reports')

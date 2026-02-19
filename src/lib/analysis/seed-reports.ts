@@ -2,13 +2,26 @@
  * Generate initial report rows for each report type.
  *
  * When a report set is created, this module produces the report + report_item
- * rows based on the client's industry. Website reports get partial auto-analysis;
+ * rows based on the client's industry. Analyzable report types (website,
+ * brand/logo, online reviews, competitors) get auto-populated where possible;
  * all others start as draft templates for manual entry.
  */
 
 import { type Industry, getReportConfigs, type ReportTypeConfig } from './report-config';
 import { calculateTier } from './scoring';
 import { analyzeWebsite, type WebsiteCheckResult } from './website';
+import { analyzeBrand } from './brand';
+import { analyzeReviews } from './reviews';
+import { analyzeCompetitors } from './competitors';
+
+/** Client data passed through from the API route */
+export interface ClientData {
+  name: string;
+  address: string | null;
+  websiteUrl: string | null;
+  phone: string | null;
+  industry: Industry;
+}
 
 interface ReportRow {
   report_set_id: string;
@@ -39,46 +52,44 @@ interface SeedResult {
 }
 
 /**
- * Generate report + item templates for a given industry.
- * Website analysis is run automatically if websiteUrl is provided.
+ * Generate report + item templates for a given client.
+ * Analyzable reports are auto-populated; others start as draft templates.
  */
 export async function seedReports(
   reportSetId: string,
-  industry: Industry,
-  websiteUrl: string | null,
+  clientData: ClientData,
   insertReport: (report: ReportRow) => Promise<string>,
 ): Promise<SeedResult> {
-  const configs = getReportConfigs(industry);
+  const configs = getReportConfigs(clientData.industry);
   const allReports: ReportRow[] = [];
   const allItems: ReportItemRow[] = [];
 
   for (const config of configs) {
     const maxScore = config.categories.reduce((sum, c) => sum + c.maxScore, 0);
 
-    // Auto-analyze website if URL provided
-    let websiteResults: WebsiteCheckResult[] | null = null;
-    if (config.type === 'website' && websiteUrl) {
-      try {
-        websiteResults = await analyzeWebsite(websiteUrl);
-      } catch {
-        // Website analysis failed — leave as draft
-      }
+    // Run the appropriate analyzer for this report type
+    let analysisResults: WebsiteCheckResult[] | null = null;
+
+    try {
+      analysisResults = await runAnalyzer(config.type, clientData, config);
+    } catch {
+      // Analysis failed — leave as draft
     }
 
-    // Website reports with results are "in_progress" (not completed) since
-    // manual categories (Overall Design, Content Clarity, Branding Consistency)
-    // still need human review
-    const scoredItems = websiteResults?.filter((r) => r.score !== null) ?? [];
+    // Compute score from analysis results
+    const scoredItems = analysisResults?.filter((r) => r.score !== null) ?? [];
     const score = scoredItems.length > 0
       ? scoredItems.reduce((sum, r) => sum + (r.score ?? 0), 0)
       : null;
     const tier = score !== null ? calculateTier(score, maxScore) : null;
-    const status = websiteResults
-      ? (websiteResults.some((r) => r.score === null) ? 'in_progress' : 'completed')
+
+    // Determine status: completed if all scored, in_progress if partial, draft if none
+    const status = analysisResults
+      ? (analysisResults.some((r) => r.score === null) ? 'in_progress' : 'completed')
       : 'draft';
 
-    const opportunities = websiteResults
-      ? generateWebsiteOpportunities(websiteResults)
+    const opportunities = analysisResults
+      ? generateOpportunities(analysisResults)
       : null;
 
     const report: ReportRow = {
@@ -95,15 +106,53 @@ export async function seedReports(
     const reportId = await insertReport(report);
     allReports.push(report);
 
-    // Create items from category templates
-    const items = websiteResults
-      ? createItemsFromAnalysis(reportId, config, websiteResults)
+    // Create items from analysis results or empty templates
+    const items = analysisResults
+      ? createItemsFromAnalysis(reportId, config, analysisResults)
       : createEmptyItems(reportId, config);
 
     allItems.push(...items);
   }
 
   return { reports: allReports, items: allItems };
+}
+
+/**
+ * Dispatch to the appropriate analyzer for a report type.
+ * Returns null if no auto-analysis is available for this type.
+ */
+async function runAnalyzer(
+  reportType: string,
+  clientData: ClientData,
+  config: ReportTypeConfig,
+): Promise<WebsiteCheckResult[] | null> {
+  switch (reportType) {
+    case 'website':
+      if (!clientData.websiteUrl) return null;
+      return analyzeWebsite(clientData.websiteUrl);
+
+    case 'brand_logo':
+      if (!clientData.websiteUrl) return null;
+      return analyzeBrand(clientData.websiteUrl);
+
+    case 'online_reviews':
+      if (!clientData.name) return null;
+      return analyzeReviews(
+        clientData.name,
+        clientData.address,
+        config.categories.map((c) => c.category),
+      );
+
+    case 'competitors':
+      return analyzeCompetitors(
+        clientData.name,
+        clientData.address,
+        clientData.industry,
+      );
+
+    default:
+      return null;
+  }
 }
 
 function createEmptyItems(reportId: string, config: ReportTypeConfig): ReportItemRow[] {
@@ -129,7 +178,6 @@ function createItemsFromAnalysis(
   config: ReportTypeConfig,
   results: WebsiteCheckResult[],
 ): ReportItemRow[] {
-  // Match results to config categories by name
   return config.categories.map((cat, index) => {
     const result = results.find((r) => r.category === cat.category);
     if (result) {
@@ -138,8 +186,8 @@ function createItemsFromAnalysis(
         category: result.category,
         status: result.status,
         score: result.score,
-        rating: null,
-        total_reviews: null,
+        rating: (result.metadata?.rating as number) ?? null,
+        total_reviews: (result.metadata?.total_reviews as number) ?? null,
         feedback_summary: result.feedback_summary,
         notes: result.notes,
         metadata: {
@@ -165,10 +213,9 @@ function createItemsFromAnalysis(
   });
 }
 
-function generateWebsiteOpportunities(results: WebsiteCheckResult[]): string {
+function generateOpportunities(results: WebsiteCheckResult[]): string {
   const lines: string[] = [];
 
-  // Issues from auto-analyzed categories
   const issues = results.filter((r) => r.score !== null && r.score <= 2);
   for (const issue of issues) {
     if (issue.feedback_summary) {
@@ -176,16 +223,15 @@ function generateWebsiteOpportunities(results: WebsiteCheckResult[]): string {
     }
   }
 
-  // Note which categories need manual review
   const manualCategories = results.filter((r) => r.score === null);
   if (manualCategories.length > 0) {
     lines.push(
-      `**Manual review needed:** ${manualCategories.map((r) => r.category).join(', ')} — these categories require visual assessment.`
+      `**Manual review needed:** ${manualCategories.map((r) => r.category).join(', ')} — these categories require manual assessment.`
     );
   }
 
   if (lines.length === 0) {
-    return 'Auto-analyzed categories look strong. Complete manual review for Overall Design, Content Clarity, and Branding Consistency to finalize the report.';
+    return 'Auto-analyzed categories look strong. Complete manual review for remaining categories to finalize the report.';
   }
 
   return lines.join('\n\n');

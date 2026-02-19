@@ -2,66 +2,35 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { Button } from '@bds/components/ui/Button/Button';
-import { analyzeWebsite } from '@/lib/analysis/website';
-import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
-import { WEBSITE_CONFIG } from '@/lib/analysis/report-config';
+
+const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
 
 interface AnalyzeButtonProps {
   reportId: string;
-  reportSetId: string;
   reportType: string;
-  websiteUrl: string | null;
 }
 
-export function AnalyzeButton({ reportId, reportSetId, reportType, websiteUrl }: AnalyzeButtonProps) {
+export function AnalyzeButton({ reportId, reportType }: AnalyzeButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
-  // Only website reports support auto-analysis for now
-  if (reportType !== 'website' || !websiteUrl) return null;
+  if (!ANALYZABLE_TYPES.includes(reportType)) return null;
 
   async function handleAnalyze() {
-    if (!websiteUrl) return;
     setLoading(true);
 
     try {
-      const results = await analyzeWebsite(websiteUrl);
-      const supabase = createClient();
+      const res = await fetch('/api/admin/reporting/analyze', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: reportId, report_type: reportType }),
+      });
 
-      // Update each report item with analysis results
-      const { data: items } = await supabase
-        .from('report_items')
-        .select('id, category, sort_order')
-        .eq('report_id', reportId)
-        .order('sort_order', { ascending: true });
-
-      if (items) {
-        for (const item of items) {
-          const result = results.find((r) => r.category === item.category);
-          if (result && result.score !== null) {
-            const catConfig = WEBSITE_CONFIG.categories.find((c) => c.category === item.category);
-            await supabase
-              .from('report_items')
-              .update({
-                status: result.status,
-                score: result.score,
-                feedback_summary: result.feedback_summary,
-                notes: result.notes,
-                metadata: {
-                  maxScore: catConfig?.maxScore ?? 5,
-                  ...result.metadata,
-                },
-              })
-              .eq('id', item.id);
-          }
-        }
+      if (!res.ok) {
+        const data = await res.json();
+        console.error('Analysis failed:', data.error);
       }
-
-      // Cascade recalculation
-      await recalculateReportScore(supabase, reportId);
-      await recalculateReportSetScore(supabase, reportSetId);
 
       router.refresh();
     } catch (err) {

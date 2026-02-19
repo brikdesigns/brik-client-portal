@@ -137,6 +137,7 @@ export function AddressAutocomplete({
         apiKey,
         limit: '5',
         format: 'json',
+        filter: 'countrycode:us',
       });
 
       const res = await fetch(
