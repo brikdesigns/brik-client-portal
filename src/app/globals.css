@@ -108,24 +108,38 @@
   --_typography---font-family--heading: Poppins, sans-serif;
   --_typography---font-family--display: Poppins, sans-serif;
 
-  /* ---- Base mode spacing ---- */
+  /*
+   * Component-level spacing — matches BDS :root definitions.
+   *
+   * The BDS Webflow CSS has TWO spacing "modes":
+   * - :root = component-level (buttons, badges, inputs) — 12px, 16px, 24px
+   * - .body = section/layout-level (page sections) — 24px, 32px, 40px
+   *
+   * Since .body overrides :root by specificity, we must explicitly reset
+   * to the :root (component) values here. Without this, components would
+   * inherit the section-level spacing (way too large for UI elements).
+   *
+   * Reference: brik-bds.webflow.css :root {} block
+   */
   --_space---none: var(--space--0);
-  --_space---tiny: var(--space--100);
-  --_space---sm: var(--space--150);
-  --_space---md: var(--space--200);
-  --_space---lg: var(--space--400);
-  --_space---xl: var(--space--600);
+  --_space---tiny: var(--space--200);
+  --_space---xs: var(--space--250);
+  --_space---sm: var(--space--300);
+  --_space---md: var(--space--400);
+  --_space---lg: var(--space--600);
+  --_space---xl: var(--space--800);
   --_space---xxl: var(--space--800);
-  --_space---huge: var(--space--1000);
+  --_space---huge: var(--space--1200);
 
   --_space---gap--none: var(--space--0);
   --_space---gap--tiny: var(--space--50);
-  --_space---gap--sm: var(--space--100);
+  --_space---gap--xs: var(--space--100);
+  --_space---gap--sm: var(--space--150);
   --_space---gap--md: var(--space--200);
   --_space---gap--lg: var(--space--400);
-  --_space---gap--xl: var(--space--500);
+  --_space---gap--xl: var(--space--600);
   --_space---gap--xxl: var(--space--600);
-  --_space---gap--huge: var(--space--1200);
+  --_space---gap--huge: var(--space--800);
 
   --_space---button: var(--space--200);
   --_space---input: var(--space--200);
