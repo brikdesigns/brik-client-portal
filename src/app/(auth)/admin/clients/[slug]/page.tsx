@@ -10,6 +10,8 @@ import { DataTable } from '@/components/data-table';
 import { ClientStatusBadge, ProjectStatusBadge, InvoiceStatusBadge, ServiceStatusBadge, ServiceTypeTag, ProposalStatusBadge } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
 import { DeleteClientButton } from '@/components/delete-client-button';
+import { RunAnalysisButton } from '@/components/run-analysis-button';
+import { ReportSetStatusBadge } from '@/components/report-badges';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -62,6 +64,15 @@ export default async function ClientDetailPage({ params }: Props) {
     .order('created_at', { ascending: false });
 
   const latestProposal = proposals?.[0] || null;
+
+  // Fetch report set for marketing analysis card
+  const { data: reportSet } = await supabase
+    .from('report_sets')
+    .select('id, status, overall_tier')
+    .eq('client_id', client.id)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
   const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
   const invoices = (client.invoices as { id: string; description: string | null; amount_cents: number; status: string; due_date: string | null; invoice_url: string | null }[]) ?? [];
@@ -180,8 +191,21 @@ export default async function ClientDetailPage({ params }: Props) {
           >
             <CardControl
               title="Marketing Analysis"
-              description="Evaluate the prospect's current marketing presence, competitors, and opportunities for growth."
-              action={<Button variant="primary" size="sm">Start</Button>}
+              description={
+                reportSet
+                  ? `Analysis ${reportSet.status === 'completed' ? 'complete' : reportSet.status === 'needs_review' ? 'needs review' : 'in progress'}.`
+                  : 'Evaluate the prospect\'s current marketing presence, competitors, and opportunities for growth.'
+              }
+              badge={reportSet ? <ReportSetStatusBadge status={reportSet.status} /> : undefined}
+              action={
+                reportSet ? (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
+                    View Details
+                  </Button>
+                ) : (
+                  <RunAnalysisButton clientId={client.id} slug={client.slug} />
+                )
+              }
             />
             <CardControl
               title="Proposal"
