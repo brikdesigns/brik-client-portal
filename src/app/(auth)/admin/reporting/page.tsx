@@ -4,7 +4,7 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
-import { ReportSetStatusBadge } from '@/components/report-badges';
+import { ReportSetStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 
 export default async function AdminReportingPage() {
   const supabase = createClient();
@@ -13,7 +13,8 @@ export default async function AdminReportingPage() {
     .from('report_sets')
     .select(`
       id, status, overall_score, overall_max_score, overall_tier, created_at,
-      clients(id, name, slug, industry)
+      clients(id, name, slug, industry),
+      reports(status)
     `)
     .order('created_at', { ascending: false });
 
@@ -76,12 +77,21 @@ export default async function AdminReportingPage() {
               style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
             },
             {
-              header: 'Score',
-              accessor: (rs) =>
-                rs.overall_score !== null && rs.overall_max_score !== null
-                  ? `${rs.overall_score} / ${rs.overall_max_score}`
-                  : '—',
+              header: 'Progress',
+              accessor: (rs) => {
+                const reports = rs.reports as unknown as Array<{ status: string }> | null;
+                if (!reports || reports.length === 0) return '—';
+                const done = reports.filter((r) => r.status === 'completed').length;
+                return `${done} / ${reports.length} complete`;
+              },
               style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+            },
+            {
+              header: 'Tier',
+              accessor: (rs) =>
+                rs.status === 'completed' && rs.overall_tier
+                  ? <ScoreTierBadge tier={rs.overall_tier} />
+                  : '—',
             },
             {
               header: 'Created',

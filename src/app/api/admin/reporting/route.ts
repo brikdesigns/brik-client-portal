@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { type Industry } from '@/lib/analysis/report-config';
 import { seedReports } from '@/lib/analysis/seed-reports';
-import { calculateTier } from '@/lib/analysis/scoring';
+import { recalculateReportSetScore } from '@/lib/analysis/scoring';
 
 export async function POST(request: Request) {
   const supabase = createClient();
@@ -94,38 +94,8 @@ export async function POST(request: Request) {
     }
   }
 
-  // Calculate overall score from completed reports
-  const { data: completedReports } = await supabase
-    .from('reports')
-    .select('score, max_score, status')
-    .eq('report_set_id', reportSet.id);
-
-  const completed = completedReports?.filter((r) => r.status === 'completed') ?? [];
-  const allDraft = completedReports?.every((r) => r.status === 'draft');
-
-  if (completed.length > 0) {
-    const overallScore = completed.reduce((sum, r) => sum + (r.score ?? 0), 0);
-    const overallMaxScore = completed.reduce((sum, r) => sum + (r.max_score ?? 0), 0);
-    const overallTier = calculateTier(overallScore, overallMaxScore);
-
-    const hasAnyDraft = completedReports?.some((r) => r.status === 'draft');
-    const setStatus = hasAnyDraft ? 'needs_review' : 'completed';
-
-    await supabase
-      .from('report_sets')
-      .update({
-        overall_score: overallScore,
-        overall_max_score: overallMaxScore,
-        overall_tier: overallTier,
-        status: setStatus,
-      })
-      .eq('id', reportSet.id);
-  } else if (allDraft) {
-    await supabase
-      .from('report_sets')
-      .update({ status: 'needs_review' })
-      .eq('id', reportSet.id);
-  }
+  // Recalculate overall score from all reports
+  await recalculateReportSetScore(supabase, reportSet.id);
 
   return NextResponse.json({
     report_set_id: reportSet.id,

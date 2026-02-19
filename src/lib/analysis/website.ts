@@ -1,21 +1,28 @@
 /**
  * Automated website analysis.
  *
- * Fetches a client's website URL and checks for:
- * - SSL certificate (https)
- * - Mobile viewport meta tag
- * - Page title + meta description (SEO)
- * - Open Graph tags
- * - Response time
- * - Contact info presence (phone, email)
- * - Social media links
+ * Evaluates a client's website across 10 categories matching the Notion
+ * "Website Report" database. Some categories can be partially auto-scored
+ * from HTML; others require manual assessment.
+ *
+ * Categories (scored 1-5, max 50):
+ * 1. Overall Design — manual
+ * 2. Mobile Responsiveness — partial auto
+ * 3. Navigation — partial auto
+ * 4. Content Clarity — manual
+ * 5. Booking/Inquiries — partial auto
+ * 6. Photos & Media — partial auto
+ * 7. SEO Optimization — auto
+ * 8. Speed & Performance — partial auto
+ * 9. Branding Consistency — manual
+ * 10. Trust Signals — auto
  */
 
-interface WebsiteCheckResult {
+export interface WebsiteCheckResult {
   category: string;
   status: 'pass' | 'warning' | 'error' | 'neutral';
-  score: number;
-  feedback_summary: string;
+  score: number | null;
+  feedback_summary: string | null;
   notes: string | null;
   metadata: Record<string, unknown>;
 }
@@ -55,138 +62,237 @@ export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]>
     fetchError = err instanceof Error ? err.message : 'Failed to fetch';
   }
 
-  // 1. SSL Certificate
+  const htmlLower = fetchError ? '' : html.toLowerCase();
+
+  // 1. Overall Design — requires visual assessment, cannot auto-score
   results.push({
-    category: 'SSL Certificate',
-    status: isHttps ? 'pass' : 'error',
-    score: isHttps ? 1 : 0,
-    feedback_summary: isHttps
-      ? 'Site uses HTTPS — secure connection verified.'
-      : 'Site does not use HTTPS. SSL certificate is required for security and SEO.',
-    notes: fetchError ? `Fetch error: ${fetchError}` : null,
-    metadata: { url: normalizedUrl, isHttps },
+    category: 'Overall Design',
+    status: 'neutral',
+    score: null,
+    feedback_summary: null,
+    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires manual visual assessment.',
+    metadata: { automatable: false },
   });
 
+  // 2. Mobile Responsiveness
   if (fetchError) {
-    // Can't analyze further if fetch failed
-    const errorResult = (category: string): WebsiteCheckResult => ({
-      category,
-      status: 'neutral',
-      score: 0,
-      feedback_summary: 'Could not analyze — website was unreachable.',
-      notes: fetchError,
-      metadata: {},
+    results.push(unreachable('Mobile Responsiveness', fetchError));
+  } else {
+    const hasViewport = htmlLower.includes('name="viewport"') || htmlLower.includes("name='viewport'");
+    const hasMediaQueries = htmlLower.includes('@media') && (htmlLower.includes('max-width') || htmlLower.includes('min-width'));
+    const score = hasViewport ? (hasMediaQueries ? 4 : 3) : 1;
+    results.push({
+      category: 'Mobile Responsiveness',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: hasViewport
+        ? hasMediaQueries
+          ? 'Viewport meta tag and responsive media queries detected.'
+          : 'Viewport meta tag found, but limited responsive CSS detected.'
+        : 'No viewport meta tag found. Site may not display correctly on mobile devices.',
+      notes: null,
+      metadata: { hasViewport, hasMediaQueries },
     });
-    results.push(errorResult('Mobile Responsive'));
-    results.push(errorResult('Page Speed'));
-    results.push(errorResult('SEO Meta Tags'));
-    results.push(errorResult('Open Graph Tags'));
-    results.push(errorResult('Contact Information'));
-    results.push(errorResult('Social Media Links'));
-    return results;
   }
 
-  const htmlLower = html.toLowerCase();
+  // 3. Navigation — check for nav structure
+  if (fetchError) {
+    results.push(unreachable('Navigation', fetchError));
+  } else {
+    const hasNav = htmlLower.includes('<nav') || htmlLower.includes('role="navigation"');
+    const linkCount = (html.match(/<a\s/gi) || []).length;
+    const hasFooter = htmlLower.includes('<footer');
+    const score = hasNav ? (linkCount > 5 && hasFooter ? 4 : 3) : 2;
+    results.push({
+      category: 'Navigation',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: hasNav
+        ? `Navigation element found with ${linkCount} links${hasFooter ? ' and footer navigation' : ''}.`
+        : 'No semantic <nav> element found. Navigation structure may need improvement.',
+      notes: null,
+      metadata: { hasNav, linkCount, hasFooter },
+    });
+  }
 
-  // 2. Mobile Responsive (viewport meta tag)
-  const hasViewport = htmlLower.includes('name="viewport"') || htmlLower.includes("name='viewport'");
+  // 4. Content Clarity — manual assessment
   results.push({
-    category: 'Mobile Responsive',
-    status: hasViewport ? 'pass' : 'error',
-    score: hasViewport ? 1 : 0,
-    feedback_summary: hasViewport
-      ? 'Mobile viewport meta tag found — site should display properly on mobile.'
-      : 'No viewport meta tag found. Site may not be mobile-friendly.',
-    notes: null,
-    metadata: { hasViewport },
+    category: 'Content Clarity',
+    status: 'neutral',
+    score: null,
+    feedback_summary: null,
+    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires manual content review.',
+    metadata: { automatable: false },
   });
 
-  // 3. Page Speed (response time)
-  const speedPass = responseTime < 2000;
-  const speedWarning = responseTime < 4000;
+  // 5. Booking/Inquiries — check for forms and booking widgets
+  if (fetchError) {
+    results.push(unreachable('Booking/Inquiries', fetchError));
+  } else {
+    const hasForm = htmlLower.includes('<form');
+    const hasBooking = htmlLower.includes('book') || htmlLower.includes('schedule') || htmlLower.includes('appointment');
+    const hasPhone = /(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/.test(html);
+    const score = hasForm ? (hasBooking ? 4 : 3) : hasPhone ? 2 : 1;
+    results.push({
+      category: 'Booking/Inquiries',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: hasForm
+        ? hasBooking
+          ? 'Contact/booking form detected with appointment-related content.'
+          : 'Contact form found, but no booking-specific functionality detected.'
+        : hasPhone
+          ? 'Phone number found but no online booking/inquiry form.'
+          : 'No contact form or booking system detected.',
+      notes: null,
+      metadata: { hasForm, hasBooking, hasPhone },
+    });
+  }
+
+  // 6. Photos & Media — check image usage
+  if (fetchError) {
+    results.push(unreachable('Photos & Media', fetchError));
+  } else {
+    const imageCount = (html.match(/<img\s/gi) || []).length;
+    const hasAltTags = (html.match(/alt=["'][^"']+["']/gi) || []).length;
+    const hasLazyLoad = htmlLower.includes('loading="lazy"') || htmlLower.includes("loading='lazy'");
+    const altRatio = imageCount > 0 ? hasAltTags / imageCount : 0;
+    const score = imageCount >= 5 ? (altRatio > 0.7 ? 4 : 3) : imageCount > 0 ? 2 : 1;
+    results.push({
+      category: 'Photos & Media',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: imageCount >= 5
+        ? `${imageCount} images found. ${Math.round(altRatio * 100)}% have alt text${hasLazyLoad ? ', lazy loading enabled' : ''}.`
+        : imageCount > 0
+          ? `Only ${imageCount} image(s) found. Consider adding more visual content.`
+          : 'No images found on the page.',
+      notes: null,
+      metadata: { imageCount, hasAltTags, altRatio, hasLazyLoad },
+    });
+  }
+
+  // 7. SEO Optimization — fully automatable
+  if (fetchError) {
+    results.push(unreachable('SEO Optimization', fetchError));
+  } else {
+    const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
+    const hasTitle = !!titleMatch && titleMatch[1].trim().length > 0;
+    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
+      || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["']/i);
+    const hasDesc = !!descMatch && descMatch[1].trim().length > 0;
+    const hasH1 = htmlLower.includes('<h1');
+    const hasStructured = htmlLower.includes('application/ld+json') || htmlLower.includes('itemtype=');
+    const hasCanonical = htmlLower.includes('rel="canonical"') || htmlLower.includes("rel='canonical'");
+
+    let score = 1;
+    if (hasTitle) score++;
+    if (hasDesc) score++;
+    if (hasH1) score++;
+    if (hasStructured || hasCanonical) score++;
+
+    results.push({
+      category: 'SEO Optimization',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: [
+        hasTitle ? 'Page title present' : 'Missing page title',
+        hasDesc ? 'meta description present' : 'missing meta description',
+        hasH1 ? 'H1 heading found' : 'no H1 heading',
+        hasStructured ? 'structured data found' : 'no structured data',
+      ].join(', ') + '.',
+      notes: hasTitle ? `Title: "${titleMatch![1].trim().substring(0, 80)}"` : null,
+      metadata: { hasTitle, hasDesc, hasH1, hasStructured, hasCanonical, title: titleMatch?.[1]?.trim() },
+    });
+  }
+
+  // 8. Speed & Performance
+  if (fetchError) {
+    results.push(unreachable('Speed & Performance', fetchError));
+  } else {
+    const pageSize = html.length;
+    const scriptCount = (html.match(/<script/gi) || []).length;
+    const pageSizeKB = Math.round(pageSize / 1024);
+
+    let score = 1;
+    if (responseTime < 1000) score = 5;
+    else if (responseTime < 2000) score = 4;
+    else if (responseTime < 3000) score = 3;
+    else if (responseTime < 5000) score = 2;
+
+    // Penalize for excessive scripts or large page size
+    if (scriptCount > 20) score = Math.max(1, score - 1);
+    if (pageSizeKB > 500) score = Math.max(1, score - 1);
+
+    results.push({
+      category: 'Speed & Performance',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: `Response time: ${responseTime}ms. Page size: ${pageSizeKB}KB. ${scriptCount} script tags.`,
+      notes: null,
+      metadata: { responseTimeMs: responseTime, pageSizeKB, scriptCount },
+    });
+  }
+
+  // 9. Branding Consistency — manual assessment
   results.push({
-    category: 'Page Speed',
-    status: speedPass ? 'pass' : speedWarning ? 'warning' : 'error',
-    score: speedPass ? 1 : 0,
-    feedback_summary: speedPass
-      ? `Page loaded in ${responseTime}ms — good response time.`
-      : `Page loaded in ${responseTime}ms — ${speedWarning ? 'could be faster' : 'very slow'}.`,
-    notes: null,
-    metadata: { responseTimeMs: responseTime },
+    category: 'Branding Consistency',
+    status: 'neutral',
+    score: null,
+    feedback_summary: null,
+    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires visual comparison across multiple pages.',
+    metadata: { automatable: false },
   });
 
-  // 4. SEO Meta Tags (title + description)
-  const titleMatch = html.match(/<title[^>]*>([^<]*)<\/title>/i);
-  const hasTitle = !!titleMatch && titleMatch[1].trim().length > 0;
-  const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
-    || html.match(/<meta[^>]*content=["']([^"']*)["'][^>]*name=["']description["']/i);
-  const hasDesc = !!descMatch && descMatch[1].trim().length > 0;
-  const seoScore = (hasTitle ? 0.5 : 0) + (hasDesc ? 0.5 : 0);
-  results.push({
-    category: 'SEO Meta Tags',
-    status: seoScore === 1 ? 'pass' : seoScore > 0 ? 'warning' : 'error',
-    score: seoScore >= 0.5 ? 1 : 0,
-    feedback_summary: hasTitle && hasDesc
-      ? 'Page title and meta description found — good SEO foundation.'
-      : hasTitle
-        ? 'Page title found but meta description is missing.'
-        : 'Missing page title and meta description.',
-    notes: hasTitle ? `Title: "${titleMatch![1].trim().substring(0, 80)}"` : null,
-    metadata: { hasTitle, hasDesc, title: titleMatch?.[1]?.trim() },
-  });
+  // 10. Trust Signals
+  if (fetchError) {
+    results.push(unreachable('Trust Signals', fetchError));
+  } else {
+    const hasPhone = /(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/.test(html);
+    const hasEmail = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/.test(html);
+    const socialPlatforms = ['facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'linkedin.com', 'youtube.com', 'tiktok.com'];
+    const foundSocials = socialPlatforms.filter((p) => htmlLower.includes(p));
+    const hasOgImage = htmlLower.includes('property="og:image"') || htmlLower.includes("property='og:image'");
 
-  // 5. Open Graph Tags
-  const hasOgTitle = htmlLower.includes('property="og:title"') || htmlLower.includes("property='og:title'");
-  const hasOgImage = htmlLower.includes('property="og:image"') || htmlLower.includes("property='og:image'");
-  const ogScore = (hasOgTitle ? 0.5 : 0) + (hasOgImage ? 0.5 : 0);
-  results.push({
-    category: 'Open Graph Tags',
-    status: ogScore === 1 ? 'pass' : ogScore > 0 ? 'warning' : 'error',
-    score: ogScore >= 0.5 ? 1 : 0,
-    feedback_summary: hasOgTitle && hasOgImage
-      ? 'Open Graph tags configured — social sharing will display properly.'
-      : hasOgTitle || hasOgImage
-        ? 'Partial Open Graph setup — missing ' + (!hasOgTitle ? 'og:title' : 'og:image') + '.'
-        : 'No Open Graph tags found. Social media shares will lack rich previews.',
-    notes: null,
-    metadata: { hasOgTitle, hasOgImage },
-  });
+    let score = 1;
+    if (isHttps) score++;
+    if (hasPhone || hasEmail) score++;
+    if (foundSocials.length >= 2) score++;
+    if (hasOgImage) score++;
 
-  // 6. Contact Information (phone + email patterns)
-  const phonePattern = /(\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4})/;
-  const emailPattern = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/;
-  const hasPhone = phonePattern.test(html);
-  const hasEmail = emailPattern.test(html);
-  const contactScore = (hasPhone ? 0.5 : 0) + (hasEmail ? 0.5 : 0);
-  results.push({
-    category: 'Contact Information',
-    status: contactScore === 1 ? 'pass' : contactScore > 0 ? 'warning' : 'error',
-    score: contactScore >= 0.5 ? 1 : 0,
-    feedback_summary: hasPhone && hasEmail
-      ? 'Phone and email contact information found on the page.'
-      : hasPhone || hasEmail
-        ? `Only ${hasPhone ? 'phone number' : 'email address'} found — add ${!hasPhone ? 'phone number' : 'email'} for better accessibility.`
-        : 'No contact information (phone or email) found on the page.',
-    notes: null,
-    metadata: { hasPhone, hasEmail },
-  });
-
-  // 7. Social Media Links
-  const socialPlatforms = ['facebook.com', 'instagram.com', 'twitter.com', 'x.com', 'linkedin.com', 'youtube.com', 'tiktok.com'];
-  const foundSocials = socialPlatforms.filter((p) => htmlLower.includes(p));
-  const hasSocials = foundSocials.length >= 2;
-  results.push({
-    category: 'Social Media Links',
-    status: hasSocials ? 'pass' : foundSocials.length > 0 ? 'warning' : 'error',
-    score: hasSocials ? 1 : 0,
-    feedback_summary: hasSocials
-      ? `Found ${foundSocials.length} social media links: ${foundSocials.map(s => s.replace('.com', '')).join(', ')}.`
-      : foundSocials.length > 0
-        ? `Only ${foundSocials.length} social link found. Consider adding more for broader reach.`
-        : 'No social media links found on the page.',
-    notes: null,
-    metadata: { foundSocials },
-  });
+    results.push({
+      category: 'Trust Signals',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: [
+        isHttps ? 'SSL active' : 'No SSL',
+        hasPhone ? 'phone visible' : 'no phone',
+        hasEmail ? 'email visible' : 'no email',
+        foundSocials.length > 0 ? `${foundSocials.length} social links` : 'no social links',
+      ].join(', ') + '.',
+      notes: null,
+      metadata: { isHttps, hasPhone, hasEmail, foundSocials, hasOgImage },
+    });
+  }
 
   return results;
+}
+
+/** Convert a 1-5 score to a status tier */
+function tierFromScore(score: number): 'pass' | 'warning' | 'error' {
+  if (score >= 4) return 'pass';
+  if (score >= 3) return 'warning';
+  return 'error';
+}
+
+/** Placeholder for categories that couldn't be analyzed */
+function unreachable(category: string, error: string): WebsiteCheckResult {
+  return {
+    category,
+    status: 'neutral',
+    score: null,
+    feedback_summary: 'Could not analyze — website was unreachable.',
+    notes: error,
+    metadata: { automatable: true, fetchFailed: true },
+  };
 }

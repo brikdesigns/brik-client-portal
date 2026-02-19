@@ -2,13 +2,13 @@
  * Generate initial report rows for each report type.
  *
  * When a report set is created, this module produces the report + report_item
- * rows based on the client's industry. Items start as 'neutral' with no scores —
- * except for website reports, which are auto-analyzed.
+ * rows based on the client's industry. Website reports get partial auto-analysis;
+ * all others start as draft templates for manual entry.
  */
 
 import { type Industry, getReportConfigs, type ReportTypeConfig } from './report-config';
 import { calculateTier } from './scoring';
-import { analyzeWebsite } from './website';
+import { analyzeWebsite, type WebsiteCheckResult } from './website';
 
 interface ReportRow {
   report_set_id: string;
@@ -56,7 +56,7 @@ export async function seedReports(
     const maxScore = config.categories.reduce((sum, c) => sum + c.maxScore, 0);
 
     // Auto-analyze website if URL provided
-    let websiteResults: Awaited<ReturnType<typeof analyzeWebsite>> | null = null;
+    let websiteResults: WebsiteCheckResult[] | null = null;
     if (config.type === 'website' && websiteUrl) {
       try {
         websiteResults = await analyzeWebsite(websiteUrl);
@@ -65,11 +65,17 @@ export async function seedReports(
       }
     }
 
-    const score = websiteResults
-      ? websiteResults.reduce((sum, r) => sum + r.score, 0)
+    // Website reports with results are "in_progress" (not completed) since
+    // manual categories (Overall Design, Content Clarity, Branding Consistency)
+    // still need human review
+    const scoredItems = websiteResults?.filter((r) => r.score !== null) ?? [];
+    const score = scoredItems.length > 0
+      ? scoredItems.reduce((sum, r) => sum + (r.score ?? 0), 0)
       : null;
     const tier = score !== null ? calculateTier(score, maxScore) : null;
-    const status = websiteResults ? 'completed' : 'draft';
+    const status = websiteResults
+      ? (websiteResults.some((r) => r.score === null) ? 'in_progress' : 'completed')
+      : 'draft';
 
     const opportunities = websiteResults
       ? generateWebsiteOpportunities(websiteResults)
@@ -91,7 +97,7 @@ export async function seedReports(
 
     // Create items from category templates
     const items = websiteResults
-      ? createItemsFromAnalysis(reportId, websiteResults)
+      ? createItemsFromAnalysis(reportId, config, websiteResults)
       : createEmptyItems(reportId, config);
 
     allItems.push(...items);
@@ -110,57 +116,77 @@ function createEmptyItems(reportId: string, config: ReportTypeConfig): ReportIte
     total_reviews: null,
     feedback_summary: null,
     notes: null,
-    metadata: { maxScore: cat.maxScore },
+    metadata: {
+      maxScore: cat.maxScore,
+      ...(cat.defaultMetadata ?? {}),
+    },
     sort_order: index,
   }));
 }
 
 function createItemsFromAnalysis(
   reportId: string,
-  results: Awaited<ReturnType<typeof analyzeWebsite>>,
+  config: ReportTypeConfig,
+  results: WebsiteCheckResult[],
 ): ReportItemRow[] {
-  return results.map((result, index) => ({
-    report_id: reportId,
-    category: result.category,
-    status: result.status,
-    score: result.score,
-    rating: null,
-    total_reviews: null,
-    feedback_summary: result.feedback_summary,
-    notes: result.notes,
-    metadata: result.metadata as Record<string, unknown>,
-    sort_order: index,
-  }));
+  // Match results to config categories by name
+  return config.categories.map((cat, index) => {
+    const result = results.find((r) => r.category === cat.category);
+    if (result) {
+      return {
+        report_id: reportId,
+        category: result.category,
+        status: result.status,
+        score: result.score,
+        rating: null,
+        total_reviews: null,
+        feedback_summary: result.feedback_summary,
+        notes: result.notes,
+        metadata: {
+          maxScore: cat.maxScore,
+          ...result.metadata,
+        },
+        sort_order: index,
+      };
+    }
+    // Fallback: category exists in config but not in results
+    return {
+      report_id: reportId,
+      category: cat.category,
+      status: 'neutral',
+      score: null,
+      rating: null,
+      total_reviews: null,
+      feedback_summary: null,
+      notes: null,
+      metadata: { maxScore: cat.maxScore },
+      sort_order: index,
+    };
+  });
 }
 
-function generateWebsiteOpportunities(
-  results: Awaited<ReturnType<typeof analyzeWebsite>>,
-): string {
-  const issues = results.filter((r) => r.status === 'error' || r.status === 'warning');
-  if (issues.length === 0) {
-    return 'Website meets all basic standards. Consider advanced optimizations like structured data, page speed improvements, and accessibility audits.';
+function generateWebsiteOpportunities(results: WebsiteCheckResult[]): string {
+  const lines: string[] = [];
+
+  // Issues from auto-analyzed categories
+  const issues = results.filter((r) => r.score !== null && r.score <= 2);
+  for (const issue of issues) {
+    if (issue.feedback_summary) {
+      lines.push(`**${issue.category}:** ${issue.feedback_summary}`);
+    }
   }
 
-  const lines = issues.map((issue) => {
-    switch (issue.category) {
-      case 'SSL Certificate':
-        return 'Install an SSL certificate to secure the website and improve search rankings.';
-      case 'Mobile Responsive':
-        return 'Add a viewport meta tag and ensure the site is mobile-friendly — over 60% of web traffic is mobile.';
-      case 'Page Speed':
-        return 'Optimize page load time by compressing images, enabling caching, and minimizing JavaScript.';
-      case 'SEO Meta Tags':
-        return 'Add a descriptive meta title and description to improve search engine visibility.';
-      case 'Open Graph Tags':
-        return 'Configure Open Graph tags so social media shares display rich previews with images and descriptions.';
-      case 'Contact Information':
-        return 'Add visible phone number and email address to the website for easy client contact.';
-      case 'Social Media Links':
-        return 'Link to active social media profiles to build credibility and engagement.';
-      default:
-        return `Address ${issue.category}: ${issue.feedback_summary}`;
-    }
-  });
+  // Note which categories need manual review
+  const manualCategories = results.filter((r) => r.score === null);
+  if (manualCategories.length > 0) {
+    lines.push(
+      `**Manual review needed:** ${manualCategories.map((r) => r.category).join(', ')} — these categories require visual assessment.`
+    );
+  }
+
+  if (lines.length === 0) {
+    return 'Auto-analyzed categories look strong. Complete manual review for Overall Design, Content Clarity, and Branding Consistency to finalize the report.';
+  }
 
   return lines.join('\n\n');
 }

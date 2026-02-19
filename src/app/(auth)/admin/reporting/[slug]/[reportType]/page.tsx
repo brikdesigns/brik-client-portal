@@ -1,11 +1,11 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
-import { ReportStatusBadge, ItemStatusBadge } from '@/components/report-badges';
+import { ReportStatusBadge } from '@/components/report-badges';
 import { ScoreCard, NumericScoreCard } from '@/components/score-card';
 import { OpportunitiesCard } from '@/components/opportunities-card';
+import { EditableReportTable } from '@/components/editable-report-table';
+import { AnalyzeButton } from '@/components/analyze-button';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
 import { ReportDetailTabs } from './tabs';
@@ -25,7 +25,7 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
   // Fetch client
   const { data: client, error: clientError } = await supabase
     .from('clients')
-    .select('id, name, slug, industry')
+    .select('id, name, slug, industry, website_url')
     .eq('slug', slug)
     .single();
 
@@ -59,8 +59,21 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
     .eq('report_id', report.id)
     .order('sort_order', { ascending: true });
 
-  const allItems = items ?? [];
+  const allItems = (items ?? []) as Array<{
+    id: string;
+    category: string;
+    status: string;
+    score: number | null;
+    rating: number | null;
+    total_reviews: number | null;
+    feedback_summary: string | null;
+    notes: string | null;
+    metadata: Record<string, unknown>;
+  }>;
   const reportLabel = REPORT_TYPE_LABELS[reportType as ReportType] || reportType;
+
+  // Count scored vs total items for progress display
+  const scoredCount = allItems.filter((i) => i.score !== null).length;
 
   return (
     <div>
@@ -87,10 +100,18 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
             value: <ReportStatusBadge status={report.status} />,
           },
           {
-            label: 'Created',
-            value: new Date(report.created_at).toLocaleDateString(),
+            label: 'Progress',
+            value: `${scoredCount} of ${allItems.length} items scored`,
           },
         ]}
+        actions={
+          <AnalyzeButton
+            reportId={report.id}
+            reportSetId={reportSet.id}
+            reportType={reportType}
+            websiteUrl={client.website_url}
+          />
+        }
         tabs={
           <ReportDetailTabs
             slug={slug}
@@ -120,7 +141,7 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
               <NumericScoreCard value="—" label="Score pending" />
             )}
             <NumericScoreCard
-              value={report.score !== null ? report.score.toString() : '—'}
+              value={report.score !== null ? `${report.score} / ${report.max_score ?? '?'}` : '—'}
               label="Score"
             />
           </div>
@@ -129,44 +150,12 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
           <OpportunitiesCard text={report.opportunities_text} />
         </div>
       ) : (
-        <Card variant="elevated" padding="lg">
-          <DataTable
-            data={allItems}
-            rowKey={(item) => item.id}
-            emptyMessage="No data yet for this report."
-            columns={[
-              {
-                header: 'Category',
-                accessor: (item) => item.category,
-                style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
-              },
-              {
-                header: 'Status',
-                accessor: (item) => <ItemStatusBadge status={item.status} />,
-              },
-              {
-                header: 'Rating',
-                accessor: (item) => item.rating !== null ? item.rating.toString() : '—',
-                style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
-              },
-              {
-                header: 'Reviews',
-                accessor: (item) => item.total_reviews !== null ? item.total_reviews.toString() : '—',
-                style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
-              },
-              {
-                header: 'Summary',
-                accessor: (item) => item.feedback_summary || '—',
-                style: { color: 'var(--_color---text--secondary)', fontSize: '13px', maxWidth: '300px' },
-              },
-              {
-                header: 'Notes',
-                accessor: (item) => item.notes || '—',
-                style: { color: 'var(--_color---text--muted)', fontSize: '13px', maxWidth: '200px' },
-              },
-            ]}
-          />
-        </Card>
+        <EditableReportTable
+          items={allItems}
+          reportId={report.id}
+          reportSetId={reportSet.id}
+          reportType={reportType as ReportType}
+        />
       )}
     </div>
   );

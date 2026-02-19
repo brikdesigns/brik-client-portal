@@ -43,6 +43,9 @@ export default async function ClientReportListPage({ params }: Props) {
     .order('created_at', { ascending: true });
 
   const allReports = reports ?? [];
+  const completedCount = allReports.filter((r) => r.status === 'completed').length;
+  const totalCount = allReports.length;
+  const allComplete = completedCount === totalCount && totalCount > 0;
 
   return (
     <div>
@@ -65,16 +68,14 @@ export default async function ClientReportListPage({ params }: Props) {
               : 'General',
           },
           {
-            label: 'Overall score',
-            value: reportSet.overall_score !== null
-              ? `${reportSet.overall_score} / ${reportSet.overall_max_score}`
-              : 'Pending',
+            label: 'Progress',
+            value: `${completedCount} of ${totalCount} reports complete`,
           },
           {
             label: 'Overall tier',
-            value: reportSet.overall_tier
+            value: allComplete && reportSet.overall_tier
               ? <ScoreTierBadge tier={reportSet.overall_tier} />
-              : 'Pending',
+              : 'In progress',
           },
         ]}
       />
