@@ -1,6 +1,6 @@
 {
   "name": "brik-client-portal",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -12,7 +12,7 @@
     "db:status": "supabase migration list",
     "db:seed": "supabase db reset --db-only",
     "prepare": "husky",
-    "db:push-api": "node scripts/apply-migration-with-api.mjs"
+    "maintenance": "./scripts/portal-maintenance.sh"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
@@ -21,9 +21,7 @@
     "@fortawesome/react-fontawesome": "^3.2.0",
     "@supabase/ssr": "^0.5.0",
     "@supabase/supabase-js": "^2.45.0",
-    "dotenv": "^17.3.1",
     "next": "^14.2.0",
-    "pg": "^8.18.0",
     "react": "^18.3.0",
     "react-dom": "^18.3.0",
     "react-markdown": "^10.1.0",
