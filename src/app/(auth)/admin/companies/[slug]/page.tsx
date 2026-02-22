@@ -90,7 +90,6 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     .eq('company_id', client.id)
     .order('created_at', { ascending: false });
 
-  const latestAgreement = agreements?.find((a) => a.type === 'marketing_agreement') || null;
   const latestBaa = agreements?.find((a) => a.type === 'baa') || null;
 
   const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
@@ -373,15 +372,17 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 ? `Analysis ${reportSet.status === 'completed' ? 'complete' : reportSet.status === 'needs_review' ? 'needs review' : 'in progress'}.`
                 : 'Evaluate the prospect\'s current marketing presence, competitors, and opportunities for growth.'
             }
-            badge={reportSet ? <ReportSetStatusBadge status={reportSet.status} /> : undefined}
             action={
-              reportSet ? (
-                <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
-                  View Details
-                </Button>
-              ) : (
-                <RunAnalysisButton clientId={client.id} slug={client.slug} />
-              )
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {reportSet && <ReportSetStatusBadge status={reportSet.status} />}
+                {reportSet ? (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
+                    View Details
+                  </Button>
+                ) : (
+                  <RunAnalysisButton clientId={client.id} slug={client.slug} />
+                )}
+              </div>
             }
           />
           <CardControl
@@ -391,46 +392,32 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 ? `${latestProposal.title} — ${formatCurrency(latestProposal.total_amount_cents)}`
                 : 'Generate a tailored proposal based on the marketing analysis and recommended services.'
             }
-            badge={latestProposal ? <ProposalStatusBadge status={latestProposal.status} /> : undefined}
             action={
-              latestProposal ? (
-                <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
-                  View
-                </Button>
-              ) : (
-                <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
-                  Start
-                </Button>
-              )
-            }
-          />
-          {latestProposal?.status === 'accepted' && (
-            <CardControl
-              title="Marketing Agreement"
-              description={
-                latestAgreement
-                  ? `${latestAgreement.title} — ${latestAgreement.status === 'signed' ? 'Signed' : latestAgreement.status === 'sent' || latestAgreement.status === 'viewed' ? 'Awaiting signature' : 'Draft'}`
-                  : 'Agreement will be generated when the proposal is accepted.'
-              }
-              badge={latestAgreement ? <AgreementStatusBadge status={latestAgreement.status} /> : undefined}
-              action={
-                latestAgreement ? (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestAgreement.id}`}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {latestProposal && <ProposalStatusBadge status={latestProposal.status} />}
+                {latestProposal ? (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
                     View
                   </Button>
-                ) : undefined
-              }
-            />
-          )}
+                ) : (
+                  <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
+                    Start
+                  </Button>
+                )}
+              </div>
+            }
+          />
           {latestBaa && (
             <CardControl
               title="Business Associate Agreement"
               description={`BAA — ${latestBaa.status === 'signed' ? 'Signed' : latestBaa.status === 'sent' || latestBaa.status === 'viewed' ? 'Awaiting signature' : 'Draft'}`}
-              badge={<AgreementStatusBadge status={latestBaa.status} />}
               action={
-                <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
-                  View
-                </Button>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <AgreementStatusBadge status={latestBaa.status} />
+                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
+                    View
+                  </Button>
+                </div>
               }
             />
           )}

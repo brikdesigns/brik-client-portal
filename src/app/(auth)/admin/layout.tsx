@@ -36,7 +36,7 @@ export default async function AdminLayout({
       <main
         style={{
           flex: 1,
-          backgroundColor: 'var(--_color---page--secondary, #f2f2f2)',
+          backgroundColor: 'var(--_color---page--primary)',
           padding: '32px',
           marginLeft: '260px',
           minHeight: '100vh',

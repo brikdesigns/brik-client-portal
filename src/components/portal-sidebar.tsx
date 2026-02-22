@@ -13,12 +13,11 @@ import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 const adminNavItems = [
   { label: 'Overview', href: '/admin' },
   { label: 'Companies', href: '/admin/companies' },
-  { label: 'Reporting', href: '/admin/reporting' },
+  { label: 'Contacts', href: '/admin/contacts' },
   { label: 'Services', href: '/admin/services' },
-  { label: 'Agreements', href: '/admin/agreements' },
   { label: 'Projects', href: '/admin/projects' },
   { label: 'Invoices', href: '/admin/invoices' },
-  { label: 'Contacts', href: '/admin/contacts' },
+  { label: 'Reporting', href: '/admin/reporting' },
 ];
 
 const clientNavItems = [
