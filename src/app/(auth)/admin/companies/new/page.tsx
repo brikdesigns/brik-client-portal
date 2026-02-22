@@ -59,7 +59,7 @@ export default function NewCompanyPage() {
     try {
       const supabase = createClient();
       const slug = toSlug(name);
-      const defaultStatus = type === 'lead' ? 'new' : 'prospect';
+      const defaultStatus = type === 'lead' ? 'needs_qualified' : 'active';
 
       const { error: insertError } = await supabase
         .from('companies')

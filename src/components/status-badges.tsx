@@ -11,6 +11,9 @@ import {
   faEye,
   faPaperPlane,
   faClock,
+  faStop,
+  faClipboardList,
+  faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle as faCircleRegular } from '@fortawesome/free-regular-svg-icons';
 
@@ -31,47 +34,32 @@ function StatusBadgeBase({ status, map }: { status: string; map: Record<string, 
   );
 }
 
-// ── Company Status ──────────────────────────────────────────────────
+// ── Company Status (unified) ────────────────────────────────────────
 const companyStatusMap: Record<string, StatusConfig> = {
-  // Lead statuses
-  new: {
-    label: 'New',
-    variant: 'info',
-    icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
-  },
-  working: {
-    label: 'Working',
-    variant: 'progress',
-    icon: <FontAwesomeIcon icon={faRotate} style={iconSize} />,
-  },
-  qualified: {
-    label: 'Qualified',
-    variant: 'positive',
-    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
-  },
-  unqualified: {
-    label: 'Unqualified',
+  not_started: {
+    label: 'Not Started',
     variant: 'neutral',
-    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+    icon: <FontAwesomeIcon icon={faStop} style={iconSize} />,
   },
-  // Client statuses
-  prospect: {
-    label: 'Prospect',
+  needs_qualified: {
+    label: 'Needs Qualified',
     variant: 'warning',
     icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
+  },
+  needs_proposal: {
+    label: 'Needs Proposal',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faClipboardList} style={iconSize} />,
   },
   active: {
     label: 'Active',
     variant: 'positive',
     icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
   },
-  inactive: {
-    label: 'Inactive',
+  not_active: {
+    label: 'Not Active',
     variant: 'neutral',
-  },
-  archived: {
-    label: 'Archived',
-    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
   },
 };
 
@@ -229,7 +217,15 @@ const serviceTypeLabels: Record<string, string> = {
 
 const companyTypeLabels: Record<string, string> = {
   lead: 'Lead',
+  prospect: 'Prospect',
   client: 'Client',
+};
+
+// Company type tag colors (system palette)
+const companyTypeColors: Record<string, { bg: string; text: string }> = {
+  lead:     { bg: '#8b5cf6', text: '#ffffff' },  // purple
+  prospect: { bg: '#4665f5', text: '#ffffff' },  // blue
+  client:   { bg: '#27ae60', text: '#ffffff' },  // green
 };
 
 const roleLabels: Record<string, string> = {
@@ -243,9 +239,6 @@ const roleLabels: Record<string, string> = {
 export function CompanyStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={companyStatusMap} />;
 }
-
-/** @deprecated Use CompanyStatusBadge instead */
-export const ClientStatusBadge = CompanyStatusBadge;
 
 export function ServiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={serviceStatusMap} />;
@@ -267,13 +260,22 @@ export function ProposalStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={proposalStatusMap} />;
 }
 
-export function CompanyTypeBadge({ type }: { type: string }) {
+export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: boolean }) {
+  const colors = muted
+    ? { bg: 'var(--_color---bg--secondary, #e0e0e0)', text: 'var(--_color---text--secondary, #828282)' }
+    : companyTypeColors[type] ?? { bg: '#e0e0e0', text: '#333' };
   return (
-    <Badge status={type === 'lead' ? 'warning' : 'info'}>
+    <Tag
+      icon={<FontAwesomeIcon icon={faUser} style={{ width: 10, height: 10 }} />}
+      style={{ backgroundColor: colors.bg, color: colors.text }}
+    >
       {companyTypeLabels[type] ?? type}
-    </Badge>
+    </Tag>
   );
 }
+
+/** @deprecated Use CompanyTypeTag */
+export const CompanyTypeBadge = CompanyTypeTag;
 
 export function ServiceTypeTag({ type }: { type: string }) {
   return <Tag>{serviceTypeLabels[type] ?? type}</Tag>;
@@ -283,5 +285,3 @@ export function RoleTag({ role }: { role: string }) {
   return <Tag>{roleLabels[role] ?? role}</Tag>;
 }
 
-/** @deprecated Use ServiceTypeTag instead */
-export const ServiceTypeBadge = ServiceTypeTag;

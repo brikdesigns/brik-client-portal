@@ -4,7 +4,7 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
-import { CompanyStatusBadge, CompanyTypeBadge } from '@/components/status-badges';
+import { CompanyStatusBadge, CompanyTypeTag } from '@/components/status-badges';
 
 interface Props {
   searchParams: Promise<{ type?: string }>;
@@ -30,7 +30,7 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
     `)
     .order('name');
 
-  if (typeFilter === 'lead' || typeFilter === 'client') {
+  if (typeFilter === 'lead' || typeFilter === 'prospect' || typeFilter === 'client') {
     query = query.eq('type', typeFilter);
   }
 
@@ -39,6 +39,7 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
   // Counts for stat cards
   const allCompanies = companies ?? [];
   const leadCount = allCompanies.filter((c) => c.type === 'lead').length;
+  const prospectCount = allCompanies.filter((c) => c.type === 'prospect').length;
   const clientCount = allCompanies.filter((c) => c.type === 'client').length;
 
   // Tab styles
@@ -59,14 +60,9 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
         title="Companies"
         subtitle="Manage leads and client accounts."
         actions={
-          <div style={{ display: 'flex', gap: 'var(--_space---gap--md)' }}>
-            <Button variant="outline" size="md" asLink href="/admin/companies/new?type=lead">
-              Add lead
-            </Button>
-            <Button variant="primary" size="md" asLink href="/admin/companies/new?type=client">
-              Add client
-            </Button>
-          </div>
+          <Button variant="primary" size="md" asLink href="/admin/companies/new">
+            Add New
+          </Button>
         }
       />
 
@@ -82,6 +78,7 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
         >
           <CardSummary label="Total companies" value={allCompanies.length} />
           <CardSummary label="Leads" value={leadCount} />
+          <CardSummary label="Prospects" value={prospectCount} />
           <CardSummary label="Clients" value={clientCount} />
         </div>
       )}
@@ -95,6 +92,7 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
       >
         <a href="/admin/companies" style={tabStyle(!typeFilter)}>All</a>
         <a href="/admin/companies?type=lead" style={tabStyle(typeFilter === 'lead')}>Leads</a>
+        <a href="/admin/companies?type=prospect" style={tabStyle(typeFilter === 'prospect')}>Prospects</a>
         <a href="/admin/companies?type=client" style={tabStyle(typeFilter === 'client')}>Clients</a>
       </div>
 
@@ -105,9 +103,11 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
           emptyMessage={
             typeFilter === 'lead'
               ? 'No leads yet. Add your first lead to get started.'
-              : typeFilter === 'client'
-                ? 'No clients yet. Add your first client to get started.'
-                : 'No companies yet. Add your first company to get started.'
+              : typeFilter === 'prospect'
+                ? 'No prospects yet. Qualify a lead to create one.'
+                : typeFilter === 'client'
+                  ? 'No clients yet.'
+                  : 'No companies yet. Add your first company to get started.'
           }
           columns={[
             {
@@ -117,7 +117,7 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
             },
             {
               header: 'Type',
-              accessor: (c) => <CompanyTypeBadge type={c.type} />,
+              accessor: (c) => <CompanyTypeTag type={c.type} muted={c.status === 'not_active'} />,
             },
             {
               header: 'Contact',

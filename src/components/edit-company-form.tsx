@@ -26,18 +26,12 @@ function formatPhone(digits: string): string {
   return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
-const leadStatusOptions = [
-  { label: 'New', value: 'new' },
-  { label: 'Working', value: 'working' },
-  { label: 'Qualified', value: 'qualified' },
-  { label: 'Unqualified', value: 'unqualified' },
-];
-
-const clientStatusOptions = [
-  { label: 'Prospect', value: 'prospect' },
+const statusOptions = [
+  { label: 'Not Started', value: 'not_started' },
+  { label: 'Needs Qualified', value: 'needs_qualified' },
+  { label: 'Needs Proposal', value: 'needs_proposal' },
   { label: 'Active', value: 'active' },
-  { label: 'Inactive', value: 'inactive' },
-  { label: 'Archived', value: 'archived' },
+  { label: 'Not Active', value: 'not_active' },
 ];
 
 interface EditCompanyFormProps {
@@ -131,7 +125,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
             label="Status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
-            options={client.type === 'lead' ? leadStatusOptions : clientStatusOptions}
+            options={statusOptions}
             fullWidth
           />
 

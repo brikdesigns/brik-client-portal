@@ -19,7 +19,7 @@ export function QualifyLeadButton({ companyId }: QualifyLeadButtonProps) {
 
     const { error } = await supabase
       .from('companies')
-      .update({ type: 'client', status: 'prospect' })
+      .update({ type: 'prospect', status: 'needs_proposal' })
       .eq('id', companyId);
 
     if (error) {
@@ -33,7 +33,7 @@ export function QualifyLeadButton({ companyId }: QualifyLeadButtonProps) {
 
   return (
     <Button variant="primary" size="sm" onClick={handleQualify} disabled={loading}>
-      {loading ? 'Qualifying...' : 'Qualify as Client'}
+      {loading ? 'Qualifying...' : 'Qualify Lead'}
     </Button>
   );
 }

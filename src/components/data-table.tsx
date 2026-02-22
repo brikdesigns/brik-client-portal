@@ -36,7 +36,7 @@ export function DataTable<T>({
 
   return (
     <div style={{ overflowX: 'auto' }}>
-      <Table size="comfortable">
+      <Table size="default">
         <TableHeader>
           <TableRow>
             {columns.map((col, i) => (
