@@ -4,6 +4,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -191,6 +192,11 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           <div style={{ display: 'flex', gap: 'var(--_space---gap--md)' }}>
             <DeleteCompanyButton companyId={client.id} companyName={client.name} />
             {companyType === 'lead' && <QualifyLeadButton companyId={client.id} />}
+            {companyType === 'prospect' && (
+              <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}?tab=onboarding`}>
+                Onboard Prospect
+              </Button>
+            )}
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
               Edit
             </Button>
@@ -581,10 +587,10 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Name',
                 accessor: (c) => (
-                  <span style={{ fontWeight: 500, color: 'var(--_color---text--primary)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 500, color: 'var(--_color---text--primary)' }}>
                     {c.full_name}
                     {c.is_primary && (
-                      <Badge status="info" style={{ marginLeft: '8px' }}>Primary</Badge>
+                      <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>Primary</Tag>
                     )}
                   </span>
                 ),
@@ -607,9 +613,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Role',
                 accessor: (c) => (
-                  <Badge status="neutral">
+                  <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>
                     {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
-                  </Badge>
+                  </Tag>
                 ),
               },
               {

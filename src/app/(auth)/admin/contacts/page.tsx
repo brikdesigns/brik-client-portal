@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Tag } from '@bds/components/ui/Tag/Tag';
+import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -39,10 +41,10 @@ export default async function AdminContactsPage() {
             {
               header: 'Name',
               accessor: (c) => (
-                <span style={{ fontWeight: 500, color: 'var(--_color---text--primary)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 500, color: 'var(--_color---text--primary)' }}>
                   {c.full_name}
                   {c.is_primary && (
-                    <Badge status="info" style={{ marginLeft: '8px' }}>Primary</Badge>
+                    <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>Primary</Tag>
                   )}
                 </span>
               ),
@@ -69,16 +71,11 @@ export default async function AdminContactsPage() {
               style: { color: 'var(--_color---text--secondary)' },
             },
             {
-              header: 'Phone',
-              accessor: (c) => c.phone || '—',
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-            {
               header: 'Role',
               accessor: (c) => (
-                <Badge status="neutral">
+                <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>
                   {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
-                </Badge>
+                </Tag>
               ),
             },
             {
@@ -88,6 +85,20 @@ export default async function AdminContactsPage() {
                   {c.user_id ? 'Active' : 'No access'}
                 </Badge>
               ),
+            },
+            {
+              header: '',
+              accessor: (c) => (
+                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                  <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
+                    View
+                  </Button>
+                  <Button variant="ghost" size="sm" asLink href={`/admin/contacts/${c.id}/edit`}>
+                    Edit
+                  </Button>
+                </div>
+              ),
+              style: { textAlign: 'right' },
             },
           ]}
         />
