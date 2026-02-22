@@ -12,7 +12,8 @@
     "db:status": "supabase migration list",
     "db:seed": "supabase db reset --db-only",
     "prepare": "husky",
-    "maintenance": "./scripts/portal-maintenance.sh"
+    "maintenance": "./scripts/portal-maintenance.sh",
+    "audit:tokens": "./scripts/token-audit.sh"
   },
   "dependencies": {
     "@fortawesome/fontawesome-svg-core": "^7.2.0",
