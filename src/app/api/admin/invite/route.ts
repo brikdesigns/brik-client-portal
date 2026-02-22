@@ -24,7 +24,7 @@ export async function POST(request: Request) {
 
   // Parse request body
   const body = await request.json();
-  const { email, full_name, role, client_id } = body;
+  const { email, full_name, role, company_id } = body;
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       .update({
         invited_by: user.id,
         invited_at: new Date().toISOString(),
-        company_id: client_id || null,
+        company_id: company_id || null,
       })
       .eq('id', data.user.id);
   }

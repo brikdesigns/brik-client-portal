@@ -32,7 +32,7 @@ export async function POST(request: Request) {
   const body = await request.json();
   const {
     name,
-    client_id,
+    company_id,
     description,
     status,
     start_date,
@@ -41,9 +41,9 @@ export async function POST(request: Request) {
     clickup_assignee_id,
   } = body;
 
-  if (!name || !client_id) {
+  if (!name || !company_id) {
     return NextResponse.json(
-      { error: 'name and client_id are required' },
+      { error: 'name and company_id are required' },
       { status: 400 }
     );
   }
@@ -91,7 +91,7 @@ export async function POST(request: Request) {
   const { data: project, error: insertError } = await supabase
     .from('projects')
     .insert({
-      company_id: client_id,
+      company_id,
       name,
       slug: toSlug(name),
       description: description || null,

@@ -20,7 +20,7 @@ interface Agreement {
   signed_by_name: string | null;
   signed_by_email: string | null;
   created_at: string;
-  clients: { name: string; contact_email: string | null };
+  companies: { name: string; contact_email: string | null };
 }
 
 export default function PublicAgreementPage() {
@@ -137,7 +137,7 @@ export default function PublicAgreementPage() {
             style={{ marginBottom: '32px' }}
           />
           <p style={{ ...bodyStyle, color: 'var(--_color---text--muted)', marginBottom: '8px' }}>
-            {agreement.title} for {agreement.clients.name}
+            {agreement.title} for {agreement.companies.name}
           </p>
           <h1 style={{ ...headingStyle, fontSize: '28px' }}>{agreement.title}</h1>
         </div>

@@ -27,7 +27,7 @@ interface Proposal {
   accepted_at: string | null;
   accepted_by_email: string | null;
   created_at: string;
-  clients: { name: string; contact_email: string | null };
+  companies: { name: string; contact_email: string | null };
   proposal_items: ProposalItem[];
 }
 
@@ -134,7 +134,7 @@ export default function PublicProposalPage() {
             style={{ marginBottom: '32px' }}
           />
           <p style={{ ...bodyStyle, color: 'var(--_color---text--muted)', marginBottom: '8px' }}>
-            Proposal for {proposal.clients.name}
+            Proposal for {proposal.companies.name}
           </p>
           <h1 style={{ ...headingStyle, fontSize: '28px' }}>{proposal.title}</h1>
         </div>

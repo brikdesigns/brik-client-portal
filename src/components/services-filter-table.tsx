@@ -6,7 +6,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
 import { DataTable } from './data-table';
 import { ServiceBadge } from './service-badge';
-import { ServiceTypeTag, ClientStatusBadge } from './status-badges';
+import { ServiceTypeTag, CompanyStatusBadge } from './status-badges';
 import { formatCurrency } from '@/lib/format';
 
 interface ServiceCategory {
@@ -171,7 +171,7 @@ export function ServicesFilterTable({
             {
               header: 'Status',
               accessor: (s) => (
-                <ClientStatusBadge status={s.active ? 'active' : 'inactive'} />
+                <CompanyStatusBadge status={s.active ? 'active' : 'inactive'} />
               ),
             },
             {
