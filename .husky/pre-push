@@ -10,5 +10,6 @@ if [ -n "$DIRTY_PKG" ]; then
   exit 1
 fi
 
-echo "🔍 Running build check before push..."
+echo "🔍 Running clean build check before push..."
+rm -rf .next
 npm run build

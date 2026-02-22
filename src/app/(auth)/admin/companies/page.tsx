@@ -5,6 +5,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { CompanyStatusBadge, CompanyTypeTag } from '@/components/status-badges';
+import { CompanyTabs } from '@/components/company-tabs';
 
 interface Props {
   searchParams: Promise<{ type?: string }>;
@@ -14,7 +15,8 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
   const { type: typeFilter } = await searchParams;
   const supabase = createClient();
 
-  let query = supabase
+  // Always fetch all companies for accurate stat counts
+  const { data: allCompanies } = await supabase
     .from('companies')
     .select(`
       id,
@@ -30,29 +32,18 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
     `)
     .order('name');
 
-  if (typeFilter === 'lead' || typeFilter === 'prospect' || typeFilter === 'client') {
-    query = query.eq('type', typeFilter);
-  }
+  const companies = allCompanies ?? [];
 
-  const { data: companies } = await query;
+  // Stats from full dataset (always accurate regardless of tab)
+  const leadCount = companies.filter((c) => c.type === 'lead').length;
+  const prospectCount = companies.filter((c) => c.type === 'prospect').length;
+  const clientCount = companies.filter((c) => c.type === 'client').length;
 
-  // Counts for stat cards
-  const allCompanies = companies ?? [];
-  const leadCount = allCompanies.filter((c) => c.type === 'lead').length;
-  const prospectCount = allCompanies.filter((c) => c.type === 'prospect').length;
-  const clientCount = allCompanies.filter((c) => c.type === 'client').length;
-
-  // Tab styles
-  const tabStyle = (active: boolean) => ({
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    fontWeight: active ? 600 : 400,
-    color: active ? 'var(--_color---text--primary)' : 'var(--_color---text--secondary)',
-    textDecoration: 'none' as const,
-    padding: '8px 16px',
-    borderBottom: active ? '2px solid var(--brand--primary, #E35335)' : '2px solid transparent',
-    display: 'inline-block',
-  });
+  // Filter for table display
+  const validTypes = ['lead', 'prospect', 'client'];
+  const tableData = typeFilter && validTypes.includes(typeFilter)
+    ? companies.filter((c) => c.type === typeFilter)
+    : companies;
 
   return (
     <div>
@@ -64,41 +55,27 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
             Add New
           </Button>
         }
+        tabs={<CompanyTabs />}
       />
 
-      {/* Stat cards */}
-      {!typeFilter && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-            marginBottom: '24px',
-          }}
-        >
-          <CardSummary label="Total companies" value={allCompanies.length} />
-          <CardSummary label="Leads" value={leadCount} />
-          <CardSummary label="Prospects" value={prospectCount} />
-          <CardSummary label="Clients" value={clientCount} />
-        </div>
-      )}
-
-      {/* Tab bar */}
+      {/* Stat cards — always visible */}
       <div
         style={{
-          borderBottom: '1px solid var(--_color---border--primary)',
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+          gap: '16px',
           marginBottom: '24px',
         }}
       >
-        <a href="/admin/companies" style={tabStyle(!typeFilter)}>All</a>
-        <a href="/admin/companies?type=lead" style={tabStyle(typeFilter === 'lead')}>Leads</a>
-        <a href="/admin/companies?type=prospect" style={tabStyle(typeFilter === 'prospect')}>Prospects</a>
-        <a href="/admin/companies?type=client" style={tabStyle(typeFilter === 'client')}>Clients</a>
+        <CardSummary label="Total Companies" value={companies.length} />
+        <CardSummary label="Leads" value={leadCount} />
+        <CardSummary label="Prospects" value={prospectCount} />
+        <CardSummary label="Clients" value={clientCount} />
       </div>
 
       <Card variant="elevated" padding="lg">
         <DataTable
-          data={allCompanies}
+          data={tableData}
           rowKey={(c) => c.id}
           emptyMessage={
             typeFilter === 'lead'
