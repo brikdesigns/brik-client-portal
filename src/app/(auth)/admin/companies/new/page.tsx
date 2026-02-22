@@ -92,9 +92,9 @@ export default function NewCompanyPage() {
   const toggleStyle = (active: boolean) => ({
     flex: 1,
     padding: '10px 16px',
-    border: `2px solid ${active ? 'var(--brand--primary, #E35335)' : 'var(--_color---border--default, #e5e5e5)'}`,
+    border: `2px solid ${active ? 'var(--brand--primary)' : 'var(--_color---border--secondary)'}`,
     borderRadius: '8px',
-    background: active ? 'var(--_color---bg--elevated, #fff)' : 'transparent',
+    background: active ? 'var(--_color---background--elevated)' : 'transparent',
     color: active ? 'var(--_color---text--primary)' : 'var(--_color---text--secondary)',
     fontFamily: 'var(--_typography---font-family--body)',
     fontSize: '14px',

@@ -221,11 +221,11 @@ const companyTypeLabels: Record<string, string> = {
   client: 'Client',
 };
 
-// Company type tag colors (system palette)
+// Company type tag colors (BDS system palette tokens)
 const companyTypeColors: Record<string, { bg: string; text: string }> = {
-  lead:     { bg: '#8b5cf6', text: '#ffffff' },  // purple
-  prospect: { bg: '#4665f5', text: '#ffffff' },  // blue
-  client:   { bg: '#27ae60', text: '#ffffff' },  // green
+  lead:     { bg: 'var(--system--purple)', text: 'var(--_color---text--on-color-dark)' },
+  prospect: { bg: 'var(--system--blue)',   text: 'var(--_color---text--on-color-dark)' },
+  client:   { bg: 'var(--system--green)',  text: 'var(--_color---text--on-color-dark)' },
 };
 
 const roleLabels: Record<string, string> = {
@@ -262,8 +262,8 @@ export function ProposalStatusBadge({ status }: { status: string }) {
 
 export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: boolean }) {
   const colors = muted
-    ? { bg: 'var(--_color---bg--secondary, #e0e0e0)', text: 'var(--_color---text--secondary, #828282)' }
-    : companyTypeColors[type] ?? { bg: '#e0e0e0', text: '#333' };
+    ? { bg: 'var(--_color---background--secondary)', text: 'var(--_color---text--muted)' }
+    : companyTypeColors[type] ?? { bg: 'var(--_color---background--secondary)', text: 'var(--_color---text--primary)' };
   return (
     <Tag
       icon={<FontAwesomeIcon icon={faUser} style={{ width: 10, height: 10 }} />}

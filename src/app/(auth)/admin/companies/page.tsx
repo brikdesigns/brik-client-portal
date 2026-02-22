@@ -86,7 +86,7 @@ export default async function AdminCompaniesPage({ searchParams }: Props) {
       {/* Tab bar */}
       <div
         style={{
-          borderBottom: '1px solid var(--_color---border--default, #e5e5e5)',
+          borderBottom: '1px solid var(--_color---border--primary)',
           marginBottom: '24px',
         }}
       >
