@@ -13,7 +13,7 @@ interface InviteUserFormProps {
 export function InviteUserForm({ clients }: InviteUserFormProps) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'client' | 'admin'>('client');
+  const [role, setRole] = useState<'client' | 'admin' | 'manager'>('client');
   const [clientId, setClientId] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -26,7 +26,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
     setSuccess('');
 
     if (role === 'client' && !clientId) {
-      setError('Please select a client to assign this user to.');
+      setError('Please select a company to assign this user to.');
       return;
     }
 
@@ -40,7 +40,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           email,
           full_name: fullName,
           role,
-          client_id: role === 'client' ? clientId : null,
+          company_id: role === 'client' ? clientId : null,
         }),
       });
 
@@ -105,11 +105,12 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           label="Role"
           value={role}
           onChange={(e) => {
-            setRole(e.target.value as 'client' | 'admin');
-            if (e.target.value === 'admin') setClientId('');
+            setRole(e.target.value as 'client' | 'admin' | 'manager');
+            if (e.target.value !== 'client') setClientId('');
           }}
           options={[
             { label: 'Client', value: 'client' },
+            { label: 'Manager', value: 'manager' },
             { label: 'Admin', value: 'admin' },
           ]}
         />

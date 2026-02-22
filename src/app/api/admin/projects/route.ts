@@ -91,7 +91,7 @@ export async function POST(request: Request) {
   const { data: project, error: insertError } = await supabase
     .from('projects')
     .insert({
-      client_id,
+      company_id: client_id,
       name,
       slug: toSlug(name),
       description: description || null,

@@ -31,12 +31,34 @@ function StatusBadgeBase({ status, map }: { status: string; map: Record<string, 
   );
 }
 
-// ── Client / User Status ────────────────────────────────────────────
-const clientStatusMap: Record<string, StatusConfig> = {
-  prospect: {
-    label: 'Prospect',
+// ── Company Status ──────────────────────────────────────────────────
+const companyStatusMap: Record<string, StatusConfig> = {
+  // Lead statuses
+  new: {
+    label: 'New',
     variant: 'info',
     icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
+  },
+  working: {
+    label: 'Working',
+    variant: 'progress',
+    icon: <FontAwesomeIcon icon={faRotate} style={iconSize} />,
+  },
+  qualified: {
+    label: 'Qualified',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  unqualified: {
+    label: 'Unqualified',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+  },
+  // Client statuses
+  prospect: {
+    label: 'Prospect',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
   },
   active: {
     label: 'Active',
@@ -134,6 +156,35 @@ const invoiceStatusMap: Record<string, StatusConfig> = {
   },
 };
 
+// ── Agreement Status ────────────────────────────────────────────────
+const agreementStatusMap: Record<string, StatusConfig> = {
+  draft: {
+    label: 'Draft',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faPencil} style={iconSize} />,
+  },
+  sent: {
+    label: 'Sent',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faPaperPlane} style={iconSize} />,
+  },
+  viewed: {
+    label: 'Viewed',
+    variant: 'progress',
+    icon: <FontAwesomeIcon icon={faEye} style={iconSize} />,
+  },
+  signed: {
+    label: 'Signed',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  expired: {
+    label: 'Expired',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faClock} style={iconSize} />,
+  },
+};
+
 // ── Proposal Status ─────────────────────────────────────────────────
 const proposalStatusMap: Record<string, StatusConfig> = {
   draft: {
@@ -176,16 +227,25 @@ const serviceTypeLabels: Record<string, string> = {
   add_on: 'Add-on',
 };
 
+const companyTypeLabels: Record<string, string> = {
+  lead: 'Lead',
+  client: 'Client',
+};
+
 const roleLabels: Record<string, string> = {
   admin: 'Admin',
   client: 'Client',
+  manager: 'Manager',
 };
 
 // ── Exported Components ─────────────────────────────────────────────
 
-export function ClientStatusBadge({ status }: { status: string }) {
-  return <StatusBadgeBase status={status} map={clientStatusMap} />;
+export function CompanyStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={companyStatusMap} />;
 }
+
+/** @deprecated Use CompanyStatusBadge instead */
+export const ClientStatusBadge = CompanyStatusBadge;
 
 export function ServiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={serviceStatusMap} />;
@@ -199,8 +259,20 @@ export function InvoiceStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={invoiceStatusMap} />;
 }
 
+export function AgreementStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={agreementStatusMap} />;
+}
+
 export function ProposalStatusBadge({ status }: { status: string }) {
   return <StatusBadgeBase status={status} map={proposalStatusMap} />;
+}
+
+export function CompanyTypeBadge({ type }: { type: string }) {
+  return (
+    <Badge status={type === 'lead' ? 'warning' : 'info'}>
+      {companyTypeLabels[type] ?? type}
+    </Badge>
+  );
 }
 
 export function ServiceTypeTag({ type }: { type: string }) {

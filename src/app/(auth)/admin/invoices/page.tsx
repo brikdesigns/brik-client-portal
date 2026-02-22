@@ -16,7 +16,7 @@ export default async function AdminInvoicesPage() {
     .select(`
       id, description, amount_cents, currency, status,
       invoice_date, due_date, paid_at, invoice_url,
-      clients(id, name, slug)
+      companies(id, name, slug)
     `)
     .order('created_at', { ascending: false });
 
@@ -73,9 +73,9 @@ export default async function AdminInvoicesPage() {
               {
                 header: 'Client',
                 accessor: (inv) => {
-                  const client = inv.clients as unknown as { id: string; name: string; slug: string } | null;
+                  const client = inv.companies as unknown as { id: string; name: string; slug: string } | null;
                   return client ? (
-                    <TextLink href={`/admin/clients/${client.slug}`} size="small">
+                    <TextLink href={`/admin/companies/${client.slug}`} size="small">
                       {client.name}
                     </TextLink>
                   ) : '—';
@@ -146,9 +146,9 @@ export default async function AdminInvoicesPage() {
             {
               header: 'Client',
               accessor: (inv) => {
-                const client = inv.clients as unknown as { id: string; name: string; slug: string } | null;
+                const client = inv.companies as unknown as { id: string; name: string; slug: string } | null;
                 return client ? (
-                  <TextLink href={`/admin/clients/${client.slug}`} size="small">
+                  <TextLink href={`/admin/companies/${client.slug}`} size="small">
                     {client.name}
                   </TextLink>
                 ) : '—';

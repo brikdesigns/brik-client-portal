@@ -22,7 +22,7 @@ export async function GET(
       id, title, status, token, valid_until, total_amount_cents,
       first_viewed_at, view_count, accepted_at, accepted_by_email,
       sent_at, created_at,
-      clients(name, contact_email),
+      companies(name, contact_email),
       proposal_items(id, name, description, quantity, unit_price_cents, sort_order)
     `)
     .eq('token', token)

@@ -13,7 +13,7 @@ export default async function ProposalsPage() {
     .from('proposals')
     .select(`
       id, title, status, total_amount_cents, valid_until, created_at, token,
-      clients(name, slug)
+      companies(name, slug)
     `)
     .order('created_at', { ascending: false });
 
@@ -25,7 +25,7 @@ export default async function ProposalsPage() {
     valid_until: string | null;
     created_at: string;
     token: string;
-    clients: { name: string; slug: string };
+    companies: { name: string; slug: string };
   }[]) ?? [];
 
   const draft = allProposals.filter((p) => p.status === 'draft').length;
@@ -60,10 +60,10 @@ export default async function ProposalsPage() {
               header: 'Client',
               accessor: (p) => (
                 <a
-                  href={`/admin/clients/${p.clients.slug}`}
+                  href={`/admin/companies/${p.companies.slug}`}
                   style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
                 >
-                  {p.clients.name}
+                  {p.companies.name}
                 </a>
               ),
             },
@@ -71,7 +71,7 @@ export default async function ProposalsPage() {
               header: 'Title',
               accessor: (p) => (
                 <a
-                  href={`/admin/clients/${p.clients.slug}/proposals/${p.id}`}
+                  href={`/admin/companies/${p.companies.slug}/proposals/${p.id}`}
                   style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
                 >
                   {p.title}

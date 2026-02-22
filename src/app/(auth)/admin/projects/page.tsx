@@ -14,7 +14,7 @@ export default async function AdminProjectsPage() {
     .select(`
       id, name, slug, status, description,
       start_date, end_date,
-      clients(id, name, slug)
+      companies(id, name, slug)
     `)
     .order('created_at', { ascending: false });
 
@@ -68,10 +68,10 @@ export default async function AdminProjectsPage() {
             {
               header: 'Client',
               accessor: (p) => {
-                const client = p.clients as unknown as { id: string; name: string; slug: string } | null;
+                const client = p.companies as unknown as { id: string; name: string; slug: string } | null;
                 return client ? (
                   <a
-                    href={`/admin/clients/${client.slug}`}
+                    href={`/admin/companies/${client.slug}`}
                     style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none', fontSize: '13px' }}
                   >
                     {client.name}

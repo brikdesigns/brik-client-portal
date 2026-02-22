@@ -23,13 +23,13 @@ export default async function UserDetailPage({ params }: Props) {
       email,
       role,
       is_active,
-      client_id,
+      company_id,
       invited_at,
       invited_by,
       last_login_at,
       created_at,
       updated_at,
-      clients(id, name, slug)
+      companies(id, name, slug)
     `)
     .eq('id', id)
     .single();
@@ -38,7 +38,7 @@ export default async function UserDetailPage({ params }: Props) {
     notFound();
   }
 
-  const client = user.clients as unknown as { id: string; name: string; slug: string } | null;
+  const client = user.companies as unknown as { id: string; name: string; slug: string } | null;
 
   // Look up who invited this user
   let invitedByName: string | null = null;
@@ -106,7 +106,7 @@ export default async function UserDetailPage({ params }: Props) {
             label: 'Client',
             value: client ? (
               <a
-                href={`/admin/clients/${client.slug}`}
+                href={`/admin/companies/${client.slug}`}
                 style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
               >
                 {client.name}

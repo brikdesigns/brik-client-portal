@@ -23,17 +23,17 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { client_id } = body as { client_id: string };
+  const { company_id } = body as { company_id: string };
 
-  if (!client_id) {
-    return NextResponse.json({ error: 'client_id is required' }, { status: 400 });
+  if (!company_id) {
+    return NextResponse.json({ error: 'company_id is required' }, { status: 400 });
   }
 
   // Fetch client data
   const { data: client, error: clientError } = await supabase
-    .from('clients')
+    .from('companies')
     .select('id, name, slug, industry, website_url, address, phone')
-    .eq('id', client_id)
+    .eq('id', company_id)
     .single();
 
   if (clientError || !client) {
@@ -44,7 +44,7 @@ export async function POST(request: Request) {
   const { data: existing } = await supabase
     .from('report_sets')
     .select('id')
-    .eq('client_id', client_id)
+    .eq('company_id', company_id)
     .limit(1)
     .maybeSingle();
 
@@ -58,7 +58,7 @@ export async function POST(request: Request) {
   // Create report set
   const { data: reportSet, error: rsError } = await supabase
     .from('report_sets')
-    .insert({ client_id, status: 'in_progress' })
+    .insert({ company_id, status: 'in_progress' })
     .select('id')
     .single();
 

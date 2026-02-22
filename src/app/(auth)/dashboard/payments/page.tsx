@@ -30,7 +30,7 @@ export default async function PaymentsPage() {
   const { data: invoices } = await supabase
     .from('invoices')
     .select('id, amount_cents, currency, status, description, invoice_date, due_date, paid_at, invoice_url')
-    .eq('client_id', currentClientId)
+    .eq('company_id', currentClientId)
     .order('invoice_date', { ascending: false });
 
   const openInvoices = invoices?.filter((i) => i.status === 'open') ?? [];

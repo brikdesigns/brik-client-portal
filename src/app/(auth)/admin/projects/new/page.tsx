@@ -103,7 +103,7 @@ export default function NewProjectPage() {
     async function loadClients() {
       const supabase = createClient();
       const { data } = await supabase
-        .from('clients')
+        .from('companies')
         .select('id, name')
         .eq('status', 'active')
         .order('name');
@@ -207,7 +207,7 @@ export default function NewProjectPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name,
-          client_id: clientId,
+          company_id: clientId,
           description: description || null,
           status,
           start_date: startDate || null,

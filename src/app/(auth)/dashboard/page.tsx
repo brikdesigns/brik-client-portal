@@ -34,7 +34,7 @@ export default async function DashboardPage() {
 
   const [servicesRes, invoicesRes] = await Promise.all([
     supabase
-      .from('client_services')
+      .from('company_services')
       .select(`
         id, status,
         services(
@@ -42,13 +42,13 @@ export default async function DashboardPage() {
           service_categories(slug, name)
         )
       `)
-      .eq('client_id', currentClientId)
+      .eq('company_id', currentClientId)
       .eq('status', 'active')
       .order('created_at', { ascending: false }),
     supabase
       .from('invoices')
       .select('id, amount_cents, status')
-      .eq('client_id', currentClientId)
+      .eq('company_id', currentClientId)
       .order('invoice_date', { ascending: false }),
   ]);
 

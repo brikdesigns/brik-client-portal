@@ -7,7 +7,7 @@ export default async function InviteUserPage() {
   const supabase = createClient();
 
   const { data: clients } = await supabase
-    .from('clients')
+    .from('companies')
     .select('id, name')
     .eq('status', 'active')
     .order('name');

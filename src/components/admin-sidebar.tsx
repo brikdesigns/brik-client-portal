@@ -15,11 +15,11 @@ interface AdminSidebarProps {
 
 const baseNavItems = [
   { label: 'Overview', href: '/admin' },
-  { label: 'Clients', href: '/admin/clients' },
+  { label: 'Companies', href: '/admin/companies' },
   { label: 'Proposals', href: '/admin/proposals' },
   { label: 'Services', href: '/admin/services' },
   { label: 'Invoices', href: '/admin/invoices' },
-  { label: 'Users', href: '/admin/users' },
+  { label: 'Contacts', href: '/admin/contacts' },
 ];
 
 /**

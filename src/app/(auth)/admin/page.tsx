@@ -8,23 +8,23 @@ import { ProjectStatusBadge } from '@/components/status-badges';
 export default async function AdminOverviewPage() {
   const supabase = createClient();
 
-  const [clientsRes, projectsRes, invoicesRes, usersRes] = await Promise.all([
-    supabase.from('clients').select('id', { count: 'exact', head: true }),
+  const [leadsRes, clientsRes, projectsRes, invoicesRes] = await Promise.all([
+    supabase.from('companies').select('id', { count: 'exact', head: true }).eq('type', 'lead'),
+    supabase.from('companies').select('id', { count: 'exact', head: true }).eq('type', 'client'),
     supabase.from('projects').select('id', { count: 'exact', head: true }),
     supabase.from('invoices').select('id', { count: 'exact', head: true }).eq('status', 'open'),
-    supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'client'),
   ]);
 
   const stats = [
-    { label: 'Active clients', value: clientsRes.count ?? 0, href: '/admin/clients' },
-    { label: 'Projects', value: projectsRes.count ?? 0, href: '/admin/clients' },
+    { label: 'Leads', value: leadsRes.count ?? 0, href: '/admin/companies?type=lead' },
+    { label: 'Clients', value: clientsRes.count ?? 0, href: '/admin/companies?type=client' },
+    { label: 'Projects', value: projectsRes.count ?? 0, href: '/admin/projects' },
     { label: 'Open invoices', value: invoicesRes.count ?? 0, href: '/admin/invoices' },
-    { label: 'Portal users', value: usersRes.count ?? 0, href: '/admin/users' },
   ];
 
   const { data: recentProjects } = await supabase
     .from('projects')
-    .select('id, name, status, clients(name)')
+    .select('id, name, status, companies(name)')
     .order('created_at', { ascending: false })
     .limit(5);
 
@@ -74,9 +74,9 @@ export default async function AdminOverviewPage() {
               style: { color: 'var(--_color---text--primary)', fontWeight: 500 },
             },
             {
-              header: 'Client',
+              header: 'Company',
               accessor: (p) =>
-                (p.clients as unknown as { name: string } | null)?.name ?? '—',
+                (p.companies as unknown as { name: string } | null)?.name ?? '—',
               style: { color: 'var(--_color---text--secondary)' },
             },
             {

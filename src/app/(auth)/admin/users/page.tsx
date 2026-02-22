@@ -19,7 +19,7 @@ export default async function AdminUsersPage() {
       is_active,
       last_login_at,
       invited_at,
-      clients(name)
+      companies(name)
     `)
     .order('created_at', { ascending: false });
 
@@ -70,7 +70,7 @@ export default async function AdminUsersPage() {
             {
               header: 'Client',
               accessor: (u) =>
-                (u.clients as unknown as { name: string } | null)?.name ?? '—',
+                (u.companies as unknown as { name: string } | null)?.name ?? '—',
               style: { color: 'var(--_color---text--secondary)' },
             },
             {

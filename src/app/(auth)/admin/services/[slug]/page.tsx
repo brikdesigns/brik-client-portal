@@ -24,9 +24,9 @@ export default async function ServiceDetailPage({ params }: Props) {
       base_price_cents, stripe_product_id, stripe_price_id,
       active, created_at,
       service_categories(id, name, slug, color_token),
-      client_services(
+      company_services(
         id, status, started_at, cancelled_at, notes,
-        clients(id, name, slug, status)
+        companies(id, name, slug, status)
       )
     `)
     .eq('slug', slug)
@@ -37,13 +37,13 @@ export default async function ServiceDetailPage({ params }: Props) {
   }
 
   const category = service.service_categories as unknown as { id: string; name: string; slug: string; color_token: string } | null;
-  const assignments = (service.client_services as unknown as {
+  const assignments = (service.company_services as unknown as {
     id: string;
     status: string;
     started_at: string | null;
     cancelled_at: string | null;
     notes: string | null;
-    clients: { id: string; name: string; slug: string; status: string } | null;
+    companies: { id: string; name: string; slug: string; status: string } | null;
   }[]) ?? [];
 
   const activeAssignments = assignments.filter((a) => a.status === 'active').length;
@@ -190,12 +190,12 @@ export default async function ServiceDetailPage({ params }: Props) {
             {
               header: 'Client',
               accessor: (a) =>
-                a.clients ? (
+                a.companies ? (
                   <a
-                    href={`/admin/clients/${a.clients.slug}`}
+                    href={`/admin/companies/${a.companies.slug}`}
                     style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
                   >
-                    {a.clients.name}
+                    {a.companies.name}
                   </a>
                 ) : (
                   '—'

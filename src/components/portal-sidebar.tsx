@@ -12,12 +12,13 @@ import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 
 const adminNavItems = [
   { label: 'Overview', href: '/admin' },
-  { label: 'Clients', href: '/admin/clients' },
+  { label: 'Companies', href: '/admin/companies' },
   { label: 'Reporting', href: '/admin/reporting' },
   { label: 'Services', href: '/admin/services' },
+  { label: 'Agreements', href: '/admin/agreements' },
   { label: 'Projects', href: '/admin/projects' },
   { label: 'Invoices', href: '/admin/invoices' },
-  { label: 'Users', href: '/admin/users' },
+  { label: 'Contacts', href: '/admin/contacts' },
 ];
 
 const clientNavItems = [
@@ -27,8 +28,12 @@ const clientNavItems = [
   { label: 'Payments', href: '/dashboard/payments' },
 ];
 
+// Items managers should NOT see (admin-only sections)
+const managerHiddenHrefs = ['/admin/contacts'];
+
 interface PortalSidebarProps {
   role: 'admin' | 'client';
+  portalRole?: 'admin' | 'manager' | 'client';
   userName: string;
   isAdmin?: boolean;
   clients?: Array<{ id: string; name: string }>;
@@ -37,6 +42,7 @@ interface PortalSidebarProps {
 
 export function PortalSidebar({
   role,
+  portalRole,
   userName,
   isAdmin = false,
   clients = [],
@@ -44,7 +50,10 @@ export function PortalSidebar({
 }: PortalSidebarProps) {
   const pathname = usePathname();
 
-  const baseItems = role === 'admin' ? adminNavItems : clientNavItems;
+  const allItems = role === 'admin' ? adminNavItems : clientNavItems;
+  const baseItems = portalRole === 'manager'
+    ? allItems.filter((item) => !managerHiddenHrefs.includes(item.href))
+    : allItems;
   const homeHref = role === 'admin' ? '/admin' : '/dashboard';
 
   function isActive(href: string) {

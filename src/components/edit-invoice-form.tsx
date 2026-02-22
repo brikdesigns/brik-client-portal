@@ -11,7 +11,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 interface EditInvoiceFormProps {
   invoice: {
     id: string;
-    client_id: string;
+    company_id: string;
     description: string | null;
     amount_cents: number;
     status: string;
@@ -95,7 +95,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
         }}
       >
         Client: <a
-          href={`/admin/clients/${clientSlug || invoice.client_id}`}
+          href={`/admin/companies/${clientSlug || invoice.company_id}`}
           style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none' }}
         >
           {clientName}

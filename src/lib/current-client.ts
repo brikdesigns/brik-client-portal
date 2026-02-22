@@ -17,10 +17,10 @@ export async function getCurrentClientId(userId: string): Promise<string | null>
   if (currentClientId) {
     const supabase = createClient();
     const { data } = await supabase
-      .from('client_users')
-      .select('client_id')
+      .from('company_users')
+      .select('company_id')
       .eq('user_id', userId)
-      .eq('client_id', currentClientId)
+      .eq('company_id', currentClientId)
       .single();
 
     if (data) {
@@ -82,10 +82,10 @@ export async function getUserClients(userId: string): Promise<Array<{ id: string
   const supabase = createClient();
 
   const { data } = await supabase
-    .from('client_users')
+    .from('company_users')
     .select(`
-      client_id,
-      clients (
+      company_id,
+      companies (
         id,
         name
       )
@@ -98,9 +98,9 @@ export async function getUserClients(userId: string): Promise<Array<{ id: string
   }
 
   return data.map((cu) => {
-    const client = cu.clients as unknown as { id: string; name: string } | null;
+    const client = cu.companies as unknown as { id: string; name: string } | null;
     return {
-      id: cu.client_id,
+      id: cu.company_id,
       name: client?.name || 'Unknown Client',
     };
   });

@@ -14,9 +14,9 @@ export default async function EditInvoicePage({ params }: Props) {
   const { data: invoice, error } = await supabase
     .from('invoices')
     .select(`
-      id, client_id, description, amount_cents, status,
+      id, company_id, description, amount_cents, status,
       invoice_date, due_date, paid_at, invoice_url,
-      clients(name, slug)
+      companies(name, slug)
     `)
     .eq('id', id)
     .single();
@@ -25,7 +25,7 @@ export default async function EditInvoicePage({ params }: Props) {
     notFound();
   }
 
-  const client = invoice.clients as unknown as { name: string; slug: string } | null;
+  const client = invoice.companies as unknown as { name: string; slug: string } | null;
 
   return (
     <div>
@@ -45,7 +45,7 @@ export default async function EditInvoicePage({ params }: Props) {
       <EditInvoiceForm
         invoice={{
           id: invoice.id,
-          client_id: invoice.client_id,
+          company_id: invoice.company_id,
           description: invoice.description,
           amount_cents: invoice.amount_cents,
           status: invoice.status,

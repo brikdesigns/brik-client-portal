@@ -24,7 +24,7 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
 
   // Fetch client
   const { data: client, error: clientError } = await supabase
-    .from('clients')
+    .from('companies')
     .select('id, name, slug, industry, website_url')
     .eq('slug', slug)
     .single();
@@ -35,7 +35,7 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
   const { data: reportSet } = await supabase
     .from('report_sets')
     .select('id')
-    .eq('client_id', client.id)
+    .eq('company_id', client.id)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();

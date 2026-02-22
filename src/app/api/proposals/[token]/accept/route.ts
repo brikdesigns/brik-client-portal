@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { generateAgreementsForProposal } from '@/lib/agreements/generate';
 
 function getServiceClient() {
   return createServiceClient(
@@ -25,7 +26,7 @@ export async function POST(
   // Fetch proposal
   const { data: proposal, error } = await supabase
     .from('proposals')
-    .select('id, status, valid_until')
+    .select('id, company_id, status, valid_until')
     .eq('token', token)
     .single();
 
@@ -73,6 +74,14 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Auto-generate agreement(s) after proposal acceptance
+  try {
+    await generateAgreementsForProposal(proposal.id, proposal.company_id);
+  } catch (err) {
+    // Log but don't fail — proposal acceptance is the critical path
+    console.error('Failed to auto-generate agreements:', err);
   }
 
   return NextResponse.json({ success: true });

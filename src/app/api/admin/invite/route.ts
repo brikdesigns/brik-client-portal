@@ -59,7 +59,7 @@ export async function POST(request: Request) {
       .update({
         invited_by: user.id,
         invited_at: new Date().toISOString(),
-        client_id: client_id || null,
+        company_id: client_id || null,
       })
       .eq('id', data.user.id);
   }

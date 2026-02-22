@@ -28,7 +28,7 @@ export default async function ServicesPage() {
   }
 
   const { data: clientServices } = await supabase
-    .from('client_services')
+    .from('company_services')
     .select(`
       id, status, started_at, notes,
       services(
@@ -36,7 +36,7 @@ export default async function ServicesPage() {
         service_categories(slug, name)
       )
     `)
-    .eq('client_id', currentClientId)
+    .eq('company_id', currentClientId)
     .order('created_at', { ascending: false });
 
   const services = clientServices ?? [];

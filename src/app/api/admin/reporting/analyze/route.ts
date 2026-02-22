@@ -51,7 +51,7 @@ export async function POST(request: Request) {
 
   const { data: reportSet } = await supabase
     .from('report_sets')
-    .select('id, client_id')
+    .select('id, company_id')
     .eq('id', report.report_set_id)
     .single();
 
@@ -60,9 +60,9 @@ export async function POST(request: Request) {
   }
 
   const { data: client } = await supabase
-    .from('clients')
+    .from('companies')
     .select('id, name, industry, website_url, address, phone')
-    .eq('id', reportSet.client_id)
+    .eq('id', reportSet.company_id)
     .single();
 
   if (!client) {

@@ -222,6 +222,22 @@ export default function PublicProposalPage() {
                   ? `Accepted by ${proposal.accepted_by_email} on ${proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString() : 'today'}`
                   : 'This proposal has been accepted. Thank you!'}
               </p>
+              <div
+                style={{
+                  marginTop: '20px',
+                  padding: '16px 20px',
+                  backgroundColor: 'var(--_color---surface--secondary)',
+                  borderRadius: 'var(--_border-radius---md)',
+                  textAlign: 'left',
+                }}
+              >
+                <p style={{ ...bodyStyle, fontWeight: 500, fontSize: '15px', marginBottom: '4px' }}>
+                  Next step: Review &amp; sign your agreement
+                </p>
+                <p style={{ ...bodyStyle, color: 'var(--_color---text--muted)', fontSize: '14px' }}>
+                  Your Marketing Agreement is being prepared. You&apos;ll receive a link to review and sign shortly.
+                </p>
+              </div>
             </>
           ) : isExpired ? (
             <>

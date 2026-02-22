@@ -16,7 +16,7 @@ export default async function EditProjectPage({ params }: Props) {
     .select(`
       id, name, slug, description, status,
       start_date, end_date,
-      clients(id, name, slug)
+      companies(id, name, slug)
     `)
     .eq('slug', slug)
     .single();
@@ -25,7 +25,7 @@ export default async function EditProjectPage({ params }: Props) {
     notFound();
   }
 
-  const client = project.clients as unknown as { id: string; name: string; slug: string } | null;
+  const client = project.companies as unknown as { id: string; name: string; slug: string } | null;
 
   return (
     <div>

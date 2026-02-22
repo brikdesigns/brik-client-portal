@@ -13,7 +13,7 @@ export default async function AdminReportingPage() {
     .from('report_sets')
     .select(`
       id, status, overall_score, overall_max_score, overall_tier, created_at,
-      clients(id, name, slug, industry),
+      companies(id, name, slug, industry),
       reports(status)
     `)
     .order('created_at', { ascending: false });
@@ -51,10 +51,10 @@ export default async function AdminReportingPage() {
             {
               header: 'Client',
               accessor: (rs) => {
-                const client = rs.clients as unknown as { id: string; name: string; slug: string; industry: string | null } | null;
+                const client = rs.companies as unknown as { id: string; name: string; slug: string; industry: string | null } | null;
                 return client ? (
                   <a
-                    href={`/admin/clients/${client.slug}`}
+                    href={`/admin/companies/${client.slug}`}
                     style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
                   >
                     {client.name}
@@ -69,7 +69,7 @@ export default async function AdminReportingPage() {
             {
               header: 'Industry',
               accessor: (rs) => {
-                const client = rs.clients as unknown as { industry: string | null } | null;
+                const client = rs.companies as unknown as { industry: string | null } | null;
                 return client?.industry
                   ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
                   : '—';
@@ -101,7 +101,7 @@ export default async function AdminReportingPage() {
             {
               header: '',
               accessor: (rs) => {
-                const client = rs.clients as unknown as { slug: string } | null;
+                const client = rs.companies as unknown as { slug: string } | null;
                 return client ? (
                   <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
                     View Details

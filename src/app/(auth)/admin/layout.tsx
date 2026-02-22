@@ -21,7 +21,7 @@ export default async function AdminLayout({
     .eq('id', user.id)
     .single();
 
-  if (profile?.role !== 'admin') {
+  if (!['admin', 'manager'].includes(profile?.role ?? '')) {
     redirect('/dashboard');
   }
 
@@ -29,6 +29,7 @@ export default async function AdminLayout({
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PortalSidebar
         role="admin"
+        portalRole={profile?.role as 'admin' | 'manager'}
         userName={profile?.full_name || user.email || 'Admin'}
         isAdmin
       />

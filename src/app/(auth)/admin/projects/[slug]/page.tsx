@@ -18,7 +18,7 @@ export default async function ProjectDetailPage({ params }: Props) {
     .select(`
       id, name, slug, status, description,
       start_date, end_date, notion_page_id, clickup_task_id, created_at,
-      clients(id, name, slug)
+      companies(id, name, slug)
     `)
     .eq('slug', slug)
     .single();
@@ -27,14 +27,14 @@ export default async function ProjectDetailPage({ params }: Props) {
     notFound();
   }
 
-  const client = project.clients as unknown as { id: string; name: string; slug: string } | null;
+  const client = project.companies as unknown as { id: string; name: string; slug: string } | null;
 
   const metadataItems = [
     {
       label: 'Client',
       value: client ? (
         <a
-          href={`/admin/clients/${client.slug}`}
+          href={`/admin/companies/${client.slug}`}
           style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none' }}
         >
           {client.name}

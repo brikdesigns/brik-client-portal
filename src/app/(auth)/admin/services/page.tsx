@@ -21,7 +21,7 @@ export default async function AdminServicesPage() {
       category_id,
       stripe_product_id,
       service_categories(id, name, slug, color_token),
-      client_services(id, clients(id, name))
+      company_services(id, companies(id, name))
     `)
     .order('sort_order')
     .order('name');
@@ -39,12 +39,12 @@ export default async function AdminServicesPage() {
       slug: string;
       color_token: string;
     } | null;
-    const clientServices = s.client_services as unknown as {
+    const clientServices = s.company_services as unknown as {
       id: string;
-      clients: { id: string; name: string } | null;
+      companies: { id: string; name: string } | null;
     }[];
     const clients = (clientServices ?? [])
-      .map((cs) => cs.clients)
+      .map((cs) => cs.companies)
       .filter((c): c is { id: string; name: string } => c !== null);
 
     return {

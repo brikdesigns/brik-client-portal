@@ -14,7 +14,7 @@ export default async function EditUserPage({ params }: Props) {
   // Fetch user data
   const { data: user, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, is_active, client_id')
+    .select('id, full_name, email, role, is_active, company_id')
     .eq('id', id)
     .single();
 
@@ -24,7 +24,7 @@ export default async function EditUserPage({ params }: Props) {
 
   // Fetch all clients for the dropdown
   const { data: clients } = await supabase
-    .from('clients')
+    .from('companies')
     .select('id, name')
     .order('name');
 

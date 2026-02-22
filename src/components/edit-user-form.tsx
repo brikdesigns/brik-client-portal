@@ -14,7 +14,7 @@ interface EditUserFormProps {
     email: string;
     role: string;
     is_active: boolean;
-    client_id: string | null;
+    company_id: string | null;
   };
   clients: Array<{ id: string; name: string }>;
 }
@@ -29,7 +29,7 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
     email: user.email,
     role: user.role,
     is_active: user.is_active,
-    client_id: user.client_id || '',
+    company_id: user.company_id || '',
   });
 
   async function handleSubmit(e: React.FormEvent) {
@@ -90,6 +90,7 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             options={[
               { label: 'Admin', value: 'admin' },
+              { label: 'Manager', value: 'manager' },
               { label: 'Client', value: 'client' },
             ]}
             fullWidth
@@ -110,8 +111,8 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
 
           <Select
             label="Client"
-            value={formData.client_id}
-            onChange={(e) => setFormData({ ...formData, client_id: e.target.value })}
+            value={formData.company_id}
+            onChange={(e) => setFormData({ ...formData, company_id: e.target.value })}
             placeholder="— No Client —"
             options={clients.map((client) => ({
               label: client.name,

@@ -30,17 +30,17 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { client_id, title, valid_until, notes, items } = body as {
-    client_id: string;
+  const { company_id, title, valid_until, notes, items } = body as {
+    company_id: string;
     title: string;
     valid_until?: string;
     notes?: string;
     items: ProposalItem[];
   };
 
-  if (!client_id || !title || !items || items.length === 0) {
+  if (!company_id || !title || !items || items.length === 0) {
     return NextResponse.json(
-      { error: 'client_id, title, and at least one item are required' },
+      { error: 'company_id, title, and at least one item are required' },
       { status: 400 }
     );
   }
@@ -55,7 +55,7 @@ export async function POST(request: Request) {
   const { data: proposal, error: proposalError } = await supabase
     .from('proposals')
     .insert({
-      client_id,
+      company_id,
       title,
       token,
       valid_until: valid_until || null,

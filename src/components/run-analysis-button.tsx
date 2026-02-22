@@ -19,7 +19,7 @@ export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
       const res = await fetch('/api/admin/reporting', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ client_id: clientId }),
+        body: JSON.stringify({ company_id: clientId }),
       });
 
       if (res.ok) {

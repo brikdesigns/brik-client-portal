@@ -54,7 +54,7 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug 
       return;
     }
 
-    router.push(`/admin/clients/${clientSlug}`);
+    router.push(`/admin/companies/${clientSlug}`);
     router.refresh();
   }
 
