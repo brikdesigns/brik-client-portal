@@ -30,6 +30,11 @@ export default async function AdminContactsPage() {
       <PageHeader
         title="Contacts"
         subtitle="People at your companies — clients, managers, and admins."
+        actions={
+          <Button variant="primary" size="sm" asLink href="/admin/contacts/new">
+            Add New
+          </Button>
+        }
       />
 
       <Card variant="elevated" padding="lg">

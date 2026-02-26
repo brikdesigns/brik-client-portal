@@ -47,6 +47,10 @@ interface EditCompanyFormProps {
     website_url: string | null;
     notes: string | null;
     address: string | null;
+    city: string | null;
+    state: string | null;
+    postal_code: string | null;
+    country: string | null;
     phone: string | null;
     industry: string | null;
   };
@@ -58,6 +62,10 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
   const [status, setStatus] = useState(client.status);
   const [contactId, setContactId] = useState(client.contact_id ?? '');
   const [address, setAddress] = useState(client.address ?? '');
+  const [city, setCity] = useState(client.city ?? '');
+  const [state, setState] = useState(client.state ?? '');
+  const [postalCode, setPostalCode] = useState(client.postal_code ?? '');
+  const [country, setCountry] = useState(client.country ?? '');
   const [phone, setPhone] = useState(client.phone ?? '');
   const [industry, setIndustry] = useState(client.industry ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(client.website_url ?? '');
@@ -87,6 +95,10 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
           status,
           contact_id: contactId || null,
           address: address || null,
+          city: city || null,
+          state: state || null,
+          postal_code: postalCode || null,
+          country: country || null,
           phone: phone || null,
           industry: industry || null,
           website_url: websiteUrl || null,
@@ -134,6 +146,12 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
             placeholder="Enter business address"
             value={address}
             onChange={setAddress}
+            onSelect={(result) => {
+              setCity(result.city ?? '');
+              setState(result.state ?? '');
+              setPostalCode(result.postcode ?? '');
+              setCountry(result.country ?? '');
+            }}
             fullWidth
           />
 

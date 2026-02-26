@@ -43,6 +43,16 @@ Brik Designs client portal — secure web app where agency clients track project
 - **GitHub App:** Installed on `brikdesigns` org (required for auto-deploy)
 - **Env Vars:** NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, NEXT_PUBLIC_SITE_URL
 - **Both repos public:** brik-client-portal + brik-bds (required for submodule build)
+- **Build credits:** Pro plan = 3,000/month. Each push to main/staging/PR = ~2 min of credits.
+- **Best practices:** [Product Build Workflow](https://www.notion.so/Product-Build-Workflow-31097d34ed2880eebdb6eb335581276f)
+
+### Deploy rules (MANDATORY)
+
+1. **Always `npm run build` locally before pushing.** The pre-push hook enforces this.
+2. **Batch changes** — commit locally as much as you want, push 2-3x/day max during active dev.
+3. **Use `[skip ci]` in commit messages** for docs-only changes (README, comments, CLAUDE.md).
+4. **Never push to main without confirming with the user.**
+5. **Check for lint errors** before pushing (`npm run lint`).
 
 ## Architecture
 

@@ -10,9 +10,11 @@ import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ServiceBadge } from '@/components/service-badge';
+import { MeetingNotesPicker } from '@/components/meeting-notes-picker';
+import { ProposalSectionEditor, type ProposalSection } from '@/components/proposal-section-editor';
 import { formatCurrency } from '@/lib/format';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faTrash, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faTrash, faPlus, faWandMagicSparkles, faArrowRight, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
 
 interface Service {
   id: string;
@@ -20,6 +22,8 @@ interface Service {
   slug: string;
   base_price_cents: number | null;
   service_type: string;
+  billing_frequency: string | null;
+  proposal_copy: string | null;
   service_categories: { slug: string; name: string } | null;
 }
 
@@ -34,41 +38,67 @@ interface LineItem {
 
 const iconSize = { width: 12, height: 12 };
 
+type Step = 1 | 2 | 3;
+
+const STEP_LABELS: Record<Step, string> = {
+  1: 'Sources',
+  2: 'Generate & Edit',
+  3: 'Review & Save',
+};
+
 export default function NewProposalPage() {
   const router = useRouter();
   const params = useParams();
   const slug = params.slug as string;
 
-  const [clientName, setClientName] = useState('');
-  const [clientId, setClientId] = useState('');
+  // Company state
+  const [companyName, setCompanyName] = useState('');
+  const [companyId, setCompanyId] = useState('');
+
+  // Step management
+  const [step, setStep] = useState<Step>(1);
+
+  // Step 1: Sources
+  const [meetingNotesContent, setMeetingNotesContent] = useState('');
+  const [meetingNotesUrl, setMeetingNotesUrl] = useState('');
+  const [services, setServices] = useState<Service[]>([]);
+  const [selectedServiceIds, setSelectedServiceIds] = useState<Set<string>>(new Set());
+
+  // Step 2: Generated sections
+  const [sections, setSections] = useState<ProposalSection[]>([]);
+  const [generating, setGenerating] = useState(false);
+  const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
+
+  // Step 3: Line items + metadata
   const [title, setTitle] = useState('');
   const [validUntil, setValidUntil] = useState('');
   const [notes, setNotes] = useState('');
   const [items, setItems] = useState<LineItem[]>([]);
-  const [services, setServices] = useState<Service[]>([]);
+
+  // Shared
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Load client + services on mount
+  // Load company + services on mount
   useEffect(() => {
     const supabase = createClient();
 
     async function load() {
-      const { data: client } = await supabase
+      const { data: company } = await supabase
         .from('companies')
         .select('id, name')
         .eq('slug', slug)
         .single();
 
-      if (client) {
-        setClientId(client.id);
-        setClientName(client.name);
-        setTitle(`Proposal for ${client.name}`);
+      if (company) {
+        setCompanyId(company.id);
+        setCompanyName(company.name);
+        setTitle(`Proposal for ${company.name}`);
       }
 
       const { data: svcData } = await supabase
         .from('services')
-        .select('id, name, slug, base_price_cents, service_type, service_categories(slug, name)')
+        .select('id, name, slug, base_price_cents, service_type, billing_frequency, proposal_copy, service_categories(slug, name)')
         .order('name');
 
       if (svcData) {
@@ -78,6 +108,126 @@ export default function NewProposalPage() {
 
     load();
   }, [slug]);
+
+  // --- Step 1: Service selection helpers ---
+
+  function toggleService(serviceId: string) {
+    setSelectedServiceIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(serviceId)) {
+        next.delete(serviceId);
+      } else {
+        next.add(serviceId);
+      }
+      return next;
+    });
+  }
+
+  // Group services by category
+  const servicesByCategory = services.reduce<Record<string, Service[]>>((acc, svc) => {
+    const cat = svc.service_categories?.name || 'Other';
+    if (!acc[cat]) acc[cat] = [];
+    acc[cat].push(svc);
+    return acc;
+  }, {});
+
+  // --- Step 2: Generation ---
+
+  async function handleGenerate() {
+    if (selectedServiceIds.size === 0) {
+      setError('Select at least one service before generating.');
+      return;
+    }
+
+    setError('');
+    setGenerating(true);
+
+    try {
+      const res = await fetch('/api/admin/proposals/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_id: companyId,
+          meeting_notes_url: meetingNotesUrl || undefined,
+          service_ids: Array.from(selectedServiceIds),
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Generation failed.');
+        return;
+      }
+
+      setSections(data.sections);
+      if (data.meeting_notes_content) {
+        setMeetingNotesContent(data.meeting_notes_content);
+      }
+      if (data.meeting_notes_url) {
+        setMeetingNotesUrl(data.meeting_notes_url);
+      }
+
+      // Auto-populate line items from selected services
+      if (data.services) {
+        const autoItems: LineItem[] = data.services.map((s: { id: string; name: string; base_price_cents: number; billing_frequency: string | null }) => ({
+          key: crypto.randomUUID(),
+          service_id: s.id,
+          name: s.name,
+          description: '',
+          quantity: 1,
+          unit_price_cents: s.base_price_cents || 0,
+        }));
+        setItems(autoItems);
+      }
+
+      setStep(2);
+    } catch {
+      setError('An unexpected error occurred during generation.');
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleRegenerateSection(sectionType: string) {
+    setRegeneratingSection(sectionType);
+
+    try {
+      const currentSection = sections.find((s) => s.type === sectionType);
+      const res = await fetch('/api/admin/proposals/generate/section', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          company_id: companyId,
+          meeting_notes_url: meetingNotesUrl || undefined,
+          service_ids: Array.from(selectedServiceIds),
+          section_type: sectionType,
+          current_content: currentSection?.content || undefined,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.error || 'Regeneration failed.');
+        return;
+      }
+
+      setSections((prev) =>
+        prev.map((s) => (s.type === sectionType ? data.section : s))
+      );
+    } catch {
+      setError('Failed to regenerate section.');
+    } finally {
+      setRegeneratingSection(null);
+    }
+  }
+
+  function updateSection(index: number, updated: ProposalSection) {
+    setSections((prev) => prev.map((s, i) => (i === index ? updated : s)));
+  }
+
+  // --- Step 3: Line items ---
 
   function addItem() {
     setItems([
@@ -116,6 +266,8 @@ export default function NewProposalPage() {
 
   const total = items.reduce((sum, item) => sum + item.unit_price_cents * item.quantity, 0);
 
+  // --- Submit ---
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
@@ -130,9 +282,9 @@ export default function NewProposalPage() {
       return;
     }
 
-    const invalidItems = items.filter((item) => !item.name.trim() || item.unit_price_cents <= 0);
+    const invalidItems = items.filter((item) => !item.name.trim());
     if (invalidItems.length > 0) {
-      setError('Each line item needs a name and price.');
+      setError('Each line item needs a name.');
       return;
     }
 
@@ -143,10 +295,13 @@ export default function NewProposalPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          company_id: clientId,
+          company_id: companyId,
           title: title.trim(),
           valid_until: validUntil || null,
           notes: notes || null,
+          sections: sections.length > 0 ? sections : undefined,
+          meeting_notes_url: meetingNotesUrl || undefined,
+          meeting_notes_content: meetingNotesContent || undefined,
           items: items.map((item, index) => ({
             service_id: item.service_id || undefined,
             name: item.name,
@@ -174,6 +329,8 @@ export default function NewProposalPage() {
     }
   }
 
+  // --- Styling ---
+
   const sectionHeadingStyle = {
     fontFamily: 'var(--_typography---font-family--heading)',
     fontSize: 'var(--_typography---heading--small, 18px)',
@@ -182,194 +339,205 @@ export default function NewProposalPage() {
     margin: '0 0 16px',
   };
 
+  const canProceedToStep2 = selectedServiceIds.size > 0;
+  const canProceedToStep3 = sections.length > 0;
+
   return (
     <div>
       <PageHeader
-        title={`Create Proposal`}
+        title="Create Proposal"
         breadcrumbs={
           <Breadcrumb
             items={[
               { label: 'Companies', href: '/admin/companies' },
-              { label: clientName || '...', href: `/admin/companies/${slug}` },
+              { label: companyName || '...', href: `/admin/companies/${slug}` },
               { label: 'New Proposal' },
             ]}
           />
         }
       />
 
-      <form onSubmit={handleSubmit}>
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
-            <TextInput
-              label="Proposal Title"
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              required
-              fullWidth
-            />
-
-            <TextInput
-              label="Valid Until"
-              type="date"
-              value={validUntil}
-              onChange={(e) => setValidUntil(e.target.value)}
-              fullWidth
-            />
+      {/* Step Indicator */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '24px',
+          maxWidth: '720px',
+        }}
+      >
+        {([1, 2, 3] as Step[]).map((s) => (
+          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: s < 3 ? 1 : undefined }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                cursor: s < step ? 'pointer' : 'default',
+                opacity: s <= step ? 1 : 0.4,
+              }}
+              onClick={() => { if (s < step) setStep(s); }}
+            >
+              <div
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontFamily: 'var(--_typography---font-family--label)',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  backgroundColor: s <= step ? 'var(--_color---brand--primary)' : 'var(--_color---surface--tertiary)',
+                  color: s <= step ? '#fff' : 'var(--_color---text--muted)',
+                }}
+              >
+                {s < step ? <FontAwesomeIcon icon={faCheck} style={{ width: 10, height: 10 }} /> : s}
+              </div>
+              <span
+                style={{
+                  fontFamily: 'var(--_typography---font-family--label)',
+                  fontSize: '13px',
+                  fontWeight: s === step ? 600 : 400,
+                  color: s === step ? 'var(--_color---text--primary)' : 'var(--_color---text--muted)',
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {STEP_LABELS[s]}
+              </span>
+            </div>
+            {s < 3 && (
+              <div
+                style={{
+                  flex: 1,
+                  height: '1px',
+                  backgroundColor: s < step ? 'var(--_color---brand--primary)' : 'var(--_color---border--muted)',
+                }}
+              />
+            )}
           </div>
-        </Card>
+        ))}
+      </div>
 
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
-            <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-              <FontAwesomeIcon icon={faPlus} style={iconSize} /> Add Item
-            </Button>
-          </div>
+      {/* ═══ STEP 1: Sources ═══ */}
+      {step === 1 && (
+        <div>
+          {/* Meeting Notes */}
+          <MeetingNotesPicker
+            companyId={companyId}
+            companyName={companyName}
+            onNotesLoaded={(content, url) => {
+              setMeetingNotesContent(content);
+              setMeetingNotesUrl(url);
+            }}
+          />
 
-          {items.length === 0 ? (
+          {/* Service Selection */}
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
+            <h2 style={{ ...sectionHeadingStyle }}>Select Services</h2>
             <p
               style={{
                 fontFamily: 'var(--_typography---font-family--body)',
                 fontSize: '14px',
                 color: 'var(--_color---text--muted)',
-                textAlign: 'center',
-                padding: '24px 0',
+                margin: '0 0 16px',
               }}
             >
-              No line items yet. Click &quot;Add Item&quot; to add services to this proposal.
+              Choose the services to include in this proposal. These will be used for AI-generated content and line items.
             </p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {items.map((item) => {
-                const selectedService = services.find((s) => s.id === item.service_id);
-                const categorySlug = selectedService?.service_categories?.slug;
 
-                return (
-                  <div
-                    key={item.key}
-                    style={{
-                      display: 'flex',
-                      gap: '12px',
-                      alignItems: 'flex-start',
-                      padding: '16px',
-                      border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
-                      borderRadius: 'var(--_border-radius---md)',
-                      backgroundColor: 'var(--_color---surface--secondary)',
-                    }}
-                  >
-                    {categorySlug && (
-                      <div style={{ paddingTop: '28px' }}>
-                        <ServiceBadge category={categorySlug} size={16} />
-                      </div>
-                    )}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                      <Select
-                        label="Service"
-                        value={item.service_id}
-                        onChange={(e) => handleServiceSelect(item.key, e.target.value)}
-                        placeholder="Custom item"
-                        options={services.map((s) => ({ label: s.name, value: s.id }))}
-                        fullWidth
-                      />
-                      {!item.service_id && (
-                        <TextInput
-                          label="Item Name"
-                          type="text"
-                          value={item.name}
-                          onChange={(e) => updateItem(item.key, { name: e.target.value })}
-                          placeholder="Custom line item name"
-                          fullWidth
-                        />
-                      )}
-                      <TextInput
-                        label="Description"
-                        type="text"
-                        value={item.description}
-                        onChange={(e) => updateItem(item.key, { description: e.target.value })}
-                        placeholder="Optional description"
-                        fullWidth
-                      />
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <TextInput
-                          label="Qty"
-                          type="number"
-                          value={String(item.quantity)}
-                          onChange={(e) => updateItem(item.key, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
-                          fullWidth
-                        />
-                        <TextInput
-                          label="Unit Price"
-                          type="number"
-                          value={String(item.unit_price_cents / 100)}
-                          onChange={(e) => updateItem(item.key, { unit_price_cents: Math.round(parseFloat(e.target.value || '0') * 100) })}
-                          fullWidth
-                        />
-                      </div>
-                      <p
-                        style={{
-                          fontFamily: 'var(--_typography---font-family--body)',
-                          fontSize: '13px',
-                          color: 'var(--_color---text--secondary)',
-                          margin: 0,
-                          textAlign: 'right',
-                        }}
-                      >
-                        Subtotal: {formatCurrency(item.unit_price_cents * item.quantity)}
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeItem(item.key)}
+            {Object.entries(servicesByCategory).map(([categoryName, categoryServices]) => {
+              const catSlug = categoryServices[0]?.service_categories?.slug;
+              return (
+                <div key={categoryName} style={{ marginBottom: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    {catSlug && <ServiceBadge category={catSlug} size={12} />}
+                    <span
                       style={{
-                        background: 'none',
-                        border: 'none',
-                        cursor: 'pointer',
-                        color: 'var(--_color---text--muted)',
-                        padding: '4px',
-                        marginTop: '24px',
+                        fontFamily: 'var(--_typography---font-family--label)',
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: 'var(--_color---text--secondary)',
+                        textTransform: 'uppercase' as const,
+                        letterSpacing: '0.05em',
                       }}
-                      aria-label="Remove item"
                     >
-                      <FontAwesomeIcon icon={faTrash} style={{ width: 14, height: 14 }} />
-                    </button>
+                      {categoryName}
+                    </span>
                   </div>
-                );
-              })}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                    {categoryServices.map((svc) => {
+                      const isSelected = selectedServiceIds.has(svc.id);
+                      return (
+                        <label
+                          key={svc.id}
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '8px 12px',
+                            borderRadius: 'var(--_border-radius---sm)',
+                            cursor: 'pointer',
+                            backgroundColor: isSelected ? 'var(--_color---surface--secondary)' : 'transparent',
+                            border: isSelected
+                              ? 'var(--_border-width---sm) solid var(--_color---brand--primary)'
+                              : 'var(--_border-width---sm) solid transparent',
+                          }}
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => toggleService(svc.id)}
+                            style={{ accentColor: 'var(--_color---brand--primary)' }}
+                          />
+                          <div style={{ flex: 1 }}>
+                            <span
+                              style={{
+                                fontFamily: 'var(--_typography---font-family--body)',
+                                fontSize: '14px',
+                                fontWeight: isSelected ? 600 : 400,
+                                color: 'var(--_color---text--primary)',
+                              }}
+                            >
+                              {svc.name}
+                            </span>
+                            {svc.base_price_cents ? (
+                              <span
+                                style={{
+                                  fontFamily: 'var(--_typography---font-family--body)',
+                                  fontSize: '13px',
+                                  color: 'var(--_color---text--muted)',
+                                  marginLeft: '8px',
+                                }}
+                              >
+                                {formatCurrency(svc.base_price_cents)}
+                                {svc.billing_frequency === 'recurring' ? '/mo' : ''}
+                              </span>
+                            ) : null}
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
 
-              <div
+            {selectedServiceIds.size > 0 && (
+              <p
                 style={{
-                  display: 'flex',
-                  justifyContent: 'flex-end',
-                  paddingTop: '8px',
-                  borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+                  fontFamily: 'var(--_typography---font-family--body)',
+                  fontSize: '13px',
+                  color: 'var(--_color---text--secondary)',
+                  margin: '16px 0 0',
                 }}
               >
-                <p
-                  style={{
-                    fontFamily: 'var(--_typography---font-family--heading)',
-                    fontSize: 'var(--_typography---heading--small, 18px)',
-                    fontWeight: 600,
-                    color: 'var(--_color---text--primary)',
-                    margin: 0,
-                  }}
-                >
-                  Total: {formatCurrency(total)}
-                </p>
-              </div>
-            </div>
-          )}
-        </Card>
-
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px' }}>
-          <TextArea
-            label="Notes (internal)"
-            placeholder="Internal notes — not visible to the client..."
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={3}
-            fullWidth
-          />
+                {selectedServiceIds.size} service{selectedServiceIds.size !== 1 ? 's' : ''} selected
+              </p>
+            )}
+          </Card>
 
           {error && (
             <p
@@ -377,32 +545,295 @@ export default function NewProposalPage() {
                 color: 'var(--system--red, #eb5757)',
                 fontFamily: 'var(--_typography---font-family--body)',
                 fontSize: 'var(--_typography---body--sm)',
-                margin: 'var(--_space---lg) 0 0',
+                margin: '0 0 16px',
+                maxWidth: '720px',
               }}
             >
               {error}
             </p>
           )}
 
-          <div
-            style={{
-              display: 'flex',
-              gap: 'var(--_space---gap--md)',
-              marginTop: 'var(--_space---xl)',
-              justifyContent: 'flex-end',
-            }}
-          >
+          {/* Step 1 Actions */}
+          <div style={{ display: 'flex', gap: '12px', maxWidth: '720px', justifyContent: 'flex-end' }}>
             <a href={`/admin/companies/${slug}`}>
               <Button type="button" variant="outline" size="md">
                 Cancel
               </Button>
             </a>
-            <Button type="submit" variant="primary" size="md" disabled={loading}>
-              {loading ? 'Creating...' : 'Create Draft'}
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              disabled={!canProceedToStep2 || generating}
+              onClick={handleGenerate}
+            >
+              {generating ? (
+                <>Generating...</>
+              ) : (
+                <>
+                  <FontAwesomeIcon icon={faWandMagicSparkles} style={iconSize} /> Generate Draft
+                </>
+              )}
             </Button>
           </div>
-        </Card>
-      </form>
+        </div>
+      )}
+
+      {/* ═══ STEP 2: Generate & Edit ═══ */}
+      {step === 2 && (
+        <div>
+          {sections.map((section, index) => (
+            <ProposalSectionEditor
+              key={section.type}
+              section={section}
+              sectionIndex={index}
+              onChange={(updated) => updateSection(index, updated)}
+              onRegenerate={
+                section.type !== 'fee_summary'
+                  ? () => handleRegenerateSection(section.type)
+                  : undefined
+              }
+              regenerating={regeneratingSection === section.type}
+            />
+          ))}
+
+          {error && (
+            <p
+              style={{
+                color: 'var(--system--red, #eb5757)',
+                fontFamily: 'var(--_typography---font-family--body)',
+                fontSize: 'var(--_typography---body--sm)',
+                margin: '0 0 16px',
+                maxWidth: '720px',
+              }}
+            >
+              {error}
+            </p>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', maxWidth: '720px', justifyContent: 'space-between' }}>
+            <Button type="button" variant="outline" size="md" onClick={() => setStep(1)}>
+              <FontAwesomeIcon icon={faArrowLeft} style={iconSize} /> Back
+            </Button>
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              disabled={!canProceedToStep3}
+              onClick={() => { setError(''); setStep(3); }}
+            >
+              Continue <FontAwesomeIcon icon={faArrowRight} style={iconSize} />
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ═══ STEP 3: Review & Save ═══ */}
+      {step === 3 && (
+        <form onSubmit={handleSubmit}>
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
+              <TextInput
+                label="Proposal Title"
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                required
+                fullWidth
+              />
+              <TextInput
+                label="Valid Until"
+                type="date"
+                value={validUntil}
+                onChange={(e) => setValidUntil(e.target.value)}
+                fullWidth
+              />
+            </div>
+          </Card>
+
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
+              <Button type="button" variant="secondary" size="sm" onClick={addItem}>
+                <FontAwesomeIcon icon={faPlus} style={iconSize} /> Add Item
+              </Button>
+            </div>
+
+            {items.length === 0 ? (
+              <p
+                style={{
+                  fontFamily: 'var(--_typography---font-family--body)',
+                  fontSize: '14px',
+                  color: 'var(--_color---text--muted)',
+                  textAlign: 'center',
+                  padding: '24px 0',
+                }}
+              >
+                No line items yet. Click &quot;Add Item&quot; to add services to this proposal.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {items.map((item) => {
+                  const selectedService = services.find((s) => s.id === item.service_id);
+                  const categorySlug = selectedService?.service_categories?.slug;
+
+                  return (
+                    <div
+                      key={item.key}
+                      style={{
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'flex-start',
+                        padding: '16px',
+                        border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+                        borderRadius: 'var(--_border-radius---md)',
+                        backgroundColor: 'var(--_color---surface--secondary)',
+                      }}
+                    >
+                      {categorySlug && (
+                        <div style={{ paddingTop: '28px' }}>
+                          <ServiceBadge category={categorySlug} size={16} />
+                        </div>
+                      )}
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <Select
+                          label="Service"
+                          value={item.service_id}
+                          onChange={(e) => handleServiceSelect(item.key, e.target.value)}
+                          placeholder="Custom item"
+                          options={services.map((s) => ({ label: s.name, value: s.id }))}
+                          fullWidth
+                        />
+                        {!item.service_id && (
+                          <TextInput
+                            label="Item Name"
+                            type="text"
+                            value={item.name}
+                            onChange={(e) => updateItem(item.key, { name: e.target.value })}
+                            placeholder="Custom line item name"
+                            fullWidth
+                          />
+                        )}
+                        <TextInput
+                          label="Description"
+                          type="text"
+                          value={item.description}
+                          onChange={(e) => updateItem(item.key, { description: e.target.value })}
+                          placeholder="Optional description"
+                          fullWidth
+                        />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <TextInput
+                            label="Qty"
+                            type="number"
+                            value={String(item.quantity)}
+                            onChange={(e) => updateItem(item.key, { quantity: Math.max(1, parseInt(e.target.value) || 1) })}
+                            fullWidth
+                          />
+                          <TextInput
+                            label="Unit Price"
+                            type="number"
+                            value={String(item.unit_price_cents / 100)}
+                            onChange={(e) => updateItem(item.key, { unit_price_cents: Math.round(parseFloat(e.target.value || '0') * 100) })}
+                            fullWidth
+                          />
+                        </div>
+                        <p
+                          style={{
+                            fontFamily: 'var(--_typography---font-family--body)',
+                            fontSize: '13px',
+                            color: 'var(--_color---text--secondary)',
+                            margin: 0,
+                            textAlign: 'right',
+                          }}
+                        >
+                          Subtotal: {formatCurrency(item.unit_price_cents * item.quantity)}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeItem(item.key)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          color: 'var(--_color---text--muted)',
+                          padding: '4px',
+                          marginTop: '24px',
+                        }}
+                        aria-label="Remove item"
+                      >
+                        <FontAwesomeIcon icon={faTrash} style={{ width: 14, height: 14 }} />
+                      </button>
+                    </div>
+                  );
+                })}
+
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    paddingTop: '8px',
+                    borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+                  }}
+                >
+                  <p
+                    style={{
+                      fontFamily: 'var(--_typography---font-family--heading)',
+                      fontSize: 'var(--_typography---heading--small, 18px)',
+                      fontWeight: 600,
+                      color: 'var(--_color---text--primary)',
+                      margin: 0,
+                    }}
+                  >
+                    Total: {formatCurrency(total)}
+                  </p>
+                </div>
+              </div>
+            )}
+          </Card>
+
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px' }}>
+            <TextArea
+              label="Notes (internal)"
+              placeholder="Internal notes — not visible to the client..."
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              rows={3}
+              fullWidth
+            />
+
+            {error && (
+              <p
+                style={{
+                  color: 'var(--system--red, #eb5757)',
+                  fontFamily: 'var(--_typography---font-family--body)',
+                  fontSize: 'var(--_typography---body--sm)',
+                  margin: 'var(--_space---lg) 0 0',
+                }}
+              >
+                {error}
+              </p>
+            )}
+
+            <div
+              style={{
+                display: 'flex',
+                gap: 'var(--_space---gap--md)',
+                marginTop: 'var(--_space---xl)',
+                justifyContent: 'space-between',
+              }}
+            >
+              <Button type="button" variant="outline" size="md" onClick={() => setStep(2)}>
+                <FontAwesomeIcon icon={faArrowLeft} style={iconSize} /> Back
+              </Button>
+              <Button type="submit" variant="primary" size="md" disabled={loading}>
+                {loading ? 'Creating...' : 'Create Draft'}
+              </Button>
+            </div>
+          </Card>
+        </form>
+      )}
     </div>
   );
 }

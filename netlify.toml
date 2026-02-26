@@ -8,3 +8,26 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# ── Staging (branch deploys) ────────────────────────────────────────
+# Any push to `staging` branch auto-deploys to:
+#   staging--brik-client-portal.netlify.app
+#
+# To set staging-specific env vars:
+#   Netlify Dashboard → Site → Environment Variables → Branch Scoping
+#   Scope NEXT_PUBLIC_SITE_URL to "staging" branch with the staging URL
+#
+# Workflow:
+#   main     → portal.brikdesigns.com  (production)
+#   staging  → staging--brik-client-portal.netlify.app
+#   PR #N    → deploy-preview-N--brik-client-portal.netlify.app
+
+[context.staging]
+  command = "npm run build"
+
+[context.staging.environment]
+  NEXT_PUBLIC_SITE_URL = "https://staging--brik-client-portal.netlify.app"
+
+# Deploy previews for PRs
+[context.deploy-preview]
+  command = "npm run build"

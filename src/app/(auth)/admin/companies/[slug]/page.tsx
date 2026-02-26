@@ -21,8 +21,10 @@ import {
 import { ServiceBadge } from '@/components/service-badge';
 import { DeleteCompanyButton } from '@/components/delete-company-button';
 import { QualifyLeadButton } from '@/components/qualify-lead-button';
+import { GenerateProposalButton } from '@/components/generate-proposal-button';
 import { RunAnalysisButton } from '@/components/run-analysis-button';
-import { ReportSetStatusBadge } from '@/components/report-badges';
+import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
+import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
 
 interface Props {
@@ -75,7 +77,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const latestProposal = proposals?.[0] || null;
 
-  // Fetch report set for marketing analysis card
+  // Fetch report set and individual reports for the Reporting tab
   const { data: reportSet } = await supabase
     .from('report_sets')
     .select('id, status, overall_tier')
@@ -83,6 +85,16 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+
+  const { data: reports } = reportSet
+    ? await supabase
+        .from('reports')
+        .select('id, report_type, status, score, max_score, tier, created_at')
+        .eq('report_set_id', reportSet.id)
+        .order('created_at', { ascending: true })
+    : { data: null };
+
+  const allReports = reports ?? [];
 
   // Fetch agreements for this client (onboarding cards)
   const { data: agreements } = await supabase
@@ -114,9 +126,35 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const companyType = (client as unknown as { type: string }).type;
 
+  // Parse formatted address string as fallback for companies without structured fields.
+  // Geoapify US format: "Street, City, ST 12345, Country"
+  function parseAddress(formatted: string): { city: string | null; state: string | null; postalCode: string | null } {
+    const parts = formatted.split(',').map((s) => s.trim());
+    if (parts.length < 3) return { city: null, state: null, postalCode: null };
+    const stateZip = parts[parts.length - 2];
+    const match = stateZip.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
+    if (!match) return { city: null, state: null, postalCode: null };
+    return {
+      city: parts[parts.length - 3] ?? null,
+      state: match[1],
+      postalCode: match[2],
+    };
+  }
+
+  const rawCity = (client as unknown as Record<string, string>).city;
+  const rawState = (client as unknown as Record<string, string>).state;
+  const rawPostalCode = (client as unknown as Record<string, string>).postal_code;
+  const rawCountry = (client as unknown as Record<string, string>).country;
+  const parsed = (!rawCity && client.address) ? parseAddress(client.address) : null;
+  const displayCity = rawCity || parsed?.city || '—';
+  const displayState = rawState || parsed?.state || '—';
+  const displayPostalCode = rawPostalCode || parsed?.postalCode || '—';
+  const displayCountry = rawCountry || '—';
+
   // Tab configuration by type
   const allTabs: { key: string; label: string; types: string[] }[] = [
     { key: 'overview', label: 'Overview', types: ['lead', 'prospect', 'client'] },
+    { key: 'reporting', label: 'Reporting', types: ['prospect'] },
     { key: 'onboarding', label: 'Onboarding', types: ['prospect'] },
     { key: 'services', label: 'Services', types: ['client'] },
     { key: 'projects', label: 'Projects', types: ['client'] },
@@ -245,7 +283,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Overview Tab ───────────────────────────────────────── */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          <h2 style={sectionHeadingStyle}>Overview</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Overview</h2>
+            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
+              Edit
+            </Button>
+          </div>
 
           {/* Location */}
           <p style={sectionLabelStyle}>Location</p>
@@ -256,11 +299,11 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             </div>
             <div>
               <p style={fieldLabelStyle}>City</p>
-              <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).city || '—'}</p>
+              <p style={fieldValueStyle}>{displayCity}</p>
             </div>
             <div>
               <p style={fieldLabelStyle}>Country</p>
-              <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).country || '—'}</p>
+              <p style={fieldValueStyle}>{displayCountry}</p>
             </div>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
@@ -270,11 +313,11 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             </div>
             <div>
               <p style={fieldLabelStyle}>State</p>
-              <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).state || '—'}</p>
+              <p style={fieldValueStyle}>{displayState}</p>
             </div>
             <div>
               <p style={fieldLabelStyle}>Postal Code</p>
-              <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).postal_code || '—'}</p>
+              <p style={fieldValueStyle}>{displayPostalCode}</p>
             </div>
           </div>
 
@@ -368,35 +411,72 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         </div>
       )}
 
+      {/* ── Reporting Tab (prospects only) ──────────────────────── */}
+      {activeTab === 'reporting' && (
+        <Card variant="elevated" padding="lg">
+          {!reportSet ? (
+            <CardControl
+              title="Marketing Analysis"
+              description="Evaluate the prospect's current marketing presence, competitors, and opportunities for growth."
+              action={<RunAnalysisButton clientId={client.id} slug={client.slug} />}
+            />
+          ) : (
+            <DataTable
+              data={allReports}
+              rowKey={(r) => r.id}
+              emptyMessage="No reports generated yet."
+              columns={[
+                {
+                  header: 'Report',
+                  accessor: (r) => (
+                    <a
+                      href={`/admin/reporting/${client.slug}/${r.report_type}`}
+                      style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
+                    >
+                      {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
+                    </a>
+                  ),
+                },
+                {
+                  header: 'Status',
+                  accessor: (r) => <ReportStatusBadge status={r.status} />,
+                },
+                {
+                  header: 'Tier',
+                  accessor: (r) => r.tier ? <ScoreTierBadge tier={r.tier} /> : '—',
+                },
+                {
+                  header: 'Score',
+                  accessor: (r) =>
+                    r.score !== null && r.max_score !== null
+                      ? `${r.score} / ${r.max_score}`
+                      : '—',
+                  style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+                },
+                {
+                  header: '',
+                  accessor: (r) => (
+                    <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}/${r.report_type}`}>
+                      View Details
+                    </Button>
+                  ),
+                  style: { textAlign: 'right' },
+                },
+              ]}
+            />
+          )}
+        </Card>
+      )}
+
       {/* ── Onboarding Tab (prospects only) ────────────────────── */}
       {activeTab === 'onboarding' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
-          <CardControl
-            title="Marketing Analysis"
-            description={
-              reportSet
-                ? `Analysis ${reportSet.status === 'completed' ? 'complete' : reportSet.status === 'needs_review' ? 'needs review' : 'in progress'}.`
-                : 'Evaluate the prospect\'s current marketing presence, competitors, and opportunities for growth.'
-            }
-            action={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                {reportSet && <ReportSetStatusBadge status={reportSet.status} />}
-                {reportSet ? (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
-                    View Details
-                  </Button>
-                ) : (
-                  <RunAnalysisButton clientId={client.id} slug={client.slug} />
-                )}
-              </div>
-            }
-          />
           <CardControl
             title="Proposal"
             description={
               latestProposal
                 ? `${latestProposal.title} — ${formatCurrency(latestProposal.total_amount_cents)}`
-                : 'Generate a tailored proposal based on the marketing analysis and recommended services.'
+                : 'Auto-generates from Notion meeting notes — AI recommends services and writes all sections.'
             }
             action={
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -406,9 +486,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     View
                   </Button>
                 ) : (
-                  <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
-                    Start
-                  </Button>
+                  <>
+                    <GenerateProposalButton companyId={client.id} slug={client.slug} />
+                    <Button variant="outline" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
+                      Manual
+                    </Button>
+                  </>
                 )}
               </div>
             }
@@ -578,6 +661,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <Card variant="elevated" padding="lg">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Contacts</h2>
+            <Button variant="primary" size="sm" asLink href={`/admin/contacts/new?company_id=${client.id}`}>
+              Add New
+            </Button>
           </div>
           <DataTable
             data={contacts ?? []}

@@ -12,7 +12,7 @@ export default async function EditClientPage({ params }: Props) {
 
   const { data: client, error } = await supabase
     .from('companies')
-    .select('id, name, slug, type, status, contact_id, contact_name, contact_email, website_url, notes, address, phone, industry')
+    .select('id, name, slug, type, status, contact_id, contact_name, contact_email, website_url, notes, address, city, state, postal_code, country, phone, industry')
     .eq('slug', slug)
     .single();
 

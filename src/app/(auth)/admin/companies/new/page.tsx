@@ -38,6 +38,10 @@ export default function NewCompanyPage() {
   const [type, setType] = useState<'lead' | 'client'>(initialType);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
+  const [city, setCity] = useState('');
+  const [state, setState] = useState('');
+  const [postalCode, setPostalCode] = useState('');
+  const [country, setCountry] = useState('');
   const [phone, setPhone] = useState('');
   const [industry, setIndustry] = useState('');
   const [websiteUrl, setWebsiteUrl] = useState('');
@@ -69,6 +73,10 @@ export default function NewCompanyPage() {
           type,
           status: defaultStatus,
           address: address || null,
+          city: city || null,
+          state: state || null,
+          postal_code: postalCode || null,
+          country: country || null,
           phone: phone || null,
           industry: industry || null,
           website_url: websiteUrl || null,
@@ -180,6 +188,12 @@ export default function NewCompanyPage() {
               placeholder="Enter business address"
               value={address}
               onChange={setAddress}
+              onSelect={(result) => {
+                setCity(result.city ?? '');
+                setState(result.state ?? '');
+                setPostalCode(result.postcode ?? '');
+                setCountry(result.country ?? '');
+              }}
               fullWidth
             />
 

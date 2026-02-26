@@ -30,12 +30,15 @@ export async function POST(request: Request) {
   }
 
   const body = await request.json();
-  const { company_id, title, valid_until, notes, items } = body as {
+  const { company_id, title, valid_until, notes, items, sections, meeting_notes_url, meeting_notes_content } = body as {
     company_id: string;
     title: string;
     valid_until?: string;
     notes?: string;
     items: ProposalItem[];
+    sections?: Array<{ type: string; title: string; content: string | null; sort_order: number }>;
+    meeting_notes_url?: string;
+    meeting_notes_content?: string;
   };
 
   if (!company_id || !title || !items || items.length === 0) {
@@ -61,6 +64,11 @@ export async function POST(request: Request) {
       valid_until: valid_until || null,
       notes: notes || null,
       total_amount_cents,
+      sections: sections || [],
+      meeting_notes_url: meeting_notes_url || null,
+      meeting_notes_content: meeting_notes_content || null,
+      generation_status: sections && sections.length > 0 ? 'completed' : 'none',
+      generated_at: sections && sections.length > 0 ? new Date().toISOString() : null,
     })
     .select('id, token')
     .single();

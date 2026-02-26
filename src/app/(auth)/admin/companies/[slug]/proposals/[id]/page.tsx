@@ -2,11 +2,13 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { ProposalActions } from '@/components/proposal-actions';
+import { ProposalSectionViewer } from '@/components/proposal-section-viewer';
 
 interface Props {
   params: Promise<{ slug: string; id: string }>;
@@ -22,6 +24,7 @@ export default async function ProposalDetailPage({ params }: Props) {
       id, title, status, token, valid_until, total_amount_cents, notes,
       first_viewed_at, view_count, sent_at, accepted_at,
       accepted_by_email, accepted_by_ip, accepted_by_user_agent,
+      sections, generation_status, generated_at, meeting_notes_url,
       created_at,
       companies(name, slug, contact_email),
       proposal_items(id, name, description, quantity, unit_price_cents, sort_order)
@@ -42,6 +45,9 @@ export default async function ProposalDetailPage({ params }: Props) {
     unit_price_cents: number;
     sort_order: number;
   }[]) ?? [];
+
+  const sections = (proposal.sections as unknown as { type: string; title: string; content: string | null; sort_order: number }[]) ?? [];
+  const hasSections = sections.length > 0 && sections.some(s => s.content);
 
   const sortedItems = items.sort((a, b) => a.sort_order - b.sort_order);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.brikdesigns.com';
@@ -84,12 +90,17 @@ export default async function ProposalDetailPage({ params }: Props) {
           />
         }
         actions={
-          <ProposalActions
-            proposalId={proposal.id}
-            status={proposal.status}
-            shareableLink={shareableLink}
-            clientSlug={slug}
-          />
+          <div style={{ display: 'flex', gap: 'var(--_space---gap--md)', alignItems: 'center' }}>
+            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${slug}/proposals/${id}/edit`}>
+              Edit
+            </Button>
+            <ProposalActions
+              proposalId={proposal.id}
+              status={proposal.status}
+              shareableLink={shareableLink}
+              clientSlug={slug}
+            />
+          </div>
         }
         metadata={[
           { label: 'Status', value: <ProposalStatusBadge status={proposal.status} /> },
@@ -100,6 +111,9 @@ export default async function ProposalDetailPage({ params }: Props) {
               ? new Date(proposal.valid_until).toLocaleDateString()
               : 'No expiration',
           },
+          ...(proposal.generation_status && proposal.generation_status !== 'none'
+            ? [{ label: 'Generated', value: proposal.generated_at ? new Date(proposal.generated_at).toLocaleDateString() : proposal.generation_status }]
+            : []),
         ]}
       />
 
@@ -134,9 +148,28 @@ export default async function ProposalDetailPage({ params }: Props) {
         </Card>
       )}
 
+      {/* AI-generated sections */}
+      {hasSections && (
+        <div style={{ marginBottom: '24px' }}>
+          {sections
+            .filter(s => s.type !== 'fee_summary' && s.content)
+            .sort((a, b) => a.sort_order - b.sort_order)
+            .map((section) => (
+              <ProposalSectionViewer
+                key={section.type}
+                title={section.title}
+                content={section.content!}
+                sectionNumber={section.sort_order}
+              />
+            ))}
+        </div>
+      )}
+
       {/* Line items */}
       <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <h2 style={sectionHeadingStyle}>Line Items</h2>
+        <h2 style={sectionHeadingStyle}>
+          {hasSections ? 'Fee Summary' : 'Line Items'}
+        </h2>
         <DataTable
           data={sortedItems}
           rowKey={(item) => item.id}
@@ -223,6 +256,21 @@ export default async function ProposalDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
+        </Card>
+      )}
+
+      {/* Meeting notes source */}
+      {proposal.meeting_notes_url && (
+        <Card variant="outlined" padding="lg" style={{ marginBottom: '24px' }}>
+          <h2 style={sectionHeadingStyle}>Meeting Notes Source</h2>
+          <a
+            href={proposal.meeting_notes_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ color: 'var(--_color---system--link)', textDecoration: 'none', fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px' }}
+          >
+            {proposal.meeting_notes_url}
+          </a>
         </Card>
       )}
 
