@@ -13,7 +13,9 @@
     "db:seed": "supabase db reset --db-only",
     "prepare": "husky",
     "maintenance": "./scripts/portal-maintenance.sh",
-    "audit:tokens": "./scripts/token-audit.sh"
+    "audit:tokens": "./scripts/token-audit.sh",
+    "deploy:staging": "npx netlify-cli deploy --build",
+    "deploy:prod": "npx netlify-cli deploy --build --prod"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
