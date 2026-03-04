@@ -6,6 +6,11 @@ import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 
+const SESSION_MESSAGES: Record<string, string> = {
+  idle: 'You were signed out due to inactivity.',
+  max_session: 'Your session has expired. Please sign in again.',
+};
+
 export function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -13,6 +18,7 @@ export function LoginForm() {
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const sessionReason = searchParams.get('session');
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -68,6 +74,22 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit}>
+      {sessionReason && SESSION_MESSAGES[sessionReason] && (
+        <div
+          style={{
+            backgroundColor: 'var(--_color---surface--secondary, #f5f5f5)',
+            border: '1px solid var(--_color---border--primary)',
+            borderRadius: 'var(--_border-radius---sm, 6px)',
+            padding: '12px 16px',
+            marginBottom: '16px',
+            fontFamily: 'var(--_typography---font-family--body)',
+            fontSize: 'var(--_typography---body--sm)',
+            color: 'var(--_color---text--secondary)',
+          }}
+        >
+          {SESSION_MESSAGES[sessionReason]}
+        </div>
+      )}
       <div style={{ marginBottom: '16px' }}>
         <TextInput
           label="Email"
