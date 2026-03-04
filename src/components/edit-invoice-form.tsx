@@ -75,6 +75,15 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
         return;
       }
 
+      // Send payment confirmation email (non-blocking)
+      if (status === 'paid' && !invoice.paid_at) {
+        fetch('/api/admin/email/payment-received', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invoice_id: invoice.id }),
+        }).catch((err) => console.error('Payment email failed (non-critical):', err));
+      }
+
       router.push('/admin/invoices');
       router.refresh();
     } catch {
