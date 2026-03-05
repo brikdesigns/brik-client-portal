@@ -2,23 +2,16 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ReportStatusBadge } from '@/components/report-badges';
-import { ScoreCard, NumericScoreCard } from '@/components/score-card';
-import { OpportunitiesCard } from '@/components/opportunities-card';
-import { EditableReportTable } from '@/components/editable-report-table';
 import { AnalyzeButton } from '@/components/analyze-button';
+import { ReportContent } from '@/components/report-content';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
-import { type ScoreTier } from '@/lib/analysis/scoring';
-import { ReportDetailTabs } from './tabs';
 
 interface Props {
   params: Promise<{ slug: string; reportType: string }>;
-  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function ReportDetailPage({ params, searchParams }: Props) {
+export default async function ReportDetailPage({ params }: Props) {
   const { slug, reportType } = await params;
-  const { tab } = await searchParams;
-  const activeTab = tab === 'details' ? 'details' : 'summary';
 
   const supabase = createClient();
 
@@ -110,51 +103,20 @@ export default async function ReportDetailPage({ params, searchParams }: Props) 
             reportType={reportType}
           />
         }
-        tabs={
-          <ReportDetailTabs
-            slug={slug}
-            reportType={reportType}
-            activeTab={activeTab}
-          />
-        }
       />
 
-      {activeTab === 'summary' ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-          {/* Score cards */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px',
-            }}
-          >
-            {report.tier && report.score !== null && report.max_score !== null ? (
-              <ScoreCard
-                tier={report.tier as ScoreTier}
-                score={report.score}
-                maxScore={report.max_score}
-              />
-            ) : (
-              <NumericScoreCard value="—" label="Score pending" />
-            )}
-            <NumericScoreCard
-              value={report.score !== null ? `${report.score} / ${report.max_score ?? '?'}` : '—'}
-              label="Score"
-            />
-          </div>
-
-          {/* Opportunities */}
-          <OpportunitiesCard text={report.opportunities_text} />
-        </div>
-      ) : (
-        <EditableReportTable
-          items={allItems}
-          reportId={report.id}
-          reportSetId={reportSet.id}
-          reportType={reportType as ReportType}
-        />
-      )}
+      <ReportContent
+        report={{
+          id: report.id,
+          score: report.score,
+          max_score: report.max_score,
+          tier: report.tier,
+          opportunities_text: report.opportunities_text,
+        }}
+        items={allItems}
+        reportType={reportType as ReportType}
+        reportSetId={reportSet.id}
+      />
     </div>
   );
 }
