@@ -6,6 +6,8 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
+import { text, heading, meta } from '@/lib/styles';
+import { font, color, space, gap } from '@/lib/tokens';
 import { ProposalActions } from '@/components/proposal-actions';
 import { ProposalSectionsView } from './sections-view';
 import type {
@@ -80,28 +82,9 @@ export default async function ProposalDetailPage({ params }: Props) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.brikdesigns.com';
   const shareableLink = `${siteUrl}/proposals/${proposal.token}`;
 
-  const metaLabelStyle = {
-    fontFamily: 'var(--_typography---font-family--label)',
-    fontSize: '13px',
-    fontWeight: 500 as const,
-    color: 'var(--_color---text--muted)',
-    margin: '0 0 4px',
-  };
-
-  const metaValueStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    color: 'var(--_color---text--primary)',
-    margin: 0,
-  };
-
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600 as const,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const metaLabelStyle = meta.label;
+  const metaValueStyle = meta.value;
+  const sectionHeadingStyle = heading.section;
 
   return (
     <div>
@@ -117,7 +100,7 @@ export default async function ProposalDetailPage({ params }: Props) {
           />
         }
         actions={
-          <div style={{ display: 'flex', gap: 'var(--_space---gap--md)', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: gap.md, alignItems: 'center' }}>
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${slug}/proposals/${id}/edit`}>
               Edit
             </Button>
@@ -146,8 +129,8 @@ export default async function ProposalDetailPage({ params }: Props) {
 
       {/* Shareable link — visible when sent or later */}
       {(proposal.status === 'sent' || proposal.status === 'viewed' || proposal.status === 'accepted') && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: space.md, flexWrap: 'wrap' }}>
             <div>
               <p style={metaLabelStyle}>Shareable Link</p>
               <p style={{ ...metaValueStyle, wordBreak: 'break-all' }}>
@@ -155,18 +138,18 @@ export default async function ProposalDetailPage({ params }: Props) {
                   href={shareableLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
+                  style={{ color: color.system.link, textDecoration: 'none' }}
                 >
                   {shareableLink}
                 </a>
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: gap.md, flexWrap: 'wrap' }}>
               {proposal.view_count > 0 && (
                 <Badge status="info">{proposal.view_count} view{proposal.view_count !== 1 ? 's' : ''}</Badge>
               )}
               {proposal.first_viewed_at && (
-                <p style={{ ...metaValueStyle, fontSize: '13px', color: 'var(--_color---text--muted)' }}>
+                <p style={{ ...metaValueStyle, fontSize: font.size.body.sm, color: color.text.muted }}>
                   First viewed: {new Date(proposal.first_viewed_at).toLocaleString()}
                 </p>
               )}
@@ -186,9 +169,9 @@ export default async function ProposalDetailPage({ params }: Props) {
 
       {/* Acceptance audit trail */}
       {proposal.status === 'accepted' && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: '24px' }}>
+        <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
           <h2 style={sectionHeadingStyle}>Acceptance Record</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
             <div>
               <p style={metaLabelStyle}>Accepted By</p>
               <p style={metaValueStyle}>{proposal.accepted_by_email}</p>
@@ -205,7 +188,7 @@ export default async function ProposalDetailPage({ params }: Props) {
             </div>
             <div>
               <p style={metaLabelStyle}>User Agent</p>
-              <p style={{ ...metaValueStyle, fontSize: '12px', wordBreak: 'break-all' }}>
+              <p style={{ ...metaValueStyle, fontSize: font.size.body.xs, wordBreak: 'break-all' }}>
                 {proposal.accepted_by_user_agent || '—'}
               </p>
             </div>
@@ -219,11 +202,8 @@ export default async function ProposalDetailPage({ params }: Props) {
           <h2 style={sectionHeadingStyle}>Internal Notes</h2>
           <p
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--secondary)',
+              ...text.muted,
               margin: 0,
-              lineHeight: 1.6,
               whiteSpace: 'pre-wrap',
             }}
           >

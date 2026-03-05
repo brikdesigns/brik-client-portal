@@ -226,6 +226,34 @@
   --services--orange-light: #241008;
 }
 
+/*
+ * Bare element overrides.
+ *
+ * The Webflow export CSS defines bare element selectors (li, h3, h4,
+ * blockquote) with hardcoded fonts (IBM Plex Mono, Libre Franklin) and
+ * colors (#000). These bleed into rendered markdown and other dynamic
+ * content. Override them here so all text inherits the Brik brand tokens.
+ */
+li {
+  color: var(--_color---text--primary);
+  font-family: var(--_typography---font-family--body);
+}
+
+h3 {
+  color: var(--_color---text--primary);
+  font-family: var(--_typography---font-family--heading);
+}
+
+h4 {
+  color: var(--_color---text--primary);
+  font-family: var(--_typography---font-family--heading);
+}
+
+blockquote {
+  color: var(--_color---text--primary);
+  font-family: var(--_typography---font-family--body);
+}
+
 /* Dark mode logo inversion — filter to white */
 :root[data-theme="dark"] .portal-logo {
   filter: brightness(0) invert(1);

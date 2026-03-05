@@ -9,6 +9,8 @@ import {
   FeeSummaryContent,
   MarkdownContent,
 } from '@/components/proposal-sections';
+import { text } from '@/lib/styles';
+import { color, space } from '@/lib/tokens';
 import {
   isScopeSection,
   isTimelineSection,
@@ -65,12 +67,7 @@ function renderSectionContent(
   }
 
   return (
-    <p style={{
-      fontFamily: 'var(--_typography---font-family--body)',
-      fontSize: 'var(--_typography---body--md-base)',
-      color: 'var(--_color---text--muted)',
-      margin: 0,
-    }}>
+    <p style={{ ...text.body, color: color.text.muted, margin: 0 }}>
       No content yet.
     </p>
   );
@@ -90,7 +87,7 @@ export function ProposalSectionsView({
   const sortedSections = [...sections].sort((a, b) => a.sort_order - b.sort_order);
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---lg)', marginBottom: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: space.lg, marginBottom: space.lg }}>
       {/* Meeting Notes alert banner */}
       {meetingNotesUrl && (
         <AlertBanner

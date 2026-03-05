@@ -3,3 +3,24 @@
 
 echo "🔍 Running linter before commit..."
 npm run lint
+
+# Check staged .tsx/.ts files for hardcoded values that should use BDS tokens
+STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.tsx' 'src/**/*.ts' | grep -v 'email\.ts' || true)
+
+if [ -n "$STAGED_SRC" ]; then
+  HARDCODED_PX=$(echo "$STAGED_SRC" | xargs grep -n "fontSize: '[0-9]" 2>/dev/null || true)
+  HARDCODED_LH=$(echo "$STAGED_SRC" | xargs grep -n "lineHeight: [0-9]" 2>/dev/null | grep -v "lineHeight: 'var(" || true)
+
+  if [ -n "$HARDCODED_PX" ] || [ -n "$HARDCODED_LH" ]; then
+    echo ""
+    echo "⚠️  Token compliance: hardcoded values found in staged files"
+    echo "   Use imports from @/lib/tokens or @/lib/styles instead."
+    echo ""
+    [ -n "$HARDCODED_PX" ] && echo "$HARDCODED_PX"
+    [ -n "$HARDCODED_LH" ] && echo "$HARDCODED_LH"
+    echo ""
+    echo "   Run 'npm run audit:tokens' for full report."
+    echo "   To bypass (not recommended): git commit --no-verify"
+    exit 1
+  fi
+fi

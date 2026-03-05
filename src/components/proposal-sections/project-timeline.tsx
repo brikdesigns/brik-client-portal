@@ -1,37 +1,25 @@
 'use client';
 
 import { Accordion, type AccordionItemData } from '@bds/components/ui/Accordion/Accordion';
+import { text, list } from '@/lib/styles';
+import { color } from '@/lib/tokens';
 import type { TimelinePhase } from '@/lib/proposal-types';
 
 interface ProjectTimelineContentProps {
   phases: TimelinePhase[];
 }
 
-const listStyles = {
-  margin: 0,
-  paddingLeft: '24px',
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: 'var(--_typography---body--md-base)',
-  lineHeight: 'var(--font-line-height--150)',
-  color: 'var(--_color---text--secondary)',
-} as const;
-
 function PhaseContent({ phase }: { phase: TimelinePhase }) {
   return (
     <div>
       {phase.deliverables.length > 0 ? (
-        <ul style={listStyles}>
-          {phase.deliverables.map((text, i) => (
-            <li key={i} style={{ marginBottom: '4px' }}>{text}</li>
+        <ul style={{ ...list.ul, margin: 0 }}>
+          {phase.deliverables.map((txt, i) => (
+            <li key={i} style={list.li}>{txt}</li>
           ))}
         </ul>
       ) : (
-        <p style={{
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: 'var(--_typography---body--md-base)',
-          color: 'var(--_color---text--muted)',
-          margin: 0,
-        }}>
+        <p style={{ ...text.body, color: color.text.muted, margin: 0 }}>
           No deliverables specified.
         </p>
       )}
@@ -42,12 +30,7 @@ function PhaseContent({ phase }: { phase: TimelinePhase }) {
 export function ProjectTimelineContent({ phases }: ProjectTimelineContentProps) {
   if (!phases.length) {
     return (
-      <p style={{
-        fontFamily: 'var(--_typography---font-family--body)',
-        fontSize: 'var(--_typography---body--md-base)',
-        color: 'var(--_color---text--muted)',
-        margin: 0,
-      }}>
+      <p style={{ ...text.body, color: color.text.muted, margin: 0 }}>
         No timeline phases defined yet.
       </p>
     );

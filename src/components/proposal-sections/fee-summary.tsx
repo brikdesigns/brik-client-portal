@@ -3,6 +3,8 @@
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { formatCurrency } from '@/lib/format';
+import { text, heading } from '@/lib/styles';
+import { color, font, space, gap, border } from '@/lib/tokens';
 import type { FeeSummaryItem } from '@/lib/proposal-types';
 
 interface FeeSummaryContentProps {
@@ -35,11 +37,19 @@ export function FeeSummaryContent({ items, totalAmountCents }: FeeSummaryContent
             header: 'Service',
             accessor: (item) => (
               <div>
-                <p style={{ fontWeight: 500, color: 'var(--_color---text--primary)', margin: 0 }}>
+                <p style={{
+                  ...text.body,
+                  fontWeight: font.weight.medium,
+                  margin: 0,
+                }}>
                   {item.name}
                 </p>
                 {item.description && (
-                  <p style={{ fontSize: '13px', color: 'var(--_color---text--muted)', margin: '4px 0 0' }}>
+                  <p style={{
+                    ...text.bodySmall,
+                    color: color.text.muted,
+                    margin: `${gap.xs} 0 0`,
+                  }}>
                     {item.description}
                   </p>
                 )}
@@ -54,12 +64,12 @@ export function FeeSummaryContent({ items, totalAmountCents }: FeeSummaryContent
           {
             header: 'Unit Price',
             accessor: (item) => formatCurrency(item.unit_price_cents),
-            style: { textAlign: 'right', color: 'var(--_color---text--secondary)' },
+            style: { textAlign: 'right', color: color.text.secondary },
           },
           {
             header: 'Subtotal',
             accessor: (item) => formatCurrency(item.unit_price_cents * item.quantity),
-            style: { textAlign: 'right', fontWeight: 500 },
+            style: { textAlign: 'right', fontWeight: font.weight.medium },
           },
         ]}
       />
@@ -67,20 +77,12 @@ export function FeeSummaryContent({ items, totalAmountCents }: FeeSummaryContent
         style={{
           display: 'flex',
           justifyContent: 'flex-end',
-          paddingTop: '16px',
-          borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)',
-          marginTop: '8px',
+          paddingTop: space.md,
+          borderTop: `${border.width.sm} solid ${color.border.muted}`,
+          marginTop: gap.sm,
         }}
       >
-        <p
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--small, 18px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: 0,
-          }}
-        >
+        <p style={{ ...heading.section, margin: 0 }}>
           Total: {formatCurrency(totalAmountCents)}
         </p>
       </div>
