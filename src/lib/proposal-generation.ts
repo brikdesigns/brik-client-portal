@@ -32,11 +32,15 @@ export interface ProposalGenerationInput {
   services: ServiceDetail[];
 }
 
+import type { ScopeItem, TimelinePhase } from './proposal-types';
+
 export interface GeneratedSection {
   type: string;
   title: string;
   content: string;
   sort_order: number;
+  scope_items?: ScopeItem[];
+  timeline_phases?: TimelinePhase[];
 }
 
 export interface GeneratedSections {
@@ -85,6 +89,8 @@ function buildUserPrompt(input: ProposalGenerationInput): string {
     const price = (s.base_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
     const freq = s.billing_frequency === 'recurring' ? '/month' : 'one-time';
     return `### ${s.name} (${s.category_name || 'General'})
+- **Service ID**: ${s.id}
+- **Category Slug**: ${s.category_slug || 'brand'}
 - **Price**: ${price} ${freq}
 - **Proposal Copy**: ${s.proposal_copy || s.description || 'No description available'}
 - **Included Scope**: ${s.included_scope || 'Standard scope'}
@@ -106,7 +112,7 @@ ${input.meetingNotes}
 ${servicesBlock}
 
 ## Required Output Schema
-Return a JSON object with exactly 4 keys. Each value is an object with "title" (string) and "content" (markdown string).
+Return a JSON object with exactly 4 keys. Each section has "title" and "content" (markdown). The scope_of_project and project_timeline sections also include structured data arrays.
 
 {
   "overview_and_goals": {
@@ -115,17 +121,35 @@ Return a JSON object with exactly 4 keys. Each value is an object with "title" (
   },
   "scope_of_project": {
     "title": "Scope of Project",
-    "content": "Markdown content here..."
+    "content": "Markdown summary of overall scope...",
+    "scope_items": [
+      {
+        "service_name": "Exact service name from Selected Services above",
+        "service_id": "service UUID from above",
+        "category_slug": "brand|marketing|information|product|service",
+        "included": ["Deliverable 1", "Deliverable 2"],
+        "not_included": ["Exclusion 1", "Exclusion 2"],
+        "timeline": "2 weeks"
+      }
+    ]
   },
   "project_timeline": {
     "title": "Project Timeline",
-    "content": "Markdown content here..."
+    "content": "Markdown overview of the timeline...",
+    "timeline_phases": [
+      {
+        "phase_label": "Phase 01: Discovery & Foundation",
+        "deliverables": ["Activity 1", "Activity 2"]
+      }
+    ]
   },
   "why_brik": {
     "title": "Why Brik?",
     "content": "Markdown content here..."
   }
 }
+
+IMPORTANT: scope_items must include one entry per selected service. Use the exact service_name and service_id from the Selected Services section. The category_slug must be one of: brand, marketing, information, product, service.
 
 ## Section-Specific Instructions
 
@@ -205,7 +229,12 @@ export async function generateProposalSections(
     jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   }
 
-  let parsed: Record<string, { title: string; content: string }>;
+  let parsed: Record<string, {
+    title: string;
+    content: string;
+    scope_items?: ScopeItem[];
+    timeline_phases?: TimelinePhase[];
+  }>;
   try {
     parsed = JSON.parse(jsonStr);
   } catch {
@@ -220,6 +249,22 @@ export async function generateProposalSections(
     }
   }
 
+  // Validate scope_items have required fields, with safe defaults
+  const scopeItems: ScopeItem[] = (parsed.scope_of_project.scope_items || []).map(item => ({
+    service_id: item.service_id || null,
+    service_name: item.service_name || 'Unknown Service',
+    category_slug: item.category_slug || 'brand',
+    included: Array.isArray(item.included) ? item.included : [],
+    not_included: Array.isArray(item.not_included) ? item.not_included : [],
+    timeline: item.timeline || null,
+  }));
+
+  // Validate timeline_phases have required fields
+  const timelinePhases: TimelinePhase[] = (parsed.project_timeline.timeline_phases || []).map(phase => ({
+    phase_label: phase.phase_label || 'Phase',
+    deliverables: Array.isArray(phase.deliverables) ? phase.deliverables : [],
+  }));
+
   return {
     overview_and_goals: {
       type: 'overview_and_goals',
@@ -232,12 +277,14 @@ export async function generateProposalSections(
       title: parsed.scope_of_project.title,
       content: parsed.scope_of_project.content,
       sort_order: 2,
+      scope_items: scopeItems,
     },
     project_timeline: {
       type: 'project_timeline',
       title: parsed.project_timeline.title,
       content: parsed.project_timeline.content,
       sort_order: 3,
+      timeline_phases: timelinePhases,
     },
     why_brik: {
       type: 'why_brik',

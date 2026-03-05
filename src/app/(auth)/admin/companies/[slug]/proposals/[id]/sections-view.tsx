@@ -1,0 +1,137 @@
+'use client';
+
+import { CollapsibleCard } from '@bds/components/ui/CollapsibleCard/CollapsibleCard';
+import { AlertBanner } from '@bds/components/ui/AlertBanner/AlertBanner';
+import { Button } from '@bds/components/ui/Button/Button';
+import {
+  ScopeOfProjectContent,
+  ProjectTimelineContent,
+  FeeSummaryContent,
+  MarkdownContent,
+} from '@/components/proposal-sections';
+import {
+  isScopeSection,
+  isTimelineSection,
+  isFeeSummarySection,
+  type ProposalSectionBase,
+  type ScopeOfProjectSection,
+  type ProjectTimelineSection,
+  type FeeSummaryItem,
+} from '@/lib/proposal-types';
+
+interface ProposalSectionsViewProps {
+  sections: ProposalSectionBase[];
+  feeSummaryItems: FeeSummaryItem[];
+  totalAmountCents: number;
+  meetingNotesUrl: string | null;
+  hasSections: boolean;
+}
+
+function padSectionNumber(n: number): string {
+  return String(n).padStart(2, '0');
+}
+
+function renderSectionContent(
+  section: ProposalSectionBase,
+  feeSummaryItems: FeeSummaryItem[],
+  totalAmountCents: number,
+) {
+  if (isFeeSummarySection(section)) {
+    return (
+      <FeeSummaryContent
+        items={feeSummaryItems}
+        totalAmountCents={totalAmountCents}
+      />
+    );
+  }
+
+  if (isScopeSection(section)) {
+    const scopeSection = section as ScopeOfProjectSection;
+    if (scopeSection.scope_items && scopeSection.scope_items.length > 0) {
+      return <ScopeOfProjectContent items={scopeSection.scope_items} />;
+    }
+  }
+
+  if (isTimelineSection(section)) {
+    const timelineSection = section as ProjectTimelineSection;
+    if (timelineSection.timeline_phases && timelineSection.timeline_phases.length > 0) {
+      return <ProjectTimelineContent phases={timelineSection.timeline_phases} />;
+    }
+  }
+
+  // Fallback: render markdown content
+  if (section.content) {
+    return <MarkdownContent content={section.content} />;
+  }
+
+  return (
+    <p style={{
+      fontFamily: 'var(--_typography---font-family--body)',
+      fontSize: 'var(--_typography---body--md-base)',
+      color: 'var(--_color---text--muted)',
+      margin: 0,
+    }}>
+      No content yet.
+    </p>
+  );
+}
+
+export function ProposalSectionsView({
+  sections,
+  feeSummaryItems,
+  totalAmountCents,
+  meetingNotesUrl,
+  hasSections,
+}: ProposalSectionsViewProps) {
+  if (!hasSections && feeSummaryItems.length === 0) {
+    return null;
+  }
+
+  const sortedSections = [...sections].sort((a, b) => a.sort_order - b.sort_order);
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---lg)', marginBottom: '24px' }}>
+      {/* Meeting Notes alert banner */}
+      {meetingNotesUrl && (
+        <AlertBanner
+          icon="info"
+          title="Meeting Notes"
+          description="Source notes used to generate this proposal"
+          action={
+            <a href={meetingNotesUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+              <Button variant="primary" size="sm">
+                View Notes
+              </Button>
+            </a>
+          }
+        />
+      )}
+
+      {/* Collapsible section cards */}
+      {sortedSections.map((section, index) => (
+        <CollapsibleCard
+          key={section.type}
+          sectionLabel={`Section ${padSectionNumber(index + 1)}`}
+          title={section.title}
+          defaultOpen={false}
+        >
+          {renderSectionContent(section, feeSummaryItems, totalAmountCents)}
+        </CollapsibleCard>
+      ))}
+
+      {/* Fee Summary as its own card if not already in sections */}
+      {!sortedSections.some(s => s.type === 'fee_summary') && feeSummaryItems.length > 0 && (
+        <CollapsibleCard
+          sectionLabel={`Section ${padSectionNumber(sortedSections.length + 1)}`}
+          title="Fee Summary"
+          defaultOpen={false}
+        >
+          <FeeSummaryContent
+            items={feeSummaryItems}
+            totalAmountCents={totalAmountCents}
+          />
+        </CollapsibleCard>
+      )}
+    </div>
+  );
+}

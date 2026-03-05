@@ -1,14 +1,19 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { ProposalActions } from '@/components/proposal-actions';
-import { ProposalSectionViewer } from '@/components/proposal-section-viewer';
+import { ProposalSectionsView } from './sections-view';
+import type {
+  ProposalSectionBase,
+  ScopeOfProjectSection,
+  ProjectTimelineSection,
+  FeeSummaryItem,
+} from '@/lib/proposal-types';
 
 interface Props {
   params: Promise<{ slug: string; id: string }>;
@@ -18,6 +23,7 @@ export default async function ProposalDetailPage({ params }: Props) {
   const { slug, id } = await params;
   const supabase = createClient();
 
+  // Fetch proposal with company, line items, and service categories
   const { data: proposal, error } = await supabase
     .from('proposals')
     .select(`
@@ -27,7 +33,10 @@ export default async function ProposalDetailPage({ params }: Props) {
       sections, generation_status, generated_at, meeting_notes_url,
       created_at,
       companies(name, slug, contact_email),
-      proposal_items(id, name, description, quantity, unit_price_cents, sort_order)
+      proposal_items(
+        id, name, description, quantity, unit_price_cents, sort_order, service_id,
+        services(name, service_categories(slug))
+      )
     `)
     .eq('id', id)
     .single();
@@ -36,30 +45,40 @@ export default async function ProposalDetailPage({ params }: Props) {
     notFound();
   }
 
-  const client = proposal.companies as unknown as { name: string; slug: string; contact_email: string | null };
-  const items = ((proposal as unknown as Record<string, unknown>).proposal_items as {
+  const company = proposal.companies as unknown as {
+    name: string;
+    slug: string;
+    contact_email: string | null;
+  };
+
+  // Build enriched fee summary items with category slugs
+  const rawItems = ((proposal as unknown as Record<string, unknown>).proposal_items as {
     id: string;
     name: string;
     description: string | null;
     quantity: number;
     unit_price_cents: number;
     sort_order: number;
+    service_id: string | null;
+    services: { name: string; service_categories: { slug: string } | null } | null;
   }[]) ?? [];
 
-  const sections = (proposal.sections as unknown as { type: string; title: string; content: string | null; sort_order: number }[]) ?? [];
+  const feeSummaryItems: FeeSummaryItem[] = rawItems.map((item) => ({
+    id: item.id,
+    name: item.name,
+    description: item.description,
+    quantity: item.quantity,
+    unit_price_cents: item.unit_price_cents,
+    sort_order: item.sort_order,
+    service_id: item.service_id,
+    category_slug: item.services?.service_categories?.slug ?? null,
+  }));
+
+  const sections = (proposal.sections as unknown as ProposalSectionBase[]) ?? [];
   const hasSections = sections.length > 0 && sections.some(s => s.content);
 
-  const sortedItems = items.sort((a, b) => a.sort_order - b.sort_order);
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.brikdesigns.com';
   const shareableLink = `${siteUrl}/proposals/${proposal.token}`;
-
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600 as const,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
 
   const metaLabelStyle = {
     fontFamily: 'var(--_typography---font-family--label)',
@@ -76,6 +95,14 @@ export default async function ProposalDetailPage({ params }: Props) {
     margin: 0,
   };
 
+  const sectionHeadingStyle = {
+    fontFamily: 'var(--_typography---font-family--heading)',
+    fontSize: 'var(--_typography---heading--small, 18px)',
+    fontWeight: 600 as const,
+    color: 'var(--_color---text--primary)',
+    margin: '0 0 16px',
+  };
+
   return (
     <div>
       <PageHeader
@@ -84,7 +111,7 @@ export default async function ProposalDetailPage({ params }: Props) {
           <Breadcrumb
             items={[
               { label: 'Companies', href: '/admin/companies' },
-              { label: client.name, href: `/admin/companies/${slug}` },
+              { label: company.name, href: `/admin/companies/${slug}` },
               { label: 'Proposal' },
             ]}
           />
@@ -148,87 +175,14 @@ export default async function ProposalDetailPage({ params }: Props) {
         </Card>
       )}
 
-      {/* AI-generated sections */}
-      {hasSections && (
-        <div style={{ marginBottom: '24px' }}>
-          {sections
-            .filter(s => s.type !== 'fee_summary' && s.content)
-            .sort((a, b) => a.sort_order - b.sort_order)
-            .map((section) => (
-              <ProposalSectionViewer
-                key={section.type}
-                title={section.title}
-                content={section.content!}
-                sectionNumber={section.sort_order}
-              />
-            ))}
-        </div>
-      )}
-
-      {/* Line items */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-        <h2 style={sectionHeadingStyle}>
-          {hasSections ? 'Fee Summary' : 'Line Items'}
-        </h2>
-        <DataTable
-          data={sortedItems}
-          rowKey={(item) => item.id}
-          emptyMessage="No line items."
-          columns={[
-            {
-              header: 'Item',
-              accessor: (item) => (
-                <div>
-                  <p style={{ fontWeight: 500, color: 'var(--_color---text--primary)', margin: 0 }}>
-                    {item.name}
-                  </p>
-                  {item.description && (
-                    <p style={{ fontSize: '13px', color: 'var(--_color---text--muted)', margin: '4px 0 0' }}>
-                      {item.description}
-                    </p>
-                  )}
-                </div>
-              ),
-            },
-            {
-              header: 'Qty',
-              accessor: (item) => item.quantity,
-              style: { width: '60px', textAlign: 'center' },
-            },
-            {
-              header: 'Unit Price',
-              accessor: (item) => formatCurrency(item.unit_price_cents),
-              style: { textAlign: 'right', color: 'var(--_color---text--secondary)' },
-            },
-            {
-              header: 'Subtotal',
-              accessor: (item) => formatCurrency(item.unit_price_cents * item.quantity),
-              style: { textAlign: 'right', fontWeight: 500 },
-            },
-          ]}
-        />
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            paddingTop: '16px',
-            borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)',
-            marginTop: '8px',
-          }}
-        >
-          <p
-            style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: 'var(--_typography---heading--small, 18px)',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
-              margin: 0,
-            }}
-          >
-            Total: {formatCurrency(proposal.total_amount_cents)}
-          </p>
-        </div>
-      </Card>
+      {/* Proposal sections — collapsible cards with structured content */}
+      <ProposalSectionsView
+        sections={sections as (ScopeOfProjectSection | ProjectTimelineSection | ProposalSectionBase)[]}
+        feeSummaryItems={feeSummaryItems}
+        totalAmountCents={proposal.total_amount_cents}
+        meetingNotesUrl={proposal.meeting_notes_url}
+        hasSections={hasSections}
+      />
 
       {/* Acceptance audit trail */}
       {proposal.status === 'accepted' && (
@@ -256,21 +210,6 @@ export default async function ProposalDetailPage({ params }: Props) {
               </p>
             </div>
           </div>
-        </Card>
-      )}
-
-      {/* Meeting notes source */}
-      {proposal.meeting_notes_url && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: '24px' }}>
-          <h2 style={sectionHeadingStyle}>Meeting Notes Source</h2>
-          <a
-            href={proposal.meeting_notes_url}
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{ color: 'var(--_color---system--link)', textDecoration: 'none', fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px' }}
-          >
-            {proposal.meeting_notes_url}
-          </a>
         </Card>
       )}
 
