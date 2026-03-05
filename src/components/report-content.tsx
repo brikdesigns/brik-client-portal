@@ -8,6 +8,7 @@ import { ReportDetailTable } from '@/components/report-detail-table';
 import { EditableReportTable } from '@/components/editable-report-table';
 import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
+import { font } from '@/lib/tokens';
 
 interface ReportItem {
   id: string;
@@ -42,7 +43,7 @@ const TIER_TO_STATUS: Record<ScoreTier, MeterStatus> = {
 
 const TIER_LABELS: Record<ScoreTier, string> = {
   pass: 'Pass',
-  fair: 'Fair',
+  fair: 'Needs Attention',
   fail: 'Fail',
 };
 
@@ -55,8 +56,11 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
   const meterStatus = tier ? TIER_TO_STATUS[tier] : 'neutral';
   const meterLabel = tier ? TIER_LABELS[tier] : 'Pending';
 
-  const opportunityParagraphs = report.opportunities_text
-    ? report.opportunities_text.split('\n\n').filter(Boolean)
+  const opportunityLines = report.opportunities_text
+    ? report.opportunities_text
+        .split(/\n+/)
+        .map((line) => line.replace(/\*\*([^*]+)\*\*/g, '$1').trim())
+        .filter(Boolean)
     : [];
 
   return (
@@ -81,7 +85,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
         </Card>
 
         {/* Opportunities card */}
-        {opportunityParagraphs.length > 0 ? (
+        {opportunityLines.length > 0 ? (
           <Card variant="elevated" padding="lg">
             <h3
               style={{
@@ -94,21 +98,23 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
             >
               Opportunities
             </h3>
-            <div
+            <ul
               style={{
                 fontFamily: 'var(--_typography---font-family--body)',
                 fontSize: 'var(--_typography---body--md-base)',
-                lineHeight: 1.6,
+                lineHeight: font.lineHeight.relaxed,
                 color: 'var(--_color---text--secondary)',
+                margin: 0,
+                paddingLeft: '20px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px',
+                gap: '8px',
               }}
             >
-              {opportunityParagraphs.map((p, i) => (
-                <p key={i} style={{ margin: 0 }}>{p}</p>
+              {opportunityLines.map((line, i) => (
+                <li key={i}>{line}</li>
               ))}
-            </div>
+            </ul>
           </Card>
         ) : (
           <Card variant="elevated" padding="lg">

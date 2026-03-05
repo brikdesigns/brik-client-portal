@@ -2,23 +2,24 @@
  * Automated brand/logo analysis.
  *
  * Evaluates a client's website across 10 categories matching the Notion
- * "Brand/Logo Report" database. Some categories can be auto-scored from
- * HTML/CSS; others require manual visual assessment.
+ * "Brand/Logo Report" database. Most categories are auto-scored from
+ * HTML/CSS analysis; only Signage (physical) remains truly manual.
  *
  * Categories (scored 1-5, max 50):
  * 1. Logo Usage — partial auto
- * 2. Logo Consistency — manual
- * 3. Logo Legibility — manual
+ * 2. Logo Consistency — auto (multi-page comparison)
+ * 3. Logo Legibility — auto (format + sizing heuristics)
  * 4. Color Palette — auto
  * 5. Typography — auto
  * 6. Photography & Imagery — auto
- * 7. Brand Voice & Messaging — manual
+ * 7. Brand Voice & Messaging — auto (text tone analysis)
  * 8. Social Media Branding — auto
- * 9. Signage & Onsite Branding — manual
- * 10. Overall Brand Cohesion — manual
+ * 9. Signage & Onsite Branding — manual (physical)
+ * 10. Overall Brand Cohesion — auto (composite of other scores)
  */
 
 import { type WebsiteCheckResult } from './website';
+import { extractVisibleText, fleschKincaid, crawlInternalPages } from './html-utils';
 
 export async function analyzeBrand(url: string): Promise<WebsiteCheckResult[]> {
   const results: WebsiteCheckResult[] = [];
@@ -79,25 +80,92 @@ export async function analyzeBrand(url: string): Promise<WebsiteCheckResult[]> {
     });
   }
 
-  // 2. Logo Consistency — requires multi-page comparison
-  results.push({
-    category: 'Logo Consistency',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires visual comparison of logo usage across multiple pages.',
-    metadata: { automatable: false },
-  });
+  // 2. Logo Consistency — multi-page comparison
+  // (crawl happens here; results cached for #10 Overall Brand Cohesion)
+  let internalPages: Array<{ url: string; html: string }> = [];
+  if (!fetchError) {
+    try {
+      internalPages = await crawlInternalPages(normalizedUrl, html, 3);
+    } catch {
+      // Crawl failed — will fall back to homepage-only analysis
+    }
+  }
 
-  // 3. Logo Legibility — visual judgment
-  results.push({
-    category: 'Logo Legibility',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires visual assessment of logo clarity at different sizes.',
-    metadata: { automatable: false },
-  });
+  if (fetchError) {
+    results.push(unreachable('Logo Consistency', fetchError));
+  } else {
+    const homeHasLogo = htmlLower.includes('logo') || /<img[^>]*(logo|brand)[^>]*>/i.test(html);
+
+    if (internalPages.length > 0) {
+      let pagesWithLogo = 0;
+      for (const page of internalPages) {
+        const pageLower = page.html.toLowerCase();
+        if (pageLower.includes('logo') || /<img[^>]*(logo|brand)[^>]*>/i.test(page.html)) {
+          pagesWithLogo++;
+        }
+      }
+      const total = internalPages.length;
+      const rate = pagesWithLogo / total;
+      const score = rate >= 1 ? 5 : rate >= 0.75 ? 4 : rate >= 0.5 ? 3 : homeHasLogo ? 2 : 1;
+
+      results.push({
+        category: 'Logo Consistency',
+        status: tierFromScore(score),
+        score,
+        feedback_summary: `Logo present on ${pagesWithLogo}/${total} internal pages checked${homeHasLogo ? ' (plus homepage)' : ''}.`,
+        notes: null,
+        metadata: { automatable: true, pagesChecked: total, pagesWithLogo, homeHasLogo },
+      });
+    } else {
+      results.push({
+        category: 'Logo Consistency',
+        status: tierFromScore(homeHasLogo ? 3 : 1),
+        score: homeHasLogo ? 3 : 1,
+        feedback_summary: homeHasLogo
+          ? 'Logo found on homepage. Could not crawl internal pages for full comparison.'
+          : 'No logo detected on homepage.',
+        notes: homeHasLogo ? 'Score based on homepage only — admin can adjust after reviewing other pages.' : null,
+        metadata: { automatable: true, homeHasLogo, pagesChecked: 0 },
+      });
+    }
+  }
+
+  // 3. Logo Legibility — format and sizing heuristics
+  if (fetchError) {
+    results.push(unreachable('Logo Legibility', fetchError));
+  } else {
+    const hasSvgLogo = /<svg[^>]*>[\s\S]*?<\/svg>/i.test(html) && (htmlLower.includes('logo') || htmlLower.includes('brand'));
+    const logoImgs = html.match(/<img[^>]*(logo|brand)[^>]*>/gi) || [];
+    const hasRetina = logoImgs.some((img) => /srcset|2x/i.test(img));
+    const hasLargeFormat = logoImgs.some((img) => /\.(svg|webp|png)/i.test(img));
+    const hasFavicon = htmlLower.includes('rel="icon"') || htmlLower.includes("rel='icon'");
+    const hasAppleTouchIcon = htmlLower.includes('rel="apple-touch-icon"');
+
+    let score = 1;
+    if (hasSvgLogo) score = 5; // SVG = infinitely scalable = best legibility
+    else if (hasRetina && hasLargeFormat) score = 4;
+    else if (hasLargeFormat) score = 3;
+    else if (logoImgs.length > 0) score = 2;
+    // Bonus for multi-size support
+    if (score >= 3 && hasFavicon && hasAppleTouchIcon) score = Math.min(5, score + 1);
+
+    const parts: string[] = [];
+    if (hasSvgLogo) parts.push('SVG logo (scalable at any size)');
+    else if (logoImgs.length > 0) parts.push(`${logoImgs.length} raster logo image(s)`);
+    else parts.push('no logo image detected');
+    if (hasRetina) parts.push('retina-ready');
+    if (hasFavicon) parts.push('favicon present');
+    if (hasAppleTouchIcon) parts.push('Apple touch icon');
+
+    results.push({
+      category: 'Logo Legibility',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: parts.join(', ') + '.',
+      notes: score <= 2 ? 'Consider using SVG format for crisp display at all sizes.' : null,
+      metadata: { automatable: true, hasSvgLogo, logoImgCount: logoImgs.length, hasRetina, hasLargeFormat, hasFavicon, hasAppleTouchIcon },
+    });
+  }
 
   // 4. Color Palette — extract CSS colors
   if (fetchError) {
@@ -215,15 +283,60 @@ export async function analyzeBrand(url: string): Promise<WebsiteCheckResult[]> {
     });
   }
 
-  // 7. Brand Voice & Messaging — requires reading comprehension
-  results.push({
-    category: 'Brand Voice & Messaging',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires manual assessment of tone, messaging consistency, and brand personality.',
-    metadata: { automatable: false },
-  });
+  // 7. Brand Voice & Messaging — text tone analysis
+  if (fetchError) {
+    results.push(unreachable('Brand Voice & Messaging', fetchError));
+  } else {
+    const visibleText = extractVisibleText(html);
+    const readability = fleschKincaid(visibleText);
+    const textLower = visibleText.toLowerCase();
+
+    // Check for first-person voice ("we", "our") — signals brand personality
+    const weCount = (textLower.match(/\bwe\b/g) || []).length;
+    const ourCount = (textLower.match(/\bour\b/g) || []).length;
+    const youCount = (textLower.match(/\byou\b/g) || []).length;
+    const hasFirstPerson = weCount + ourCount > 3;
+    const hasSecondPerson = youCount > 3;
+
+    // Check for mission/value keywords
+    const missionKeywords = ['mission', 'values', 'believe', 'committed', 'dedicated', 'passion', 'excellence', 'quality', 'trusted'];
+    const foundMissionWords = missionKeywords.filter((k) => textLower.includes(k));
+
+    // Check for unique value proposition signals
+    const uvpKeywords = ['unique', 'different', 'unlike', 'only', 'exclusive', 'specialized', 'leading', 'premier', 'best'];
+    const foundUvpWords = uvpKeywords.filter((k) => textLower.includes(k));
+
+    let score = 1;
+    if (hasFirstPerson && hasSecondPerson) score++; // Conversational tone
+    if (foundMissionWords.length >= 2) score++; // Clear values
+    if (foundUvpWords.length >= 1) score++; // Value proposition present
+    if (readability.score >= 50 && readability.words >= 200) score++; // Readable, substantial content
+    score = Math.min(5, score);
+
+    const parts: string[] = [];
+    if (hasFirstPerson) parts.push(`first-person voice (${weCount + ourCount} uses of "we/our")`);
+    if (hasSecondPerson) parts.push(`addresses visitor (${youCount} uses of "you")`);
+    if (foundMissionWords.length > 0) parts.push(`mission language: ${foundMissionWords.slice(0, 3).join(', ')}`);
+    if (foundUvpWords.length > 0) parts.push(`differentiator language: ${foundUvpWords.slice(0, 3).join(', ')}`);
+    if (parts.length === 0) parts.push('limited brand personality signals in text content');
+
+    results.push({
+      category: 'Brand Voice & Messaging',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: parts.join('. ') + '.',
+      notes: readability.words < 100 ? 'Very little text detected — page may rely on images or JS rendering.' : null,
+      metadata: {
+        automatable: true,
+        readabilityScore: readability.score,
+        wordCount: readability.words,
+        weOurCount: weCount + ourCount,
+        youCount,
+        missionKeywords: foundMissionWords,
+        uvpKeywords: foundUvpWords,
+      },
+    });
+  }
 
   // 8. Social Media Branding — check for social links
   if (fetchError) {
@@ -270,15 +383,35 @@ export async function analyzeBrand(url: string): Promise<WebsiteCheckResult[]> {
     metadata: { automatable: false },
   });
 
-  // 10. Overall Brand Cohesion — subjective composite
-  results.push({
-    category: 'Overall Brand Cohesion',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Subjective assessment of overall brand consistency across all touchpoints.',
-    metadata: { automatable: false },
-  });
+  // 10. Overall Brand Cohesion — computed from other auto-scored categories
+  {
+    const scoredResults = results.filter((r) => r.score !== null);
+    if (scoredResults.length >= 3) {
+      const avgScore = scoredResults.reduce((sum, r) => sum + (r.score ?? 0), 0) / scoredResults.length;
+      const score = Math.min(5, Math.max(1, Math.round(avgScore)));
+      const lowCategories = scoredResults.filter((r) => (r.score ?? 0) <= 2).map((r) => r.category);
+
+      results.push({
+        category: 'Overall Brand Cohesion',
+        status: tierFromScore(score),
+        score,
+        feedback_summary: lowCategories.length > 0
+          ? `Average brand score: ${avgScore.toFixed(1)}/5. Weakest areas: ${lowCategories.join(', ')}.`
+          : `Average brand score: ${avgScore.toFixed(1)}/5. Brand elements are cohesive across analyzed categories.`,
+        notes: 'Composite score derived from other brand categories. Admin can adjust based on overall impression.',
+        metadata: { automatable: true, averageScore: avgScore, scoredCategoryCount: scoredResults.length, lowCategories },
+      });
+    } else {
+      results.push({
+        category: 'Overall Brand Cohesion',
+        status: 'neutral',
+        score: null,
+        feedback_summary: 'Not enough auto-scored categories to compute a composite score.',
+        notes: 'Score other categories first, or assign manually.',
+        metadata: { automatable: false },
+      });
+    }
+  }
 
   return results;
 }

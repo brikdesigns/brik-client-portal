@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
+import { font } from '@/lib/tokens';
 
 export default async function AdminProjectsPage() {
   const supabase = createClient();
@@ -48,8 +49,7 @@ export default async function AdminProjectsPage() {
         <CardSummary label="Not started" value={notStarted} />
       </div>
 
-      <Card variant="elevated" padding="lg">
-        <DataTable
+      <DataTable
           data={all}
           rowKey={(p) => p.id}
           emptyMessage="No projects yet. Add one to get started."
@@ -72,7 +72,7 @@ export default async function AdminProjectsPage() {
                 return client ? (
                   <a
                     href={`/admin/companies/${client.slug}`}
-                    style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none', fontSize: '13px' }}
+                    style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none', fontSize: font.size.body.xs }}
                   >
                     {client.name}
                   </a>
@@ -86,12 +86,12 @@ export default async function AdminProjectsPage() {
             {
               header: 'Start',
               accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+              style: { color: 'var(--_color---text--secondary)', fontSize: font.size.body.xs },
             },
             {
               header: 'End',
               accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+              style: { color: 'var(--_color---text--secondary)', fontSize: font.size.body.xs },
             },
             {
               header: '',
@@ -104,7 +104,6 @@ export default async function AdminProjectsPage() {
             },
           ]}
         />
-      </Card>
     </div>
   );
 }

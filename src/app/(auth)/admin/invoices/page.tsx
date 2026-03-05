@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
@@ -9,6 +9,7 @@ import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge, AgreementStatusBadge } from '@/components/status-badges';
 import { BillingTabs } from '@/components/billing-tabs';
 import { formatCurrency } from '@/lib/format';
+import { font } from '@/lib/tokens';
 
 interface Props {
   searchParams: Promise<{ tab?: string }>;
@@ -60,7 +61,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
 
   const sectionHeadingStyle = {
     fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: '18px',
+    fontSize: font.size.body.lg,
     fontWeight: 600,
     color: 'var(--_color---text--primary)',
     margin: '0 0 16px',
@@ -94,7 +95,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         <>
           {/* Open invoices */}
           {openInvoices.length > 0 && (
-            <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '24px' }}>
               <h2 style={sectionHeadingStyle}>Open invoices</h2>
               <DataTable<InvoiceRow>
                 data={openInvoices}
@@ -151,11 +152,11 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                   },
                 ]}
               />
-            </Card>
+            </div>
           )}
 
           {/* All invoices */}
-          <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h2 style={sectionHeadingStyle}>All invoices</h2>
             <DataTable<InvoiceRow>
               data={allInvoices}
@@ -218,7 +219,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                 },
               ]}
             />
-          </Card>
+          </div>
         </>
       )}
 
@@ -227,7 +228,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         <>
           {/* Pending agreements */}
           {pendingAgreements.length > 0 && (
-            <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: '24px' }}>
               <h2 style={sectionHeadingStyle}>Pending signature</h2>
               <DataTable<AgreementRow>
                 data={pendingAgreements}
@@ -278,11 +279,11 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                   },
                 ]}
               />
-            </Card>
+            </div>
           )}
 
           {/* All agreements */}
-          <Card variant="elevated" padding="lg">
+          <div>
             <h2 style={sectionHeadingStyle}>All agreements</h2>
             <DataTable<AgreementRow>
               data={allAgreements}
@@ -338,7 +339,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                 },
               ]}
             />
-          </Card>
+          </div>
         </>
       )}
     </div>

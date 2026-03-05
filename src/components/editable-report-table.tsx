@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { ItemStatusBadge } from '@/components/report-badges';
-import { type ColumnConfig, getColumnConfig, type ReportType } from '@/lib/analysis/report-config';
+import { font } from '@/lib/tokens';
+import { type ColumnConfig, getColumnConfig, getRubric, type ReportType } from '@/lib/analysis/report-config';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 
 interface ReportItem {
@@ -96,6 +97,13 @@ export function EditableReportTable({
       await recalculateReportScore(supabase, reportId);
       await recalculateReportSetScore(supabase, reportSetId);
 
+      // Regenerate opportunities text from updated items
+      await fetch('/api/admin/reporting/refresh-opportunities', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ report_id: reportId }),
+      });
+
       setEditingId(null);
       setEditValues({});
       router.refresh();
@@ -124,7 +132,7 @@ export function EditableReportTable({
     return String(val);
   }
 
-  function renderEditCell(col: ColumnConfig) {
+  function renderEditCell(col: ColumnConfig, editingItem?: ReportItem) {
     const val = editValues[col.field] ?? '';
 
     if (col.inputType === 'select' && col.options) {
@@ -145,19 +153,23 @@ export function EditableReportTable({
           rows={2}
           value={String(val)}
           onChange={(e) => setEditValues((prev) => ({ ...prev, [col.field]: e.target.value }))}
-          style={{ minWidth: '120px', fontSize: '13px' }}
+          style={{ minWidth: '120px', fontSize: font.size.body.xs }}
         />
       );
     }
 
     if (col.inputType === 'number') {
+      // For score fields, use the item's maxScore from metadata if available
+      const effectiveMax = col.field === 'score' && editingItem
+        ? (editingItem.metadata?.maxScore as number | undefined) ?? col.max
+        : col.max;
       return (
         <TextInput
           size="sm"
           type="number"
           value={val === null ? '' : String(val)}
           min={col.min}
-          max={col.max}
+          max={effectiveMax}
           step={col.step}
           onChange={(e) => setEditValues((prev) => ({ ...prev, [col.field]: e.target.value }))}
           style={{ width: '80px' }}
@@ -178,26 +190,26 @@ export function EditableReportTable({
 
   const thStyle: React.CSSProperties = {
     padding: '10px 12px',
-    fontSize: '12px',
+    fontSize: font.size.body.xs,
     fontWeight: 600,
     color: 'var(--_color---text--secondary)',
     textAlign: 'left',
     borderBottom: '2px solid var(--_color---border--primary)',
-    fontFamily: 'var(--_typography---font-family--body)',
+    fontFamily: font.family.body,
     whiteSpace: 'nowrap',
   };
 
   const tdStyle: React.CSSProperties = {
     padding: '10px 12px',
-    fontSize: '13px',
+    fontSize: font.size.body.sm,
     color: 'var(--_color---text--primary)',
     borderBottom: '1px solid var(--_color---border--primary)',
-    fontFamily: 'var(--_typography---font-family--body)',
+    fontFamily: font.family.body,
     verticalAlign: 'top',
   };
 
   return (
-    <Card variant="elevated" padding="lg">
+    <div>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -220,53 +232,108 @@ export function EditableReportTable({
             )}
             {items.map((item) => {
               const isEditing = editingId === item.id;
+              const rubric = isEditing ? getRubric(reportType, item.category) : undefined;
               return (
-                <tr key={item.id}>
-                  {columns.map((col) => (
-                    <td key={col.key} style={tdStyle}>
-                      {isEditing && !col.readOnly
-                        ? renderEditCell(col)
-                        : renderCell(item, col)
-                      }
-                    </td>
-                  ))}
-                  <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                    {isEditing ? (
-                      <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
-                        <Button
-                          variant="primary"
-                          size="sm"
-                          onClick={() => saveEdit(item)}
-                          disabled={saving}
-                        >
-                          {saving ? 'Saving...' : 'Save'}
-                        </Button>
+                <React.Fragment key={item.id}>
+                  <tr>
+                    {columns.map((col) => (
+                      <td key={col.key} style={tdStyle}>
+                        {isEditing && !col.readOnly
+                          ? renderEditCell(col, item)
+                          : renderCell(item, col)
+                        }
+                      </td>
+                    ))}
+                    <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
+                      {isEditing ? (
+                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            onClick={() => saveEdit(item)}
+                            disabled={saving}
+                          >
+                            {saving ? 'Saving...' : 'Save'}
+                          </Button>
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={cancelEdit}
+                            disabled={saving}
+                          >
+                            Cancel
+                          </Button>
+                        </div>
+                      ) : (
                         <Button
                           variant="secondary"
                           size="sm"
-                          onClick={cancelEdit}
-                          disabled={saving}
+                          onClick={() => startEdit(item)}
+                          disabled={editingId !== null}
                         >
-                          Cancel
+                          Edit
                         </Button>
-                      </div>
-                    ) : (
-                      <Button
-                        variant="secondary"
-                        size="sm"
-                        onClick={() => startEdit(item)}
-                        disabled={editingId !== null}
+                      )}
+                    </td>
+                  </tr>
+                  {isEditing && rubric && (
+                    <tr>
+                      <td
+                        colSpan={columns.length + 1}
+                        style={{
+                          padding: '8px 12px 16px',
+                          borderBottom: '1px solid var(--_color---border--primary)',
+                          background: 'var(--_color---background--secondary)',
+                        }}
                       >
-                        Edit
-                      </Button>
-                    )}
-                  </td>
-                </tr>
+                        <div
+                          style={{
+                            fontFamily: font.family.body,
+                            fontSize: font.size.body.xs,
+                            fontWeight: 600,
+                            color: 'var(--_color---text--secondary)',
+                            marginBottom: '6px',
+                          }}
+                        >
+                          Scoring rubric
+                        </div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                          {Object.entries(rubric)
+                            .sort(([a], [b]) => Number(a) - Number(b))
+                            .map(([score, desc]) => (
+                              <div
+                                key={score}
+                                style={{
+                                  display: 'flex',
+                                  gap: '8px',
+                                  fontFamily: font.family.body,
+                                  fontSize: font.size.body.xs,
+                                  lineHeight: font.lineHeight.snug,
+                                  color: 'var(--_color---text--secondary)',
+                                }}
+                              >
+                                <span
+                                  style={{
+                                    fontWeight: 700,
+                                    color: 'var(--_color---text--primary)',
+                                    minWidth: '14px',
+                                  }}
+                                >
+                                  {score}
+                                </span>
+                                <span>{desc}</span>
+                              </div>
+                            ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </React.Fragment>
               );
             })}
           </tbody>
         </table>
       </div>
-    </Card>
+    </div>
   );
 }

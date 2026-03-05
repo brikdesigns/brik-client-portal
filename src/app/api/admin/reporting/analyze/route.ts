@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { type Industry, WEBSITE_CONFIG } from '@/lib/analysis/report-config';
+import { type Industry, getReportConfigs, type ReportType } from '@/lib/analysis/report-config';
 import { analyzeWebsite, type WebsiteCheckResult } from '@/lib/analysis/website';
 import { analyzeBrand } from '@/lib/analysis/brand';
 import { analyzeReviews } from '@/lib/analysis/reviews';
 import { analyzeCompetitors } from '@/lib/analysis/competitors';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
+import { generateOpportunities } from '@/lib/analysis/seed-reports';
 
 const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
 
@@ -129,14 +130,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'No report items found' }, { status: 404 });
   }
 
+  // Resolve the config for this report type to get category maxScores
+  const configs = getReportConfigs((client.industry as Industry) || null);
+  const reportConfig = configs.find((c) => c.type === report_type as ReportType);
+
   // Update each item with analysis results
   let updatedCount = 0;
   for (const item of existingItems) {
     const result = results.find((r) => r.category === item.category);
     if (result && result.score !== null) {
-      const catConfig = report_type === 'website'
-        ? WEBSITE_CONFIG.categories.find((c) => c.category === item.category)
-        : null;
+      const catConfig = reportConfig?.categories.find((c) => c.category === item.category);
       const maxScore = catConfig?.maxScore ?? (item.metadata as Record<string, unknown>)?.maxScore ?? 5;
 
       await supabase
@@ -158,6 +161,13 @@ export async function POST(request: Request) {
       updatedCount++;
     }
   }
+
+  // Regenerate opportunities text from the full results
+  const opportunitiesText = generateOpportunities(results);
+  await supabase
+    .from('reports')
+    .update({ opportunities_text: opportunitiesText })
+    .eq('id', report_id);
 
   // Cascade recalculation
   await recalculateReportScore(supabase, report_id);

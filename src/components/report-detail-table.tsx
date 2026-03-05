@@ -1,6 +1,6 @@
 'use client';
 
-import { Card } from '@bds/components/ui/Card/Card';
+
 import {
   Table,
   TableHeader,
@@ -51,7 +51,7 @@ export function ReportDetailTable({ items, reportType }: ReportDetailTableProps)
   const columns = getColumnConfig(reportType);
 
   return (
-    <Card variant="elevated" padding="lg">
+    <div>
       <h3
         style={{
           fontFamily: 'var(--_typography---font-family--heading)',
@@ -95,6 +95,6 @@ export function ReportDetailTable({ items, reportType }: ReportDetailTableProps)
           </TableBody>
         </Table>
       </div>
-    </Card>
+    </div>
   );
 }

@@ -2,30 +2,39 @@
  * Automated website analysis.
  *
  * Evaluates a client's website across 10 categories matching the Notion
- * "Website Report" database. Some categories can be partially auto-scored
- * from HTML; others require manual assessment.
+ * "Website Report" database. Most categories are auto-scored from HTML;
+ * remaining gaps can be refined by an admin in the edit table.
  *
  * Categories (scored 1-5, max 50):
- * 1. Overall Design — manual
+ * 1. Overall Design — auto (modern CSS patterns)
  * 2. Mobile Responsiveness — partial auto
  * 3. Navigation — partial auto
- * 4. Content Clarity — manual
+ * 4. Content Clarity — auto (readability + heading + CTA analysis)
  * 5. Booking/Inquiries — partial auto
  * 6. Photos & Media — partial auto
  * 7. SEO Optimization — auto
  * 8. Speed & Performance — partial auto
- * 9. Branding Consistency — manual
+ * 9. Branding Consistency — auto (multi-page comparison)
  * 10. Trust Signals — auto
  */
 
 export interface WebsiteCheckResult {
   category: string;
-  status: 'pass' | 'warning' | 'error' | 'neutral';
+  status: 'pass' | 'warning' | 'fail' | 'error' | 'neutral';
   score: number | null;
   feedback_summary: string | null;
   notes: string | null;
   metadata: Record<string, unknown>;
 }
+
+import {
+  extractVisibleText,
+  fleschKincaid,
+  analyzeHeadingHierarchy,
+  detectCTAs,
+  detectModernCSS,
+  crawlInternalPages,
+} from './html-utils';
 
 export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]> {
   const results: WebsiteCheckResult[] = [];
@@ -64,15 +73,38 @@ export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]>
 
   const htmlLower = fetchError ? '' : html.toLowerCase();
 
-  // 1. Overall Design — requires visual assessment, cannot auto-score
-  results.push({
-    category: 'Overall Design',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires manual visual assessment.',
-    metadata: { automatable: false },
-  });
+  // 1. Overall Design — scored via modern CSS patterns
+  if (fetchError) {
+    results.push(unreachable('Overall Design', fetchError));
+  } else {
+    const css = detectModernCSS(html);
+    const hasViewport = htmlLower.includes('name="viewport"') || htmlLower.includes("name='viewport'");
+
+    let score = 1;
+    if (css.modernPatternCount >= 5) score = 5;
+    else if (css.modernPatternCount >= 4) score = 4;
+    else if (css.modernPatternCount >= 2 && hasViewport) score = 3;
+    else if (css.modernPatternCount >= 1) score = 2;
+
+    const highlights: string[] = [];
+    if (css.hasGrid) highlights.push('CSS Grid');
+    if (css.hasFlexbox) highlights.push('Flexbox');
+    if (css.hasCustomProperties) highlights.push(`${css.customPropertyCount} design tokens`);
+    if (css.hasAnimations) highlights.push('animations');
+    if (css.hasResponsiveImages) highlights.push('responsive images');
+    if (css.hasDarkMode) highlights.push('dark mode');
+
+    results.push({
+      category: 'Overall Design',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: highlights.length > 0
+        ? `Modern design patterns detected: ${highlights.join(', ')}.`
+        : 'Few modern CSS patterns detected. Design may benefit from updated techniques.',
+      notes: null,
+      metadata: { ...css, automatable: true },
+    });
+  }
 
   // 2. Mobile Responsiveness
   if (fetchError) {
@@ -115,15 +147,50 @@ export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]>
     });
   }
 
-  // 4. Content Clarity — manual assessment
-  results.push({
-    category: 'Content Clarity',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires manual content review.',
-    metadata: { automatable: false },
-  });
+  // 4. Content Clarity — readability, heading structure, CTAs
+  if (fetchError) {
+    results.push(unreachable('Content Clarity', fetchError));
+  } else {
+    const visibleText = extractVisibleText(html);
+    const readability = fleschKincaid(visibleText);
+    const headings = analyzeHeadingHierarchy(html);
+    const ctas = detectCTAs(html);
+
+    let score = 1;
+    // Readability: 60+ is standard, 80+ is very easy
+    if (readability.score >= 60) score++;
+    if (readability.score >= 40) score++; // At least somewhat readable
+    // Good heading structure
+    if (headings.isWellStructured && headings.totalHeadings >= 3) score++;
+    // Has clear CTAs
+    if (ctas.hasCTAs) score++;
+    score = Math.min(5, score);
+
+    const parts: string[] = [];
+    parts.push(`Readability score: ${readability.score}/100 (${readability.score >= 60 ? 'good' : readability.score >= 40 ? 'moderate' : 'difficult'})`);
+    parts.push(`${headings.totalHeadings} headings${headings.isWellStructured ? ' (well-structured)' : ' (hierarchy issues)'}`);
+    if (ctas.hasCTAs) {
+      parts.push(`${ctas.buttonCount} buttons, ${ctas.ctaTextCount} CTA phrases`);
+    } else {
+      parts.push('no clear calls-to-action');
+    }
+
+    results.push({
+      category: 'Content Clarity',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: parts.join('. ') + '.',
+      notes: readability.words < 100 ? 'Very little visible text detected — page may rely heavily on images or JavaScript rendering.' : null,
+      metadata: {
+        automatable: true,
+        readabilityScore: readability.score,
+        wordCount: readability.words,
+        sentenceCount: readability.sentences,
+        ...headings,
+        ...ctas,
+      },
+    });
+  }
 
   // 5. Booking/Inquiries — check for forms and booking widgets
   if (fetchError) {
@@ -234,15 +301,80 @@ export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]>
     });
   }
 
-  // 9. Branding Consistency — manual assessment
-  results.push({
-    category: 'Branding Consistency',
-    status: 'neutral',
-    score: null,
-    feedback_summary: null,
-    notes: fetchError ? `Could not fetch website: ${fetchError}` : 'Requires visual comparison across multiple pages.',
-    metadata: { automatable: false },
-  });
+  // 9. Branding Consistency — multi-page comparison
+  if (fetchError) {
+    results.push(unreachable('Branding Consistency', fetchError));
+  } else {
+    // Crawl internal pages and compare font families, CSS custom props, logo presence
+    let score = 2; // Default: we can see the homepage but can't compare
+    let feedbackParts: string[] = [];
+    const homeCustomProps = new Set((html.match(/--[\w-]+/g) || []));
+    const homeFonts = new Set(
+      (html.match(/font-family\s*:\s*([^;}]+)/gi) || [])
+        .map((m) => m.replace(/font-family\s*:\s*/i, '').split(',')[0].replace(/["']/g, '').trim().toLowerCase())
+        .filter((f) => !['inherit', 'initial', 'unset'].includes(f))
+    );
+    const hasHomeLogo = htmlLower.includes('logo') || /<img[^>]*(logo|brand)[^>]*>/i.test(html);
+
+    try {
+      const internalPages = await crawlInternalPages(normalizedUrl, html, 3);
+
+      if (internalPages.length > 0) {
+        let fontConsistent = 0;
+        let logoConsistent = 0;
+        let tokenConsistent = 0;
+
+        for (const page of internalPages) {
+          const pageLower = page.html.toLowerCase();
+          // Check font consistency
+          const pageFonts = new Set(
+            (page.html.match(/font-family\s*:\s*([^;}]+)/gi) || [])
+              .map((m) => m.replace(/font-family\s*:\s*/i, '').split(',')[0].replace(/["']/g, '').trim().toLowerCase())
+              .filter((f) => !['inherit', 'initial', 'unset'].includes(f))
+          );
+          const fontsMatch = [...homeFonts].every((f) => pageFonts.has(f));
+          if (fontsMatch) fontConsistent++;
+
+          // Check logo presence
+          const hasPageLogo = pageLower.includes('logo') || /<img[^>]*(logo|brand)[^>]*>/i.test(page.html);
+          if (hasHomeLogo && hasPageLogo) logoConsistent++;
+
+          // Check design token usage
+          const pageProps = new Set((page.html.match(/--[\w-]+/g) || []));
+          const overlap = [...homeCustomProps].filter((p) => pageProps.has(p)).length;
+          if (homeCustomProps.size > 0 && overlap / homeCustomProps.size > 0.5) tokenConsistent++;
+        }
+
+        const total = internalPages.length;
+        const consistencyRate = Math.round(((fontConsistent + logoConsistent + tokenConsistent) / (total * 3)) * 100);
+
+        if (consistencyRate >= 80) score = 5;
+        else if (consistencyRate >= 60) score = 4;
+        else if (consistencyRate >= 40) score = 3;
+        else score = 2;
+
+        feedbackParts.push(`Compared ${total} internal pages`);
+        feedbackParts.push(`fonts consistent on ${fontConsistent}/${total}`);
+        feedbackParts.push(`logo present on ${logoConsistent}/${total}`);
+        feedbackParts.push(`design tokens consistent on ${tokenConsistent}/${total}`);
+      } else {
+        feedbackParts.push('Could not crawl internal pages for comparison');
+        score = 2;
+      }
+    } catch {
+      feedbackParts = ['Multi-page comparison failed'];
+      score = 2;
+    }
+
+    results.push({
+      category: 'Branding Consistency',
+      status: tierFromScore(score),
+      score,
+      feedback_summary: feedbackParts.join('. ') + '.',
+      notes: score <= 2 ? 'Admin review recommended — compare branding elements across key pages.' : null,
+      metadata: { automatable: true, homeFonts: [...homeFonts], homeCustomPropCount: homeCustomProps.size, hasHomeLogo },
+    });
+  }
 
   // 10. Trust Signals
   if (fetchError) {

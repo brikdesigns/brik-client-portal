@@ -93,6 +93,27 @@ Git submodule at `./brik-bds/`. Uses **Brik Designs company brand** — NOT any 
 --_[category]---[type]--[variant]
 ```
 
+### Token consumption (MANDATORY)
+
+This project follows the BDS token consumption standard. See `brik-bds/CONSUMING-TOKENS.md` for the full guide.
+
+**Never write raw CSS `var()` strings inline.** Always import from the shared system:
+
+```tsx
+import { font, color, space, gap, border } from '@/lib/tokens';  // Individual values
+import { text, heading, label, meta, list } from '@/lib/styles';  // Composed presets
+import { Prose } from '@/components/prose';                        // Markdown rendering
+```
+
+**Key files:**
+
+- `src/lib/tokens.ts` — Figma style name to CSS var() mapping
+- `src/lib/styles.ts` — Composed CSSProperties presets
+- `src/components/prose.tsx` — Shared ReactMarkdown renderer
+- `.husky/pre-commit` — Blocks hardcoded px font sizes and numeric line heights
+
+**Pre-commit enforcement:** The husky hook checks staged `.ts`/`.tsx` files for `fontSize: '[0-9]` and `lineHeight: [0-9]` patterns and blocks the commit if found.
+
 ### BDS Components Used
 | Component | Import Path | Usage |
 |-----------|------------|-------|

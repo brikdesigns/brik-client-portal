@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Select } from '@bds/components/ui/Select/Select';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { Button } from '@bds/components/ui/Button/Button';
 import { DataTable } from './data-table';
 import { ServiceBadge } from './service-badge';
@@ -129,8 +129,7 @@ export function ServicesFilterTable({
       </div>
 
       {/* Single unified table */}
-      <Card variant="elevated" padding="lg">
-        <DataTable
+      <DataTable
           data={filtered}
           rowKey={(s) => s.id}
           emptyMessage="No services match your filters."
@@ -207,7 +206,6 @@ export function ServicesFilterTable({
             },
           ]}
         />
-      </Card>
     </div>
   );
 }

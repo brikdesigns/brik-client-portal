@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { RoleTag } from '@/components/status-badges';
@@ -35,8 +35,7 @@ export default async function AdminUsersPage() {
         }
       />
 
-      <Card variant="elevated" padding="lg">
-        <h2
+      <h2
           style={{
             fontFamily: 'var(--_typography---font-family--heading)',
             fontSize: 'var(--_typography---heading--small, 18px)',
@@ -100,7 +99,6 @@ export default async function AdminUsersPage() {
             },
           ]}
         />
-      </Card>
     </div>
   );
 }

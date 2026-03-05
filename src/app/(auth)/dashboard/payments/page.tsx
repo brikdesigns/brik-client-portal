@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -7,6 +7,7 @@ import { InvoiceStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { EmptyState } from '@/components/empty-state';
 import { getCurrentClientId } from '@/lib/current-client';
+import { font } from '@/lib/tokens';
 
 export default async function PaymentsPage() {
   const supabase = createClient();
@@ -20,9 +21,7 @@ export default async function PaymentsPage() {
     return (
       <div>
         <PageHeader title="Payments" subtitle="Select a client to view payments." />
-        <Card variant="elevated" padding="lg">
-          <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
-        </Card>
+        <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
       </div>
     );
   }
@@ -60,8 +59,7 @@ export default async function PaymentsPage() {
         <CardSummary label="Paid" value={`${paidInvoices.length} (${formatCurrency(totalPaid)})`} />
       </div>
 
-      <Card variant="elevated" padding="lg">
-        <DataTable
+      <DataTable
           data={invoices ?? []}
           rowKey={(inv) => inv.id}
           emptyMessage="No invoices yet."
@@ -107,7 +105,7 @@ export default async function PaymentsPage() {
                     style={{
                       color: 'var(--_color---system--link, #0034ea)',
                       fontFamily: 'var(--_typography---font-family--body)',
-                      fontSize: '13px',
+                      fontSize: font.size.body.xs,
                       textDecoration: 'none',
                     }}
                   >
@@ -117,7 +115,6 @@ export default async function PaymentsPage() {
             },
           ]}
         />
-      </Card>
     </div>
   );
 }

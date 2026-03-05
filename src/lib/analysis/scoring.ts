@@ -14,7 +14,7 @@ export type ScoreTier = 'pass' | 'fair' | 'fail';
 export function calculateTier(score: number, maxScore: number): ScoreTier {
   if (maxScore <= 0) return 'fail';
   const pct = score / maxScore;
-  if (pct >= 0.7) return 'pass';
+  if (pct >= 0.8) return 'pass';
   if (pct >= 0.4) return 'fair';
   return 'fail';
 }
@@ -27,7 +27,7 @@ export function calculatePercentage(score: number, maxScore: number): number {
 export function tierLabel(tier: ScoreTier): string {
   switch (tier) {
     case 'pass': return 'Pass';
-    case 'fair': return 'Fair';
+    case 'fair': return 'Needs Attention';
     case 'fail': return 'Fail';
   }
 }

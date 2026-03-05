@@ -34,6 +34,26 @@ export async function analyzeReviews(
         case 'Yelp':
           result = await analyzeYelp(clientName, address);
           break;
+        case 'Healthgrades':
+        case 'WebMD':
+        case 'Vitals':
+          result = await scrapeDirectoryListing(
+            platform,
+            buildGenericSearchUrl(platform, clientName, address),
+            clientName,
+          );
+          break;
+        case 'Facebook':
+          result = await scrapeFacebook(clientName, address);
+          break;
+        case 'Apple Maps':
+          result = generatePlatformFallback(
+            'Apple Maps',
+            clientName,
+            address,
+            'Apple Maps has no public search API.',
+          );
+          break;
         default:
           result = generateSearchUrl(platform, clientName, address);
           break;
@@ -123,7 +143,7 @@ async function analyzeGoogle(
 
   return {
     category: 'Google',
-    status: 'error',
+    status: 'fail',
     score: 0,
     feedback_summary: 'Not found on Google Maps.',
     notes: null,
@@ -207,7 +227,7 @@ async function analyzeYelp(
 
   return {
     category: 'Yelp',
-    status: 'error',
+    status: 'fail',
     score: 0,
     feedback_summary: 'Not found on Yelp.',
     notes: null,
@@ -217,27 +237,202 @@ async function analyzeYelp(
   };
 }
 
-// ── Fallback: generate search URLs for manual verification ──────────
+// ── Directory scraping (Healthgrades, WebMD, Vitals) ─────────────────
 
-function generateSearchUrl(
+const SCRAPE_HEADERS = {
+  'User-Agent':
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  Accept: 'text/html,application/xhtml+xml',
+  'Accept-Language': 'en-US,en;q=0.9',
+};
+
+/**
+ * Attempt to fetch a directory search page and determine if the business
+ * is listed by looking for the full business name (or significant phrases)
+ * in the returned HTML. Falls back gracefully if the request fails or the
+ * site blocks automated access.
+ */
+async function scrapeDirectoryListing(
+  platform: string,
+  searchUrl: string,
+  clientName: string,
+): Promise<WebsiteCheckResult> {
+  try {
+    const res = await fetch(searchUrl, {
+      headers: SCRAPE_HEADERS,
+      signal: AbortSignal.timeout(10000),
+      redirect: 'follow',
+    });
+
+    if (!res.ok) {
+      return generatePlatformFallback(platform, clientName, null, `HTTP ${res.status}`);
+    }
+
+    const html = await res.text();
+    const found = businessNameInHtml(clientName, html);
+
+    if (found) {
+      // Try to extract rating/review count from the raw HTML
+      const rating = extractRating(html);
+      const reviewCount = extractReviewCount(html);
+
+      return {
+        category: platform,
+        status: 'pass',
+        score: 1,
+        feedback_summary: `Found on ${platform}.${rating ? ` Rating: ${rating}.` : ''}${reviewCount ? ` Reviews: ${reviewCount}.` : ''}`,
+        notes: null,
+        metadata: {
+          searchUrl,
+          automated: true,
+          name_on_listing: clientName,
+          phone_listed: '',
+          address_listed: '',
+          ...(rating ? { rating } : {}),
+          ...(reviewCount ? { total_reviews: reviewCount } : {}),
+        },
+      };
+    }
+
+    return {
+      category: platform,
+      status: 'fail',
+      score: 0,
+      feedback_summary: `Not found on ${platform}.`,
+      notes: null,
+      metadata: { searchUrl, automated: true },
+    };
+  } catch {
+    return generatePlatformFallback(platform, clientName, null, 'Request timed out or was blocked');
+  }
+}
+
+/**
+ * Check if the business name (or a significant multi-word phrase) appears
+ * in the HTML. Requires at least a 2-word consecutive match to avoid
+ * false positives (e.g. "dental" appearing on a healthcare directory).
+ */
+function businessNameInHtml(clientName: string, html: string): boolean {
+  const htmlLower = html.toLowerCase();
+  const nameLower = clientName.toLowerCase();
+
+  // Full name match — best signal
+  if (htmlLower.includes(nameLower)) return true;
+
+  // Try 2-word consecutive phrases from the name
+  const words = nameLower.split(/\s+/).filter((w) => w.length > 2);
+  if (words.length >= 2) {
+    for (let i = 0; i < words.length - 1; i++) {
+      const phrase = `${words[i]} ${words[i + 1]}`;
+      if (htmlLower.includes(phrase)) return true;
+    }
+  }
+
+  return false;
+}
+
+function extractRating(html: string): number | null {
+  // Common patterns: "4.8 out of 5", "rating: 4.8", data-rating="4.8"
+  const match = html.match(
+    /(?:rating|score|stars?)["\s:=]*(\d+\.?\d*)(?:\s*(?:out of|\/)\s*5)?/i,
+  );
+  if (match) {
+    const val = parseFloat(match[1]);
+    if (val > 0 && val <= 5) return val;
+  }
+  return null;
+}
+
+function extractReviewCount(html: string): number | null {
+  const match = html.match(/(\d[\d,]*)\s*(?:reviews?|ratings?|patient\s*reviews?)/i);
+  if (match) {
+    const val = parseInt(match[1].replace(/,/g, ''), 10);
+    if (val > 0 && val < 1_000_000) return val;
+  }
+  return null;
+}
+
+// ── Facebook ─────────────────────────────────────────────────────────
+
+async function scrapeFacebook(
+  clientName: string,
+  address: string | null,
+): Promise<WebsiteCheckResult> {
+  // Facebook blocks unauthenticated search requests, but we can try
+  // fetching a likely page URL slug (e.g. /MemphisDentalStudio)
+  const slug = clientName.replace(/[^a-zA-Z0-9]/g, '');
+  const profileUrl = `https://www.facebook.com/${slug}`;
+
+  try {
+    const res = await fetch(profileUrl, {
+      headers: SCRAPE_HEADERS,
+      signal: AbortSignal.timeout(8000),
+      redirect: 'follow',
+    });
+
+    if (res.ok) {
+      const html = await res.text();
+      // Facebook returns a page even for 404s — check for the business name
+      if (businessNameInHtml(clientName, html) && !html.includes('page_not_found')) {
+        return {
+          category: 'Facebook',
+          status: 'pass',
+          score: 1,
+          feedback_summary: 'Found on Facebook.',
+          notes: null,
+          metadata: {
+            searchUrl: profileUrl,
+            automated: true,
+            name_on_listing: clientName,
+            phone_listed: '',
+            address_listed: '',
+          },
+        };
+      }
+    }
+  } catch {
+    // Expected — Facebook often blocks server-side requests
+  }
+
+  return generatePlatformFallback('Facebook', clientName, address, 'Facebook requires authentication for search.');
+}
+
+// ── Fallback helpers ─────────────────────────────────────────────────
+
+/**
+ * Produce a clear fallback result when automated analysis isn't possible.
+ * Unlike the old "manual verification required" message, this includes
+ * the reason and a direct search link.
+ */
+function generatePlatformFallback(
   platform: string,
   clientName: string,
   address: string | null,
+  reason: string,
 ): WebsiteCheckResult {
+  const searchUrl = buildGenericSearchUrl(platform, clientName, address);
   return {
     category: platform,
     status: 'neutral',
     score: null,
-    feedback_summary: null,
-    notes: 'Manual verification required. Use the search URL in metadata to check this platform.',
+    feedback_summary: `Could not auto-verify ${platform} listing. ${reason}`,
+    notes: `Search manually: ${searchUrl}`,
     metadata: {
-      searchUrl: buildGenericSearchUrl(platform, clientName, address),
+      searchUrl,
       manualCheck: true,
       name_on_listing: '',
       phone_listed: '',
       address_listed: '',
     },
   };
+}
+
+function generateSearchUrl(
+  platform: string,
+  clientName: string,
+  address: string | null,
+): WebsiteCheckResult {
+  return generatePlatformFallback(platform, clientName, address, 'No automated check available for this platform.');
 }
 
 function buildGenericSearchUrl(platform: string, name: string, address: string | null): string {

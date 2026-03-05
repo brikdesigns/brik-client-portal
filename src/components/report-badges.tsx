@@ -80,7 +80,7 @@ const tierMap: Record<string, StatusConfig> = {
     icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
   },
   fair: {
-    label: 'Fair',
+    label: 'Needs Attention',
     variant: 'warning',
     icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
   },
@@ -100,12 +100,18 @@ const itemStatusMap: Record<string, StatusConfig> = {
     icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
   },
   warning: {
-    label: 'Warning',
+    label: 'Needs Attention',
     variant: 'warning',
     icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
   },
+  fail: {
+    label: 'Fail',
+    variant: 'error',
+    icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
+  },
+  // Legacy: existing DB rows may still have 'error' status
   error: {
-    label: 'Error',
+    label: 'Fail',
     variant: 'error',
     icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
   },

@@ -213,26 +213,39 @@ function createItemsFromAnalysis(
   });
 }
 
-function generateOpportunities(results: WebsiteCheckResult[]): string {
+/**
+ * Build a plain-text opportunities summary from analysis results.
+ * Exported so the analyze route can regenerate it after re-analysis.
+ */
+export function generateOpportunities(results: WebsiteCheckResult[]): string {
   const lines: string[] = [];
 
+  // Platforms/categories with low scores
   const issues = results.filter((r) => r.score !== null && r.score <= 2);
   for (const issue of issues) {
     if (issue.feedback_summary) {
-      lines.push(`**${issue.category}:** ${issue.feedback_summary}`);
+      lines.push(`${issue.category} — ${issue.feedback_summary}`);
     }
   }
 
+  // Platforms that passed
+  const passed = results.filter((r) => r.status === 'pass' && r.score !== null && r.score > 2);
+  for (const item of passed) {
+    if (item.feedback_summary) {
+      lines.push(`${item.category} — ${item.feedback_summary}`);
+    }
+  }
+
+  // Platforms that still need manual review
   const manualCategories = results.filter((r) => r.score === null);
   if (manualCategories.length > 0) {
-    lines.push(
-      `**Manual review needed:** ${manualCategories.map((r) => r.category).join(', ')} — these categories require manual assessment.`
-    );
+    const names = manualCategories.map((r) => r.category).join(', ');
+    lines.push(`Needs manual review — ${names}`);
   }
 
   if (lines.length === 0) {
-    return 'Auto-analyzed categories look strong. Complete manual review for remaining categories to finalize the report.';
+    return 'All analyzed categories look strong. Complete any remaining manual reviews to finalize the report.';
   }
 
-  return lines.join('\n\n');
+  return lines.join('\n');
 }

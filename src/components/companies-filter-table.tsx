@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { Select } from '@bds/components/ui/Select/Select';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { Button } from '@bds/components/ui/Button/Button';
 import { DataTable } from './data-table';
 import { CompanyStatusBadge, CompanyTypeTag } from './status-badges';
@@ -100,8 +100,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
       </div>
 
       {/* Table */}
-      <Card variant="elevated" padding="lg">
-        <DataTable
+      <DataTable
           data={filtered}
           rowKey={(c) => c.id}
           emptyMessage="No companies match your filters."
@@ -135,7 +134,6 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             },
           ]}
         />
-      </Card>
     </div>
   );
 }

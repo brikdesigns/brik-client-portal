@@ -135,10 +135,13 @@ export async function analyzeCompetitors(
     const listingsScore = 1;
     const listingsExplanation = `Confirmed on Google Maps (${competitor.rating ?? 'N/A'} rating, ${competitor.totalReviews ?? 0} reviews).`;
 
+    // Combined score: website (/50) + listings (/7) = /57 per competitor
+    const combinedScore = websiteScore !== null ? websiteScore + listingsScore : null;
+
     results.push({
       category: slotLabel,
       status: websiteScore !== null ? 'pass' : 'neutral',
-      score: websiteScore !== null ? 1 : null, // Report-level score: 1 = analyzed
+      score: combinedScore,
       feedback_summary: `${competitor.name}: Website ${websiteScore ?? '?'}/50, Listings ${listingsScore}/7.`,
       notes: null,
       metadata: {

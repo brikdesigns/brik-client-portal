@@ -1,10 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
+import { font } from '@/lib/tokens';
 
 export default async function ProposalsPage() {
   const supabase = createClient();
@@ -50,8 +51,7 @@ export default async function ProposalsPage() {
         <CardSummary label="Total" value={allProposals.length} />
       </div>
 
-      <Card variant="elevated" padding="lg">
-        <DataTable
+      <DataTable
           data={allProposals}
           rowKey={(p) => p.id}
           emptyMessage="No proposals yet."
@@ -90,16 +90,15 @@ export default async function ProposalsPage() {
             {
               header: 'Created',
               accessor: (p) => new Date(p.created_at).toLocaleDateString(),
-              style: { color: 'var(--_color---text--muted)', fontSize: '13px' },
+              style: { color: 'var(--_color---text--muted)', fontSize: font.size.body.xs },
             },
             {
               header: 'Valid Until',
               accessor: (p) => p.valid_until ? new Date(p.valid_until).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--muted)', fontSize: '13px' },
+              style: { color: 'var(--_color---text--muted)', fontSize: font.size.body.xs },
             },
           ]}
         />
-      </Card>
     </div>
   );
 }

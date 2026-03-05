@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
 import { Badge } from '@bds/components/ui/Badge/Badge';
@@ -26,6 +26,7 @@ import { RunAnalysisButton } from '@/components/run-analysis-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
+import { font } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -166,7 +167,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const tabStyle = (active: boolean) => ({
     fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
-    fontSize: '16px',
+    fontSize: font.size.body.md,
     fontWeight: 600,
     color: active ? 'var(--brand--primary, #E35335)' : 'var(--_color---text--secondary)',
     textDecoration: 'none' as const,
@@ -185,7 +186,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const sectionLabelStyle = {
     fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
-    fontSize: '18px',
+    fontSize: font.size.body.lg,
     fontWeight: 600,
     color: 'var(--_color---text--accent, #adaaa0)',
     margin: 0,
@@ -194,7 +195,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const fieldLabelStyle = {
     fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
-    fontSize: '14px',
+    fontSize: font.size.body.sm,
     fontWeight: 600,
     color: 'var(--_color---text--secondary)',
     margin: 0,
@@ -202,14 +203,14 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const fieldValueStyle = {
     fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
+    fontSize: font.size.body.sm,
     color: 'var(--_color---text--primary)',
     margin: 0,
   };
 
   const linkStyle = {
     fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '13px',
+    fontSize: font.size.body.xs,
     color: 'var(--_color---system--link, #0034ea)',
     textDecoration: 'none' as const,
   };
@@ -397,10 +398,10 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p
                 style={{
                   fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '14px',
+                  fontSize: font.size.body.sm,
                   color: 'var(--_color---text--secondary)',
                   margin: 0,
-                  lineHeight: 1.6,
+                  lineHeight: font.lineHeight.relaxed,
                   whiteSpace: 'pre-wrap',
                 }}
               >
@@ -413,7 +414,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
       {/* ── Reporting Tab (prospects only) ──────────────────────── */}
       {activeTab === 'reporting' && (
-        <Card variant="elevated" padding="lg">
+        <>
           {!reportSet ? (
             <CardControl
               title="Marketing Analysis"
@@ -451,7 +452,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     r.score !== null && r.max_score !== null
                       ? `${r.score} / ${r.max_score}`
                       : '—',
-                  style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+                  style: { color: 'var(--_color---text--secondary)', fontSize: font.size.body.xs },
                 },
                 {
                   header: '',
@@ -465,7 +466,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               ]}
             />
           )}
-        </Card>
+        </>
       )}
 
       {/* ── Onboarding Tab (prospects only) ────────────────────── */}
@@ -520,7 +521,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
       {/* ── Services Tab ───────────────────────────────────────── */}
       {activeTab === 'services' && (
-        <Card variant="elevated" padding="lg">
+        <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
             <a href={`/admin/companies/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
@@ -570,12 +571,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
             ]}
           />
-        </Card>
+        </div>
       )}
 
       {/* ── Projects Tab ──────────────────────────────────────── */}
       {activeTab === 'projects' && (
-        <Card variant="elevated" padding="lg">
+        <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
             <a href={`/admin/companies/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
@@ -606,12 +607,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
             ]}
           />
-        </Card>
+        </div>
       )}
 
       {/* ── Invoices Tab ──────────────────────────────────────── */}
       {activeTab === 'invoices' && (
-        <Card variant="elevated" padding="lg">
+        <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
             <a href={`/admin/companies/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
@@ -653,12 +654,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
             ]}
           />
-        </Card>
+        </div>
       )}
 
       {/* ── Contacts Tab ──────────────────────────────────────── */}
       {activeTab === 'contacts' && (
-        <Card variant="elevated" padding="lg">
+        <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Contacts</h2>
             <Button variant="primary" size="sm" asLink href={`/admin/contacts/new?company_id=${client.id}`}>
@@ -714,7 +715,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
             ]}
           />
-        </Card>
+        </div>
       )}
     </div>
   );

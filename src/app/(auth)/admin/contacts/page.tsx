@@ -1,5 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
+
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Button } from '@bds/components/ui/Button/Button';
@@ -37,8 +37,7 @@ export default async function AdminContactsPage() {
         }
       />
 
-      <Card variant="elevated" padding="lg">
-        <DataTable
+      <DataTable
           data={contacts ?? []}
           rowKey={(c) => c.id}
           emptyMessage="No contacts yet."
@@ -107,7 +106,6 @@ export default async function AdminContactsPage() {
             },
           ]}
         />
-      </Card>
     </div>
   );
 }
