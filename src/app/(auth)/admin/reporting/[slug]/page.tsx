@@ -112,7 +112,7 @@ export default async function ClientReportListPage({ params }: Props) {
                 r.score !== null && r.max_score !== null
                   ? `${r.score} / ${r.max_score}`
                   : '—',
-              style: { color: color.text.secondary, fontSize: font.size.body.xs },
+              style: { color: color.text.secondary },
             },
             {
               header: '',

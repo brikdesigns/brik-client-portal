@@ -153,7 +153,7 @@ export function EditableReportTable({
           rows={2}
           value={String(val)}
           onChange={(e) => setEditValues((prev) => ({ ...prev, [col.field]: e.target.value }))}
-          style={{ minWidth: '120px', fontSize: font.size.body.xs }}
+          style={{ minWidth: '120px', fontSize: font.size.body.sm }}
         />
       );
     }
@@ -190,7 +190,7 @@ export function EditableReportTable({
 
   const thStyle: React.CSSProperties = {
     padding: `${space.sm} ${space.sm}`,
-    fontSize: font.size.body.xs,
+    fontSize: font.size.body.sm,
     fontWeight: font.weight.semibold,
     color: color.text.secondary,
     textAlign: 'left',

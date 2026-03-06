@@ -90,12 +90,12 @@ export default async function ProposalsPage() {
             {
               header: 'Created',
               accessor: (p) => new Date(p.created_at).toLocaleDateString(),
-              style: { color: color.text.muted, fontSize: font.size.body.xs },
+              style: { color: color.text.muted },
             },
             {
               header: 'Valid Until',
               accessor: (p) => p.valid_until ? new Date(p.valid_until).toLocaleDateString() : '—',
-              style: { color: color.text.muted, fontSize: font.size.body.xs },
+              style: { color: color.text.muted },
             },
           ]}
         />

@@ -72,7 +72,7 @@ export default async function AdminProjectsPage() {
                 return client ? (
                   <a
                     href={`/admin/companies/${client.slug}`}
-                    style={{ color: color.system.link, textDecoration: 'none', fontSize: font.size.body.xs }}
+                    style={{ color: color.system.link, textDecoration: 'none' }}
                   >
                     {client.name}
                   </a>
@@ -86,12 +86,12 @@ export default async function AdminProjectsPage() {
             {
               header: 'Start',
               accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-              style: { color: color.text.secondary, fontSize: font.size.body.xs },
+              style: { color: color.text.secondary },
             },
             {
               header: 'End',
               accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-              style: { color: color.text.secondary, fontSize: font.size.body.xs },
+              style: { color: color.text.secondary },
             },
             {
               header: '',

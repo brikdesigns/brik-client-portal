@@ -75,7 +75,7 @@ export default async function AdminReportingPage() {
                   ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
                   : '—';
               },
-              style: { color: color.text.secondary, fontSize: font.size.body.xs },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Progress',
@@ -85,7 +85,7 @@ export default async function AdminReportingPage() {
                 const done = reports.filter((r) => r.status === 'completed').length;
                 return `${done} / ${reports.length} complete`;
               },
-              style: { color: color.text.secondary, fontSize: font.size.body.xs },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Tier',
@@ -97,7 +97,7 @@ export default async function AdminReportingPage() {
             {
               header: 'Created',
               accessor: (rs) => new Date(rs.created_at).toLocaleDateString(),
-              style: { color: color.text.secondary, fontSize: font.size.body.xs },
+              style: { color: color.text.secondary },
             },
             {
               header: '',

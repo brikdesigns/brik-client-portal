@@ -105,7 +105,6 @@ export default async function PaymentsPage() {
                     style={{
                       color: color.system.link,
                       fontFamily: font.family.body,
-                      fontSize: font.size.body.xs,
                       textDecoration: 'none',
                     }}
                   >

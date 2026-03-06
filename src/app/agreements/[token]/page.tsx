@@ -172,7 +172,7 @@ export default function PublicAgreementPage() {
                   </div>
                 ),
                 th: ({ children }) => (
-                  <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: `${border.width.md} solid ${color.border.muted}`, fontWeight: font.weight.semibold, fontSize: font.size.body.xs, color: color.text.muted }}>
+                  <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: `${border.width.md} solid ${color.border.muted}`, fontWeight: font.weight.semibold, fontSize: font.size.body.sm, color: color.text.muted }}>
                     {children}
                   </th>
                 ),

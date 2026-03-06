@@ -145,8 +145,8 @@
 
   /*
    * Font size aliases — maps clean names to BDS font-size primitive scale.
-   * BDS defines: --_typography---body--md-base: var(--font-size--100)
-   * We alias to: --body-md: var(--font-size--100)
+   * BDS defines: --body-md: var(--font-size--100) etc.
+   * We override on .body to ensure correct values (not spacious mode).
    */
   --body-tiny: var(--font-size--25);
   --body-xs: var(--font-size--50);
@@ -211,92 +211,6 @@
   --box-shadow-md: var(--shadow-spread--0);
   --box-shadow-lg: var(--shadow-spread--0);
 
-  /*
-   * ══════════════════════════════════════════════════════════════════════
-   * BDS OLD-NAME OVERRIDES
-   *
-   * BDS component CSS classes (Button, Badge, Card, etc.) reference the
-   * OLD Webflow naming convention: --_color---background--brand-primary,
-   * --_space---md, --_typography---font-family--body, etc.
-   *
-   * The BDS .body block in webflow-tokens.css sets these to:
-   *   - Colors: blue-green template theme (NOT Brik brand)
-   *   - Spacing: Spacious mode (section-level, 48px+ padding)
-   *   - Fonts: Open Sans / Droid Sans (NOT Poppins)
-   *
-   * We MUST override them here so BDS components render with Brik brand.
-   * Without these, only portal inline styles (via tokens.ts) get correct
-   * values — BDS component CSS classes still see the BDS defaults.
-   *
-   * These match 1:1 with the BDS .body block (lines 388-515 of
-   * webflow-tokens.css). Values are set to match our brand + Base mode.
-   * ══════════════════════════════════════════════════════════════════════
-   */
-
-  /* ---- OLD-NAME: Colors (Brik brand, not blue-green theme) ---- */
-  --_color---page--primary: var(--grayscale--white);
-  --_color---page--secondary: var(--grayscale--lightest);
-  --_color---page--brand: var(--brand--primary);
-  --_color---text--primary: var(--grayscale--darkest);
-  --_color---text--secondary: var(--grayscale--darker);
-  --_color---text--muted: var(--grayscale--dark);
-  --_color---text--inverse: var(--grayscale--white);
-  --_color---text--brand: var(--brand--primary);
-  --_color---text--on-color-dark: var(--grayscale--white);
-  --_color---text--on-color-light: var(--grayscale--black);
-  --_color---surface--primary: var(--grayscale--white);
-  --_color---surface--secondary: var(--grayscale--lightest);
-  --_color---surface--nav: var(--grayscale--white);
-  --_color---surface--brand-primary: var(--brand--primary);
-  --_color---surface--brand-secondary: var(--brand--accent);
-  --_color---background--primary: var(--grayscale--white);
-  --_color---background--secondary: var(--grayscale--lightest);
-  --_color---background--brand-primary: var(--brand--primary);
-  --_color---background--brand-secondary: var(--brand--accent);
-  --_color---background--inverse: var(--grayscale--darkest);
-  --_color---background--input: var(--grayscale--white);
-  --_color---border--primary: var(--grayscale--darkest);
-  --_color---border--secondary: var(--grayscale--lighter);
-  --_color---border--muted: var(--grayscale--lighter);
-  --_color---border--brand: var(--brand--primary);
-  --_color---border--input: var(--grayscale--light);
-  --_color---border--inverse: var(--grayscale--white);
-  --_color---border--on-color: white;
-  --_color---theme--primary: var(--brand--primary);
-  --_color---theme--secondary: var(--poppy--lighter);
-  --_color---theme--tertiary: var(--poppy--darkest);
-  --_color---theme--accent: var(--brand--accent);
-  --_color---theme--fourth: white;
-
-  /* ---- OLD-NAME: Spacing — Base mode (NOT spacious) ---- */
-  --_space---none: var(--space--0);
-  --_space---tiny: var(--space--100);
-  --_space---sm: var(--space--150);
-  --_space---md: var(--space--200);
-  --_space---lg: var(--space--400);
-  --_space---xl: var(--space--600);
-  --_space---xxl: var(--space--800);
-  --_space---huge: var(--space--1000);
-  --_space---button: var(--space--200);
-  --_space---input: var(--space--200);
-
-  /* ---- OLD-NAME: Gap (same for Base and Spacious) ---- */
-  --_space---gap--none: var(--space--0);
-  --_space---gap--tiny: var(--space--50);
-  --_space---gap--sm: var(--space--100);
-  --_space---gap--md: var(--space--200);
-  --_space---gap--lg: var(--space--400);
-  --_space---gap--xl: var(--space--500);
-  --_space---gap--xxl: var(--space--600);
-  --_space---gap--huge: var(--space--1200);
-
-  /* ---- OLD-NAME: Typography (Poppins, not Open Sans/Droid Sans) ---- */
-  --_typography---font-family--body: Poppins, sans-serif;
-  --_typography---font-family--label: Poppins, sans-serif;
-  --_typography---font-family--heading: Poppins, sans-serif;
-  --_typography---font-family--display: Poppins, sans-serif;
-  --_typography---font-family--icon: "Font Awesome 6 Pro Solid 900", Arial, sans-serif;
-
   /* ---- Service category colors (from brikdesigns.com) ---- */
   --services--yellow: #f4d364;
   --services--yellow-dark: #634716;
@@ -360,36 +274,6 @@
 
   /* System */
   --color-system-link: #6b8aff;
-
-  /* OLD-NAME: Colors (dark mode) */
-  --_color---page--primary: var(--grayscale--black);
-  --_color---page--secondary: var(--grayscale--darker);
-  --_color---page--brand: var(--brand--primary);
-  --_color---text--primary: var(--grayscale--lightest);
-  --_color---text--secondary: var(--grayscale--light);
-  --_color---text--muted: var(--grayscale--dark);
-  --_color---text--inverse: var(--grayscale--darkest);
-  --_color---text--brand: var(--brand--primary);
-  --_color---surface--primary: var(--grayscale--black);
-  --_color---surface--secondary: var(--grayscale--darkest);
-  --_color---surface--nav: var(--grayscale--darkest);
-  --_color---surface--brand-primary: var(--brand--primary);
-  --_color---surface--brand-secondary: var(--brand--accent);
-  --_color---background--primary: var(--grayscale--darker);
-  --_color---background--secondary: var(--grayscale--darkest);
-  --_color---background--brand-primary: var(--brand--primary);
-  --_color---background--inverse: var(--brand--primary);
-  --_color---background--input: var(--grayscale--black);
-  --_color---border--primary: var(--grayscale--darkest);
-  --_color---border--secondary: var(--grayscale--darker);
-  --_color---border--muted: var(--grayscale--darker);
-  --_color---border--brand: var(--brand--primary);
-  --_color---border--input: var(--grayscale--dark);
-  --_color---border--inverse: var(--grayscale--black);
-  --_color---theme--primary: var(--brand--primary);
-  --_color---theme--secondary: var(--poppy--lighter);
-  --_color---theme--tertiary: var(--poppy--darkest);
-  --_color---theme--accent: var(--brand--accent);
 
   /* Service category colors (dark mode — slightly muted for dark backgrounds) */
   --services--yellow: #d4b54a;

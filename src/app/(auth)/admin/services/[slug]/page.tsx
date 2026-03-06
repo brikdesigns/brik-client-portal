@@ -211,7 +211,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             {
               header: 'Notes',
               accessor: (a) => a.notes || '—',
-              style: { color: color.text.muted, fontSize: font.size.body.xs },
+              style: { color: color.text.muted },
             },
           ]}
         />
