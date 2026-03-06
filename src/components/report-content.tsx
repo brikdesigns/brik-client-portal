@@ -3,12 +3,13 @@
 import { useState } from 'react';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
-import { Meter, type MeterStatus } from '@bds/components/ui/Meter/Meter';
+import { ProgressBar } from '@bds/components/ui/ProgressBar/ProgressBar';
 import { ReportDetailTable } from '@/components/report-detail-table';
 import { EditableReportTable } from '@/components/editable-report-table';
 import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
-import { font } from '@/lib/tokens';
+import { font, color, space, gap } from '@/lib/tokens';
+import { heading as headingStyle } from '@/lib/styles';
 
 interface ReportItem {
   id: string;
@@ -35,16 +36,16 @@ interface ReportContentProps {
   reportSetId: string;
 }
 
-const TIER_TO_STATUS: Record<ScoreTier, MeterStatus> = {
-  pass: 'positive',
-  fair: 'warning',
-  fail: 'error',
-};
-
 const TIER_LABELS: Record<ScoreTier, string> = {
   pass: 'Pass',
   fair: 'Needs Attention',
   fail: 'Fail',
+};
+
+const TIER_COLORS: Record<ScoreTier, string> = {
+  pass: color.system.green,
+  fair: color.system.orange,
+  fail: color.system.red,
 };
 
 export function ReportContent({ report, items, reportType, reportSetId }: ReportContentProps) {
@@ -53,8 +54,9 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
   const tier = report.tier as ScoreTier | null;
   const score = report.score ?? 0;
   const maxScore = report.max_score ?? 0;
-  const meterStatus = tier ? TIER_TO_STATUS[tier] : 'neutral';
-  const meterLabel = tier ? TIER_LABELS[tier] : 'Pending';
+  const tierLabel = tier ? TIER_LABELS[tier] : 'Pending';
+  const tierColor = tier ? TIER_COLORS[tier] : color.text.muted;
+  const progressPercent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
 
   const opportunityLines = report.opportunities_text
     ? report.opportunities_text
@@ -64,51 +66,47 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
     : [];
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_spacing---lg)' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
       {/* Summary row — 2-col on desktop, stacks on mobile */}
       <div
         style={{
           display: 'grid',
           gridTemplateColumns: 'minmax(280px, 1fr) 2fr',
-          gap: 'var(--_spacing---lg)',
+          gap: gap.lg,
         }}
       >
-        {/* Meter card */}
+        {/* Score card */}
         <Card variant="elevated" padding="lg">
-          <Meter
-            value={score}
-            max={maxScore}
-            status={meterStatus}
-            label={meterLabel}
-            size="lg"
-          />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+              <span style={{ fontFamily: font.family.heading, fontSize: font.size.heading.medium, fontWeight: font.weight.bold, color: tierColor }}>
+                {score} / {maxScore}
+              </span>
+              <span style={{ fontFamily: font.family.label, fontSize: font.size.body.sm, fontWeight: font.weight.semibold, color: tierColor }}>
+                {tierLabel}
+              </span>
+            </div>
+            <ProgressBar value={progressPercent} label={`Score: ${score} of ${maxScore}`} />
+          </div>
         </Card>
 
         {/* Opportunities card */}
         {opportunityLines.length > 0 ? (
           <Card variant="elevated" padding="lg">
-            <h3
-              style={{
-                fontFamily: 'var(--_typography---font-family--heading)',
-                fontSize: 'var(--_typography---heading--small)',
-                fontWeight: 600,
-                color: 'var(--_color---text--primary)',
-                margin: '0 0 16px',
-              }}
-            >
+            <h3 style={headingStyle.section}>
               Opportunities
             </h3>
             <ul
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--md-base)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.md,
                 lineHeight: font.lineHeight.relaxed,
-                color: 'var(--_color---text--secondary)',
+                color: color.text.secondary,
                 margin: 0,
-                paddingLeft: '20px',
+                paddingLeft: space.lg,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px',
+                gap: gap.sm,
               }}
             >
               {opportunityLines.map((line, i) => (
@@ -118,22 +116,14 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
           </Card>
         ) : (
           <Card variant="elevated" padding="lg">
-            <h3
-              style={{
-                fontFamily: 'var(--_typography---font-family--heading)',
-                fontSize: 'var(--_typography---heading--small)',
-                fontWeight: 600,
-                color: 'var(--_color---text--primary)',
-                margin: '0 0 16px',
-              }}
-            >
+            <h3 style={headingStyle.section}>
               Opportunities
             </h3>
             <p
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--md-base)',
-                color: 'var(--_color---text--muted)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.md,
+                color: color.text.muted,
                 margin: 0,
               }}
             >
@@ -149,7 +139,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
           style={{
             display: 'flex',
             justifyContent: 'flex-end',
-            marginBottom: 'var(--_spacing---sm)',
+            marginBottom: gap.sm,
           }}
         >
           <Button

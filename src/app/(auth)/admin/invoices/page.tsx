@@ -9,7 +9,8 @@ import { DataTable } from '@/components/data-table';
 import { InvoiceStatusBadge, AgreementStatusBadge } from '@/components/status-badges';
 import { BillingTabs } from '@/components/billing-tabs';
 import { formatCurrency } from '@/lib/format';
-import { font } from '@/lib/tokens';
+import { heading } from '@/lib/styles';
+import { font, color, gap, space } from '@/lib/tokens';
 
 interface Props {
   searchParams: Promise<{ tab?: string }>;
@@ -59,13 +60,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
   const typeLabel = (type: string) =>
     type === 'baa' ? 'BAA' : 'Marketing';
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: font.size.body.lg,
-    fontWeight: 600,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   return (
     <div>
@@ -80,8 +75,8 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
+          gap: space.md,
+          marginBottom: space.lg,
         }}
       >
         <CardSummary label="Open Invoices" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
@@ -112,23 +107,23 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                         </TextLink>
                       ) : '—';
                     },
-                    style: { fontWeight: 500 },
+                    style: { fontWeight: font.weight.medium },
                   },
                   {
                     header: 'Description',
                     accessor: (inv) => inv.description || 'Invoice',
-                    style: { color: 'var(--_color---text--primary)' },
+                    style: { color: color.text.primary },
                   },
                   {
                     header: 'Amount',
                     accessor: (inv) => formatCurrency(inv.amount_cents),
-                    style: { fontWeight: 600 },
+                    style: { fontWeight: font.weight.semibold },
                   },
                   {
                     header: 'Due',
                     accessor: (inv) =>
                       inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                    style: { color: 'var(--_color---text--secondary)' },
+                    style: { color: color.text.secondary },
                   },
                   {
                     header: 'Status',
@@ -137,7 +132,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                   {
                     header: '',
                     accessor: (inv) => (
-                      <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                      <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
                         <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
                           Edit
                         </Button>
@@ -173,29 +168,29 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                       </TextLink>
                     ) : '—';
                   },
-                  style: { fontWeight: 500 },
+                  style: { fontWeight: font.weight.medium },
                 },
                 {
                   header: 'Description',
                   accessor: (inv) => inv.description || 'Invoice',
-                  style: { color: 'var(--_color---text--primary)' },
+                  style: { color: color.text.primary },
                 },
                 {
                   header: 'Amount',
                   accessor: (inv) => formatCurrency(inv.amount_cents),
-                  style: { fontWeight: 600 },
+                  style: { fontWeight: font.weight.semibold },
                 },
                 {
                   header: 'Date',
                   accessor: (inv) =>
                     inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '—',
-                  style: { color: 'var(--_color---text--secondary)' },
+                  style: { color: color.text.secondary },
                 },
                 {
                   header: 'Due',
                   accessor: (inv) =>
                     inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                  style: { color: 'var(--_color---text--secondary)' },
+                  style: { color: color.text.secondary },
                 },
                 {
                   header: 'Status',
@@ -204,7 +199,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                 {
                   header: '',
                   accessor: (inv) => (
-                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                    <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
                       <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
                         Edit
                       </Button>
@@ -245,12 +240,12 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                         </TextLink>
                       ) : '—';
                     },
-                    style: { fontWeight: 500 },
+                    style: { fontWeight: font.weight.medium },
                   },
                   {
                     header: 'Title',
                     accessor: (a) => a.title,
-                    style: { color: 'var(--_color---text--primary)' },
+                    style: { color: color.text.primary },
                   },
                   {
                     header: 'Type',
@@ -263,7 +258,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                   {
                     header: 'Created',
                     accessor: (a) => new Date(a.created_at).toLocaleDateString(),
-                    style: { color: 'var(--_color---text--secondary)' },
+                    style: { color: color.text.secondary },
                   },
                   {
                     header: '',
@@ -300,12 +295,12 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                       </TextLink>
                     ) : '—';
                   },
-                  style: { fontWeight: 500 },
+                  style: { fontWeight: font.weight.medium },
                 },
                 {
                   header: 'Title',
                   accessor: (a) => a.title,
-                  style: { color: 'var(--_color---text--primary)' },
+                  style: { color: color.text.primary },
                 },
                 {
                   header: 'Type',
@@ -318,12 +313,12 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
                 {
                   header: 'Created',
                   accessor: (a) => new Date(a.created_at).toLocaleDateString(),
-                  style: { color: 'var(--_color---text--secondary)' },
+                  style: { color: color.text.secondary },
                 },
                 {
                   header: 'Signed by',
                   accessor: (a) => a.signed_by_name || '—',
-                  style: { color: 'var(--_color---text--secondary)' },
+                  style: { color: color.text.secondary },
                 },
                 {
                   header: '',

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, gap } from '@/lib/tokens';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 
@@ -44,13 +45,13 @@ export function GenerateProposalButton({ companyId, slug }: GenerateProposalButt
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: gap.sm }}>
       {error && (
         <span
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: '12px',
-            color: 'var(--system--red, #eb5757)',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.xs,
+            color: color.system.red,
             maxWidth: '300px',
           }}
         >

@@ -9,7 +9,7 @@ import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { ItemStatusBadge } from '@/components/report-badges';
-import { font } from '@/lib/tokens';
+import { font, color, gap, space } from '@/lib/tokens';
 import { type ColumnConfig, getColumnConfig, getRubric, type ReportType } from '@/lib/analysis/report-config';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 
@@ -189,21 +189,21 @@ export function EditableReportTable({
   }
 
   const thStyle: React.CSSProperties = {
-    padding: '10px 12px',
+    padding: `${space.sm} ${space.sm}`,
     fontSize: font.size.body.xs,
-    fontWeight: 600,
-    color: 'var(--_color---text--secondary)',
+    fontWeight: font.weight.semibold,
+    color: color.text.secondary,
     textAlign: 'left',
-    borderBottom: '2px solid var(--_color---border--primary)',
+    borderBottom: `2px solid ${color.border.primary}`,
     fontFamily: font.family.body,
     whiteSpace: 'nowrap',
   };
 
   const tdStyle: React.CSSProperties = {
-    padding: '10px 12px',
+    padding: `${space.sm} ${space.sm}`,
     fontSize: font.size.body.sm,
-    color: 'var(--_color---text--primary)',
-    borderBottom: '1px solid var(--_color---border--primary)',
+    color: color.text.primary,
+    borderBottom: `1px solid ${color.border.primary}`,
     fontFamily: font.family.body,
     verticalAlign: 'top',
   };
@@ -225,7 +225,7 @@ export function EditableReportTable({
           <tbody>
             {items.length === 0 && (
               <tr>
-                <td colSpan={columns.length + 1} style={{ ...tdStyle, textAlign: 'center', color: 'var(--_color---text--muted)' }}>
+                <td colSpan={columns.length + 1} style={{ ...tdStyle, textAlign: 'center', color: color.text.muted }}>
                   No items yet.
                 </td>
               </tr>
@@ -246,7 +246,7 @@ export function EditableReportTable({
                     ))}
                     <td style={{ ...tdStyle, textAlign: 'right', whiteSpace: 'nowrap' }}>
                       {isEditing ? (
-                        <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'flex', gap: gap.tiny, justifyContent: 'flex-end' }}>
                           <Button
                             variant="primary"
                             size="sm"
@@ -281,23 +281,23 @@ export function EditableReportTable({
                       <td
                         colSpan={columns.length + 1}
                         style={{
-                          padding: '8px 12px 16px',
-                          borderBottom: '1px solid var(--_color---border--primary)',
-                          background: 'var(--_color---background--secondary)',
+                          padding: `${space.xs} ${space.sm} ${space.md}`,
+                          borderBottom: `1px solid ${color.border.primary}`,
+                          background: color.background.secondary,
                         }}
                       >
                         <div
                           style={{
                             fontFamily: font.family.body,
                             fontSize: font.size.body.xs,
-                            fontWeight: 600,
-                            color: 'var(--_color---text--secondary)',
-                            marginBottom: '6px',
+                            fontWeight: font.weight.semibold,
+                            color: color.text.secondary,
+                            marginBottom: gap.xs,
                           }}
                         >
                           Scoring rubric
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.tiny }}>
                           {Object.entries(rubric)
                             .sort(([a], [b]) => Number(a) - Number(b))
                             .map(([score, desc]) => (
@@ -305,17 +305,17 @@ export function EditableReportTable({
                                 key={score}
                                 style={{
                                   display: 'flex',
-                                  gap: '8px',
+                                  gap: gap.xs,
                                   fontFamily: font.family.body,
                                   fontSize: font.size.body.xs,
                                   lineHeight: font.lineHeight.snug,
-                                  color: 'var(--_color---text--secondary)',
+                                  color: color.text.secondary,
                                 }}
                               >
                                 <span
                                   style={{
-                                    fontWeight: 700,
-                                    color: 'var(--_color---text--primary)',
+                                    fontWeight: font.weight.bold,
+                                    color: color.text.primary,
                                     minWidth: '14px',
                                   }}
                                 >

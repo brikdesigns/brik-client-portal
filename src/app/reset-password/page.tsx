@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { ResetPasswordForm } from '@/components/reset-password-form';
+import { font, color, space, gap, border, shadow } from '@/lib/tokens';
 
 export default function ResetPasswordPage() {
   return (
@@ -9,20 +10,20 @@ export default function ResetPasswordPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--_color---page--accent, #f1f0ec)',
+        backgroundColor: color.page.accent,
       }}
     >
       <div
         style={{
-          backgroundColor: 'var(--_color---surface--primary, white)',
-          borderRadius: '8px',
-          padding: '48px',
+          backgroundColor: color.surface.primary,
+          borderRadius: border.radius.md,
+          padding: space.huge,
           width: '100%',
           maxWidth: '420px',
-          boxShadow: 'var(--_box-shadow---md)',
+          boxShadow: shadow.md,
         }}
       >
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: space.xl }}>
           <Image
             src="/images/brik-logo.svg"
             alt="Brik Designs"
@@ -35,23 +36,23 @@ export default function ResetPasswordPage() {
 
         <h1
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--medium)',
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.medium,
+            color: color.text.primary,
             textAlign: 'center',
-            marginBottom: '8px',
-            fontWeight: 600,
+            marginBottom: gap.xs,
+            fontWeight: font.weight.semibold,
           }}
         >
           Set a new password
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
             textAlign: 'center',
-            marginBottom: '32px',
+            marginBottom: space.xl,
           }}
         >
           Choose a strong password for your account.

@@ -1,9 +1,11 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
+import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
+import { heading } from '@/lib/styles';
+import { color } from '@/lib/tokens';
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
@@ -24,7 +26,7 @@ export default async function AdminOverviewPage() {
 
   const { data: recentProjects } = await supabase
     .from('projects')
-    .select('id, name, status, companies(name)')
+    .select('id, name, slug, status, companies(name)')
     .order('created_at', { ascending: false })
     .limit(5);
 
@@ -50,42 +52,39 @@ export default async function AdminOverviewPage() {
         ))}
       </div>
 
-      <Card variant="elevated" padding="lg">
-        <h2
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--small, 18px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: '0 0 16px',
-          }}
-        >
-          Recent projects
-        </h2>
+      <h2 style={heading.section}>Recent projects</h2>
 
-        <DataTable
-          data={recentProjects ?? []}
-          rowKey={(p) => p.id}
-          emptyMessage="No projects yet. Create your first client to get started."
-          columns={[
-            {
-              header: 'Project',
-              accessor: (p) => p.name,
-              style: { color: 'var(--_color---text--primary)', fontWeight: 500 },
-            },
-            {
-              header: 'Company',
-              accessor: (p) =>
-                (p.companies as unknown as { name: string } | null)?.name ?? '—',
-              style: { color: 'var(--_color---text--secondary)' },
-            },
-            {
-              header: 'Status',
-              accessor: (p) => <ProjectStatusBadge status={p.status} />,
-            },
-          ]}
-        />
-      </Card>
+      <DataTable
+        data={recentProjects ?? []}
+        rowKey={(p) => p.id}
+        emptyMessage="No projects yet. Create your first client to get started."
+        columns={[
+          {
+            header: 'Project',
+            accessor: (p) => p.name,
+            style: { color: color.text.primary, fontWeight: 500 },
+          },
+          {
+            header: 'Company',
+            accessor: (p) =>
+              (p.companies as unknown as { name: string } | null)?.name ?? '—',
+            style: { color: color.text.secondary },
+          },
+          {
+            header: 'Status',
+            accessor: (p) => <ProjectStatusBadge status={p.status} />,
+          },
+          {
+            header: '',
+            accessor: (p) => (
+              <Button variant="primary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                View Details
+              </Button>
+            ),
+            style: { textAlign: 'right' },
+          },
+        ]}
+      />
     </div>
   );
 }

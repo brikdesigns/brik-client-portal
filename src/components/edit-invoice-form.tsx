@@ -7,6 +7,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, gap } from '@/lib/tokens';
 
 interface EditInvoiceFormProps {
   invoice: {
@@ -97,22 +98,22 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
     <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
       <div
         style={{
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: '13px',
-          color: 'var(--_color---text--muted)',
-          marginBottom: '20px',
+          fontFamily: font.family.body,
+          fontSize: font.size.body.xs,
+          color: color.text.muted,
+          marginBottom: space.md,
         }}
       >
         Client: <a
           href={`/admin/companies/${clientSlug || invoice.company_id}`}
-          style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none' }}
+          style={{ color: color.system.link, textDecoration: 'none' }}
         >
           {clientName}
         </a>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.md }}>
           <TextInput
             label="Description"
             type="text"
@@ -121,7 +122,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
             onChange={(e) => setDescription(e.target.value)}
             fullWidth
           />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.md }}>
             <TextInput
               label="Amount (USD)"
               type="number"
@@ -145,7 +146,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
               fullWidth
             />
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.md }}>
             <TextInput
               label="Invoice date"
               type="date"
@@ -173,9 +174,9 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
           {status === 'paid' && !invoice.paid_at && (
             <p
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                color: 'var(--services--green-dark)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                color: color.system.green,
                 margin: 0,
               }}
             >
@@ -187,17 +188,17 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
         {error && (
           <p
             style={{
-              color: 'var(--system--red, #eb5757)',
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
-              margin: '16px 0 0',
+              color: color.system.red,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.xs,
+              margin: `${space.md} 0 0`,
             }}
           >
             {error}
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
           <Button type="submit" variant="primary" size="md" disabled={loading}>
             {loading ? 'Saving...' : 'Save changes'}
           </Button>

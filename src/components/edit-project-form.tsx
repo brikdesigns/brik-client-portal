@@ -7,28 +7,29 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 const textareaStyle = {
   width: '100%',
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: 'var(--_typography---body--sm)',
-  lineHeight: 'var(--font-line-height--150)',
-  padding: 'var(--_space---input)',
-  borderRadius: 'var(--_border-radius---input)',
-  border: 'var(--_border-width---sm) solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input)',
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.body,
+  fontSize: font.size.body.sm,
+  lineHeight: font.lineHeight.normal,
+  padding: space.input,
+  borderRadius: border.radius.input,
+  border: `${border.width.sm} solid ${color.border.input}`,
+  backgroundColor: color.background.input,
+  color: color.text.primary,
   resize: 'vertical' as const,
   boxSizing: 'border-box' as const,
 };
 
 const textareaLabelStyle = {
   display: 'block' as const,
-  marginBottom: 'var(--_space---sm, 8px)',
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontWeight: 'var(--font-weight--semi-bold)' as string,
-  fontSize: 'var(--_typography---label--md-base)',
-  color: 'var(--_color---text--primary)',
+  marginBottom: space.sm,
+  fontFamily: font.family.label,
+  fontWeight: font.weight.semibold,
+  fontSize: font.size.label.md,
+  color: color.text.primary,
 };
 
 function toSlug(text: string): string {
@@ -97,17 +98,17 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
     <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
       <div
         style={{
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: '13px',
-          color: 'var(--_color---text--muted)',
-          marginBottom: '20px',
+          fontFamily: font.family.body,
+          fontSize: font.size.body.sm,
+          color: color.text.muted,
+          marginBottom: space.lg,
         }}
       >
-        Client: <span style={{ color: 'var(--_color---text--primary)', fontWeight: 500 }}>{clientName}</span>
+        Client: <span style={{ color: color.text.primary, fontWeight: font.weight.medium }}>{clientName}</span>
       </div>
 
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.md }}>
           <TextInput
             label="Project name"
             type="text"
@@ -138,7 +139,7 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
             ]}
             fullWidth
           />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.md }}>
             <TextInput
               label="Start date"
               type="date"
@@ -159,17 +160,17 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
         {error && (
           <p
             style={{
-              color: 'var(--system--red, #eb5757)',
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
-              margin: '16px 0 0',
+              color: color.system.red,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              margin: `${space.md} 0 0`,
             }}
           >
             {error}
           </p>
         )}
 
-        <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+        <div style={{ display: 'flex', gap: gap.md, marginTop: space.lg }}>
           <Button type="submit" variant="primary" size="md" disabled={loading}>
             {loading ? 'Saving...' : 'Save changes'}
           </Button>

@@ -5,7 +5,7 @@
  * Source of truth: brik-bds/tokens/TOKEN-REFERENCE.md + Style Dictionary output.
  *
  * WHY THIS EXISTS:
- * Figma shows "body/md · 16/150" but code needs "var(--_typography---body--md-base)".
+ * Figma shows "body/md · 16/150" but code needs "var(--body-md)".
  * This file makes that conversion instant — import and use, no guessing.
  *
  * USAGE:
@@ -20,71 +20,71 @@
 
 export const font = {
   family: {
-    body: 'var(--_typography---font-family--body)',
-    heading: 'var(--_typography---font-family--heading)',
-    label: 'var(--_typography---font-family--label)',
-    display: 'var(--_typography---font-family--display)',
+    body: 'var(--font-family-body)',
+    heading: 'var(--font-family-heading)',
+    label: 'var(--font-family-label)',
+    display: 'var(--font-family-display)',
   },
 
   /**
    * Font sizes — maps to Figma typography styles
    *
-   * Figma style        → Token                              → Resolved (Base)
-   * ─────────────────────────────────────────────────────────────────────────
-   * body/tiny           → --_typography---body--tiny          → 10.26px
-   * body/xs             → --_typography---body--xs            → 11.54px
-   * body/sm (14/150)    → --_typography---body--sm            → 14px
-   * body/md (16/150)    → --_typography---body--md-base       → 16px
-   * body/lg (18/150)    → --_typography---body--lg            → 18px
-   * body/xl (20/150)    → --_typography---body--xl            → 20px
-   * label/sm            → --_typography---label--sm           → 14px
-   * label/md            → --_typography---label--md-base      → 16px
-   * label/lg            → --_typography---label--lg           → 18px
-   * label/xl            → --_typography---label--xl           → 20px
-   * subtitle/md         → label--sm + weight 600 + uppercase (composite)
-   * heading/tiny        → --_typography---heading--tiny       → 16px
-   * heading/small       → --_typography---heading--small      → 20px
-   * heading/medium      → --_typography---heading--medium     → 25.3px
-   * heading/large       → --_typography---heading--large      → 32px
+   * Figma style        → Token                    → Resolved (Base)
+   * ─────────────────────────────────────────────────────────────────
+   * body/tiny           → --body-tiny              → 10.26px
+   * body/xs             → --body-xs                → 11.54px
+   * body/sm (14/150)    → --body-sm                → 14px
+   * body/md (16/150)    → --body-md                → 16px
+   * body/lg (18/150)    → --body-lg                → 18px
+   * body/xl (20/150)    → --body-xl                → 20px
+   * label/sm            → --label-sm               → 14px
+   * label/md            → --label-md               → 16px
+   * label/lg            → --label-lg               → 18px
+   * label/xl            → --label-xl               → 20px
+   * subtitle/md         → label-sm + weight 600 + uppercase (composite)
+   * heading/tiny        → --heading-tiny           → 16px
+   * heading/small       → --heading-sm             → 20px
+   * heading/medium      → --heading-md             → 25.3px
+   * heading/large       → --heading-lg             → 32px
    */
   size: {
     body: {
-      tiny: 'var(--_typography---body--tiny)',
-      xs: 'var(--_typography---body--xs)',
-      sm: 'var(--_typography---body--sm)',
-      md: 'var(--_typography---body--md-base)',
-      lg: 'var(--_typography---body--lg)',
-      xl: 'var(--_typography---body--xl)',
+      tiny: 'var(--body-tiny)',
+      xs: 'var(--body-xs)',
+      sm: 'var(--body-sm)',
+      md: 'var(--body-md)',
+      lg: 'var(--body-lg)',
+      xl: 'var(--body-xl)',
     },
     label: {
-      sm: 'var(--_typography---label--sm)',
-      md: 'var(--_typography---label--md-base)',
-      lg: 'var(--_typography---label--lg)',
-      xl: 'var(--_typography---label--xl)',
+      sm: 'var(--label-sm)',
+      md: 'var(--label-md)',
+      lg: 'var(--label-lg)',
+      xl: 'var(--label-xl)',
     },
     heading: {
-      tiny: 'var(--_typography---heading--tiny)',
-      small: 'var(--_typography---heading--small)',
-      medium: 'var(--_typography---heading--medium)',
-      large: 'var(--_typography---heading--large)',
-      xLarge: 'var(--_typography---heading--x-large)',
-      xxLarge: 'var(--_typography---heading--xx-large)',
-      xxxLarge: 'var(--_typography---heading--xxx-large)',
+      tiny: 'var(--heading-tiny)',
+      small: 'var(--heading-sm)',
+      medium: 'var(--heading-md)',
+      large: 'var(--heading-lg)',
+      xLarge: 'var(--heading-xl)',
+      xxLarge: 'var(--heading-xxl)',
+      xxxLarge: 'var(--heading-huge)',
     },
     icon: {
-      sm: 'var(--_typography---icon--small)',
-      md: 'var(--_typography---icon--medium-base)',
-      lg: 'var(--_typography---icon--large)',
+      sm: 'var(--icon-sm)',
+      md: 'var(--icon-md)',
+      lg: 'var(--icon-lg)',
     },
   },
 
   lineHeight: {
-    none: 'var(--font-line-height--none)',
-    tight: 'var(--font-line-height--100)',
-    snug: 'var(--font-line-height--125)',
-    normal: 'var(--font-line-height--150)',
-    relaxed: 'var(--font-line-height--175)',
-    loose: 'var(--font-line-height--200)',
+    none: 'var(--font-line-height-none)',
+    tight: 'var(--font-line-height-tight)',
+    snug: 'var(--font-line-height-snug)',
+    normal: 'var(--font-line-height-normal)',
+    relaxed: 'var(--font-line-height-relaxed)',
+    loose: 'var(--font-line-height-loose)',
   },
 
   weight: {
@@ -100,100 +100,111 @@ export const font = {
 
 export const color = {
   text: {
-    primary: 'var(--_color---text--primary)',
-    secondary: 'var(--_color---text--secondary)',
-    muted: 'var(--_color---text--muted)',
-    brand: 'var(--_color---text--brand)',
-    inverse: 'var(--_color---text--inverse)',
+    primary: 'var(--text-primary)',
+    secondary: 'var(--text-secondary)',
+    muted: 'var(--text-muted)',
+    brand: 'var(--text-brand-primary)',
+    inverse: 'var(--text-inverse)',
+    negative: 'var(--text-negative)',
   },
   surface: {
-    primary: 'var(--_color---surface--primary)',
-    secondary: 'var(--_color---surface--secondary)',
-    brandPrimary: 'var(--_color---surface--brand-primary)',
+    primary: 'var(--surface-primary)',
+    secondary: 'var(--surface-secondary)',
+    tertiary: 'var(--surface-tertiary)',
+    negative: 'var(--surface-negative)',
+    brandPrimary: 'var(--surface-brand-primary)',
+    brandSecondary: 'var(--surface-brand-secondary)',
   },
   background: {
-    primary: 'var(--_color---background--primary)',
-    secondary: 'var(--_color---background--secondary)',
-    brandPrimary: 'var(--_color---background--brand-primary)',
-    inverse: 'var(--_color---background--inverse)',
-    input: 'var(--_color---background--input)',
+    primary: 'var(--background-primary)',
+    secondary: 'var(--background-secondary)',
+    brandPrimary: 'var(--background-brand-primary)',
+    inverse: 'var(--background-inverse)',
+    elevated: 'var(--background-elevated)',
+    input: 'var(--background-input)',
   },
   border: {
-    primary: 'var(--_color---border--primary)',
-    secondary: 'var(--_color---border--secondary)',
-    muted: 'var(--_color---border--muted)',
-    brand: 'var(--_color---border--brand)',
-    input: 'var(--_color---border--input)',
-    inverse: 'var(--_color---border--inverse)',
+    primary: 'var(--border-primary)',
+    secondary: 'var(--border-secondary)',
+    muted: 'var(--border-muted)',
+    brand: 'var(--border-brand-primary)',
+    negative: 'var(--border-negative)',
+    input: 'var(--border-input)',
+    inverse: 'var(--border-inverse)',
+  },
+  brand: {
+    primary: 'var(--brand--primary)',
   },
   page: {
-    primary: 'var(--_color---page--primary)',
-    secondary: 'var(--_color---page--secondary)',
+    primary: 'var(--page-primary)',
+    secondary: 'var(--page-secondary)',
+    accent: 'var(--page-accent)',
   },
   system: {
-    link: 'var(--_color---system--link)',
-    red: 'var(--system--red)',
-    green: 'var(--system--green)',
-    yellow: 'var(--system--yellow)',
-    blue: 'var(--system--blue)',
-    orange: 'var(--system--orange)',
+    link: 'var(--color-system-link)',
+    red: 'var(--color-system-red)',
+    green: 'var(--color-system-green)',
+    yellow: 'var(--color-system-yellow)',
+    blue: 'var(--color-system-blue)',
+    orange: 'var(--color-system-orange)',
   },
 } as const;
 
 // ─── Spacing (Padding) ──────────────────────────────────────────────
 
 export const space = {
-  none: 'var(--_space---none)',
-  tiny: 'var(--_space---tiny)',
-  xs: 'var(--_space---xs)',
-  sm: 'var(--_space---sm)',
-  md: 'var(--_space---md)',
-  lg: 'var(--_space---lg)',
-  xl: 'var(--_space---xl)',
-  huge: 'var(--_space---huge)',
-  button: 'var(--_space---button)',
-  input: 'var(--_space---input)',
+  none: 'var(--padding-none)',
+  tiny: 'var(--padding-tiny)',
+  xs: 'var(--padding-xs)',
+  sm: 'var(--padding-sm)',
+  md: 'var(--padding-md)',
+  lg: 'var(--padding-lg)',
+  xl: 'var(--padding-xl)',
+  xxl: 'var(--padding-xl)',
+  huge: 'var(--padding-huge)',
+  button: 'var(--padding-tiny)',
+  input: 'var(--padding-tiny)',
 } as const;
 
 // ─── Gap (between elements) ─────────────────────────────────────────
 
 export const gap = {
-  none: 'var(--_space---gap--none)',
-  tiny: 'var(--_space---gap--tiny)',
-  xs: 'var(--_space---gap--xs)',
-  sm: 'var(--_space---gap--sm)',
-  md: 'var(--_space---gap--md)',
-  lg: 'var(--_space---gap--lg)',
-  xl: 'var(--_space---gap--xl)',
-  huge: 'var(--_space---gap--huge)',
+  none: 'var(--gap-none)',
+  tiny: 'var(--gap-tiny)',
+  xs: 'var(--gap-xs)',
+  sm: 'var(--gap-sm)',
+  md: 'var(--gap-md)',
+  lg: 'var(--gap-lg)',
+  xl: 'var(--gap-xl)',
+  huge: 'var(--gap-huge)',
 } as const;
 
 // ─── Border ──────────────────────────────────────────────────────────
 
 export const border = {
   width: {
-    none: 'var(--_border-width---none)',
-    sm: 'var(--_border-width---sm)',
-    md: 'var(--_border-width---md)',
-    lg: 'var(--_border-width---lg)',
+    none: 'var(--border-width-none)',
+    sm: 'var(--border-width-sm)',
+    md: 'var(--border-width-md)',
+    lg: 'var(--border-width-lg)',
   },
   radius: {
-    none: 'var(--_border-radius---none)',
-    sm: 'var(--_border-radius---sm)',
-    md: 'var(--_border-radius---md)',
-    lg: 'var(--_border-radius---lg)',
-    button: 'var(--_border-radius---button)',
-    input: 'var(--_border-radius---input)',
-    pill: 'var(--border-radius--pill)',
-    circle: 'var(--border-radius--circle)',
+    none: 'var(--border-radius-none)',
+    sm: 'var(--border-radius-sm)',
+    md: 'var(--border-radius-md)',
+    lg: 'var(--border-radius-lg)',
+    button: 'var(--border-radius-50)',
+    input: 'var(--border-radius-50)',
+    pill: '9999px',
+    circle: '50%',
   },
 } as const;
 
 // ─── Shadows ─────────────────────────────────────────────────────────
 
 export const shadow = {
-  none: 'var(--_box-shadow---none)',
-  sm: 'var(--_box-shadow---sm)',
-  md: 'var(--_box-shadow---md)',
-  lg: 'var(--_box-shadow---lg)',
+  none: 'var(--box-shadow-none)',
+  sm: 'var(--box-shadow-sm)',
+  md: 'var(--box-shadow-md)',
+  lg: 'var(--box-shadow-lg)',
 } as const;

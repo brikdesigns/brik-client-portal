@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Select } from '@bds/components/ui/Select/Select';
 
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { CompanyStatusBadge, CompanyTypeTag } from './status-badges';
 
@@ -53,23 +54,23 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
-          marginBottom: '16px',
+          gap: gap.sm,
+          marginBottom: space.md,
           flexWrap: 'wrap',
         }}
       >
         <span
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--sm)',
-            color: 'var(--_color---text--secondary)',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.sm,
+            color: color.text.secondary,
             whiteSpace: 'nowrap',
           }}
         >
           Showing {filtered.length} of {companies.length}
         </span>
 
-        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <Select
             value={typeFilter}
             onChange={(e) => setTypeFilter(e.target.value)}
@@ -117,7 +118,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             {
               header: 'Contact',
               accessor: (c) => c.contact_email || '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Status',

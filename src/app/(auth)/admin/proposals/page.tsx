@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
-import { font } from '@/lib/tokens';
+import { font, color } from '@/lib/tokens';
 
 export default async function ProposalsPage() {
   const supabase = createClient();
@@ -61,7 +61,7 @@ export default async function ProposalsPage() {
               accessor: (p) => (
                 <a
                   href={`/admin/companies/${p.companies.slug}`}
-                  style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
+                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
                 >
                   {p.companies.name}
                 </a>
@@ -72,7 +72,7 @@ export default async function ProposalsPage() {
               accessor: (p) => (
                 <a
                   href={`/admin/companies/${p.companies.slug}/proposals/${p.id}`}
-                  style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
+                  style={{ color: color.system.link, textDecoration: 'none' }}
                 >
                   {p.title}
                 </a>
@@ -81,7 +81,7 @@ export default async function ProposalsPage() {
             {
               header: 'Total',
               accessor: (p) => formatCurrency(p.total_amount_cents),
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Status',
@@ -90,12 +90,12 @@ export default async function ProposalsPage() {
             {
               header: 'Created',
               accessor: (p) => new Date(p.created_at).toLocaleDateString(),
-              style: { color: 'var(--_color---text--muted)', fontSize: font.size.body.xs },
+              style: { color: color.text.muted, fontSize: font.size.body.xs },
             },
             {
               header: 'Valid Until',
               accessor: (p) => p.valid_until ? new Date(p.valid_until).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--muted)', fontSize: font.size.body.xs },
+              style: { color: color.text.muted, fontSize: font.size.body.xs },
             },
           ]}
         />

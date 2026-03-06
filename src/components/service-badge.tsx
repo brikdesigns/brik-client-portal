@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { font, gap } from '@/lib/tokens';
 
 interface ServiceBadgeProps {
   category: string; // slug: brand, marketing, information, product, service
@@ -145,13 +146,13 @@ export function ServiceCategoryLabel({ category }: { category: string }) {
   const config = categoryConfig[category] ?? { token: 'orange', label: category };
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
       <ServiceBadge category={category} size={12} />
       <span
         style={{
-          fontFamily: 'var(--_typography---font-family--label)',
-          fontSize: '12px',
-          fontWeight: 500,
+          fontFamily: font.family.label,
+          fontSize: font.size.body.xs,
+          fontWeight: font.weight.medium,
           color: `var(--services--${config.token}-dark)`,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',

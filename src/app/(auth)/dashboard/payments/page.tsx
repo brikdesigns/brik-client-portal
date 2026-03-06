@@ -7,7 +7,7 @@ import { InvoiceStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { EmptyState } from '@/components/empty-state';
 import { getCurrentClientId } from '@/lib/current-client';
-import { font } from '@/lib/tokens';
+import { font, color, space } from '@/lib/tokens';
 
 export default async function PaymentsPage() {
   const supabase = createClient();
@@ -50,8 +50,8 @@ export default async function PaymentsPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: space.md,
+          marginBottom: space.xl,
         }}
       >
         <CardSummary label="Amount due" value={formatCurrency(totalDue)} />
@@ -67,7 +67,7 @@ export default async function PaymentsPage() {
             {
               header: 'Description',
               accessor: (inv) => inv.description || 'Invoice',
-              style: { color: 'var(--_color---text--primary)', fontWeight: 500 },
+              style: { color: color.text.primary, fontWeight: font.weight.medium },
             },
             {
               header: 'Date',
@@ -75,7 +75,7 @@ export default async function PaymentsPage() {
                 inv.invoice_date
                   ? new Date(inv.invoice_date).toLocaleDateString()
                   : '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Due',
@@ -83,12 +83,12 @@ export default async function PaymentsPage() {
                 inv.due_date
                   ? new Date(inv.due_date).toLocaleDateString()
                   : '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Amount',
               accessor: (inv) => formatCurrency(inv.amount_cents),
-              style: { color: 'var(--_color---text--primary)', fontWeight: 600 },
+              style: { color: color.text.primary, fontWeight: font.weight.semibold },
             },
             {
               header: 'Status',
@@ -103,8 +103,8 @@ export default async function PaymentsPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     style={{
-                      color: 'var(--_color---system--link, #0034ea)',
-                      fontFamily: 'var(--_typography---font-family--body)',
+                      color: color.system.link,
+                      fontFamily: font.family.body,
                       fontSize: font.size.body.xs,
                       textDecoration: 'none',
                     }}

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, border } from '@/lib/tokens';
 
 const SESSION_MESSAGES: Record<string, string> = {
   idle: 'You were signed out due to inactivity.',
@@ -77,20 +78,20 @@ export function LoginForm() {
       {sessionReason && SESSION_MESSAGES[sessionReason] && (
         <div
           style={{
-            backgroundColor: 'var(--_color---surface--secondary, #f5f5f5)',
-            border: '1px solid var(--_color---border--primary)',
-            borderRadius: 'var(--_border-radius---sm, 6px)',
-            padding: '12px 16px',
-            marginBottom: '16px',
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--sm)',
-            color: 'var(--_color---text--secondary)',
+            backgroundColor: color.surface.secondary,
+            border: `${border.width.sm} solid ${color.border.primary}`,
+            borderRadius: border.radius.sm,
+            padding: `${space.sm} ${space.md}`,
+            marginBottom: space.md,
+            fontFamily: font.family.body,
+            fontSize: font.size.body.sm,
+            color: color.text.secondary,
           }}
         >
           {SESSION_MESSAGES[sessionReason]}
         </div>
       )}
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: space.md }}>
         <TextInput
           label="Email"
           type="email"
@@ -102,7 +103,7 @@ export function LoginForm() {
         />
       </div>
 
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: space.lg }}>
         <TextInput
           label="Password"
           type="password"
@@ -125,13 +126,13 @@ export function LoginForm() {
         {loading ? 'Signing in...' : 'Sign in'}
       </Button>
 
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+      <div style={{ textAlign: 'center', marginTop: space.md }}>
         <a
           href="/forgot-password"
           style={{
-            color: 'var(--_color---system--link, #0034ea)',
-            fontSize: 'var(--_typography---body--sm)',
-            fontFamily: 'var(--_typography---font-family--body)',
+            color: color.system.link,
+            fontSize: font.size.body.sm,
+            fontFamily: font.family.body,
             textDecoration: 'none',
           }}
         >

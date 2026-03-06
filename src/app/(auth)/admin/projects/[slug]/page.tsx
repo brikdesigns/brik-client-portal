@@ -4,6 +4,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProjectStatusBadge } from '@/components/status-badges';
+import { font, color, space } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -35,7 +36,7 @@ export default async function ProjectDetailPage({ params }: Props) {
       value: client ? (
         <a
           href={`/admin/companies/${client.slug}`}
-          style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none' }}
+          style={{ color: color.system.link, textDecoration: 'none' }}
         >
           {client.name}
         </a>
@@ -78,13 +79,13 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* Notion link */}
       {project.notion_page_id && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <h2
             style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: 'var(--_typography---heading--small, 18px)',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
+              fontFamily: font.family.heading,
+              fontSize: font.size.heading.small,
+              fontWeight: font.weight.semibold,
+              color: color.text.primary,
               margin: '0 0 12px',
             }}
           >
@@ -95,9 +96,9 @@ export default async function ProjectDetailPage({ params }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
-              color: 'var(--_color---system--link, #0034ea)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.xs,
+              color: color.system.link,
               textDecoration: 'none',
             }}
           >
@@ -108,13 +109,13 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       {/* ClickUp link */}
       {project.clickup_task_id && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <h2
             style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: 'var(--_typography---heading--small, 18px)',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
+              fontFamily: font.family.heading,
+              fontSize: font.size.heading.small,
+              fontWeight: font.weight.semibold,
+              color: color.text.primary,
               margin: '0 0 12px',
             }}
           >
@@ -125,9 +126,9 @@ export default async function ProjectDetailPage({ params }: Props) {
             target="_blank"
             rel="noopener noreferrer"
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
-              color: 'var(--_color---system--link, #0034ea)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.xs,
+              color: color.system.link,
               textDecoration: 'none',
             }}
           >
@@ -140,30 +141,30 @@ export default async function ProjectDetailPage({ params }: Props) {
       <Card variant="elevated" padding="lg">
         <h2
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--small, 18px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.small,
+            fontWeight: font.weight.semibold,
+            color: color.text.primary,
             margin: '0 0 16px',
           }}
         >
           Details
         </h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
           <div>
             <p style={{
-              fontFamily: 'var(--_typography---font-family--label)',
-              fontSize: '12px',
-              fontWeight: 600,
-              color: 'var(--_color---text--secondary)',
+              fontFamily: font.family.label,
+              fontSize: font.size.body.xs,
+              fontWeight: font.weight.semibold,
+              color: color.text.secondary,
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
               margin: '0 0 4px',
             }}>Created</p>
             <p style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--primary)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.text.primary,
               margin: 0,
             }}>
               {new Date(project.created_at).toLocaleDateString()}
@@ -172,20 +173,20 @@ export default async function ProjectDetailPage({ params }: Props) {
           {project.description && (
             <div style={{ gridColumn: '1 / -1' }}>
               <p style={{
-                fontFamily: 'var(--_typography---font-family--label)',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--_color---text--secondary)',
+                fontFamily: font.family.label,
+                fontSize: font.size.body.xs,
+                fontWeight: font.weight.semibold,
+                color: color.text.secondary,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.5px',
                 margin: '0 0 4px',
               }}>Description</p>
               <p style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '14px',
-                color: 'var(--_color---text--primary)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                color: color.text.primary,
                 margin: 0,
-                lineHeight: 1.5,
+                lineHeight: font.lineHeight.normal,
               }}>
                 {project.description}
               </p>

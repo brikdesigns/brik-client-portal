@@ -13,6 +13,8 @@ import { ServiceBadge } from '@/components/service-badge';
 import { MeetingNotesPicker } from '@/components/meeting-notes-picker';
 import { ProposalSectionEditor, type ProposalSection } from '@/components/proposal-section-editor';
 import { formatCurrency } from '@/lib/format';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap, border } from '@/lib/tokens';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPlus, faWandMagicSparkles, faArrowRight, faArrowLeft, faCheck } from '@fortawesome/free-solid-svg-icons';
 
@@ -331,13 +333,7 @@ export default function NewProposalPage() {
 
   // --- Styling ---
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600 as const,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   const canProceedToStep2 = selectedServiceIds.size > 0;
   const canProceedToStep3 = sections.length > 0;
@@ -362,18 +358,18 @@ export default function NewProposalPage() {
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          marginBottom: '24px',
+          gap: gap.xs,
+          marginBottom: space.lg,
           maxWidth: '720px',
         }}
       >
         {([1, 2, 3] as Step[]).map((s) => (
-          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: s < 3 ? 1 : undefined }}>
+          <div key={s} style={{ display: 'flex', alignItems: 'center', gap: gap.xs, flex: s < 3 ? 1 : undefined }}>
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: gap.xs,
                 cursor: s < step ? 'pointer' : 'default',
                 opacity: s <= step ? 1 : 0.4,
               }}
@@ -387,21 +383,21 @@ export default function NewProposalPage() {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  fontFamily: 'var(--_typography---font-family--label)',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  backgroundColor: s <= step ? 'var(--_color---brand--primary)' : 'var(--_color---surface--tertiary)',
-                  color: s <= step ? '#fff' : 'var(--_color---text--muted)',
+                  fontFamily: font.family.label,
+                  fontSize: font.size.body.xs,
+                  fontWeight: font.weight.semibold,
+                  backgroundColor: s <= step ? color.brand.primary : color.surface.tertiary,
+                  color: s <= step ? '#fff' : color.text.muted,
                 }}
               >
                 {s < step ? <FontAwesomeIcon icon={faCheck} style={{ width: 10, height: 10 }} /> : s}
               </div>
               <span
                 style={{
-                  fontFamily: 'var(--_typography---font-family--label)',
-                  fontSize: '13px',
-                  fontWeight: s === step ? 600 : 400,
-                  color: s === step ? 'var(--_color---text--primary)' : 'var(--_color---text--muted)',
+                  fontFamily: font.family.label,
+                  fontSize: font.size.body.xs,
+                  fontWeight: s === step ? font.weight.semibold : font.weight.regular,
+                  color: s === step ? color.text.primary : color.text.muted,
                   whiteSpace: 'nowrap',
                 }}
               >
@@ -413,7 +409,7 @@ export default function NewProposalPage() {
                 style={{
                   flex: 1,
                   height: '1px',
-                  backgroundColor: s < step ? 'var(--_color---brand--primary)' : 'var(--_color---border--muted)',
+                  backgroundColor: s < step ? color.brand.primary : color.border.muted,
                 }}
               />
             )}
@@ -435,14 +431,14 @@ export default function NewProposalPage() {
           />
 
           {/* Service Selection */}
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
             <h2 style={{ ...sectionHeadingStyle }}>Select Services</h2>
             <p
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '14px',
-                color: 'var(--_color---text--muted)',
-                margin: '0 0 16px',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                color: color.text.muted,
+                margin: `0 0 ${space.md}`,
               }}
             >
               Choose the services to include in this proposal. These will be used for AI-generated content and line items.
@@ -451,15 +447,15 @@ export default function NewProposalPage() {
             {Object.entries(servicesByCategory).map(([categoryName, categoryServices]) => {
               const catSlug = categoryServices[0]?.service_categories?.slug;
               return (
-                <div key={categoryName} style={{ marginBottom: '16px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <div key={categoryName} style={{ marginBottom: space.md }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs, marginBottom: gap.xs }}>
                     {catSlug && <ServiceBadge category={catSlug} size={12} />}
                     <span
                       style={{
-                        fontFamily: 'var(--_typography---font-family--label)',
-                        fontSize: '12px',
-                        fontWeight: 600,
-                        color: 'var(--_color---text--secondary)',
+                        fontFamily: font.family.label,
+                        fontSize: font.size.body.xs,
+                        fontWeight: font.weight.semibold,
+                        color: color.text.secondary,
                         textTransform: 'uppercase' as const,
                         letterSpacing: '0.05em',
                       }}
@@ -478,27 +474,27 @@ export default function NewProposalPage() {
                             alignItems: 'center',
                             gap: '10px',
                             padding: '8px 12px',
-                            borderRadius: 'var(--_border-radius---sm)',
+                            borderRadius: border.radius.sm,
                             cursor: 'pointer',
-                            backgroundColor: isSelected ? 'var(--_color---surface--secondary)' : 'transparent',
+                            backgroundColor: isSelected ? color.surface.secondary : 'transparent',
                             border: isSelected
-                              ? 'var(--_border-width---sm) solid var(--_color---brand--primary)'
-                              : 'var(--_border-width---sm) solid transparent',
+                              ? `${border.width.sm} solid ${color.brand.primary}`
+                              : `${border.width.sm} solid transparent`,
                           }}
                         >
                           <input
                             type="checkbox"
                             checked={isSelected}
                             onChange={() => toggleService(svc.id)}
-                            style={{ accentColor: 'var(--_color---brand--primary)' }}
+                            style={{ accentColor: color.brand.primary }}
                           />
                           <div style={{ flex: 1 }}>
                             <span
                               style={{
-                                fontFamily: 'var(--_typography---font-family--body)',
-                                fontSize: '14px',
-                                fontWeight: isSelected ? 600 : 400,
-                                color: 'var(--_color---text--primary)',
+                                fontFamily: font.family.body,
+                                fontSize: font.size.body.sm,
+                                fontWeight: isSelected ? font.weight.semibold : font.weight.regular,
+                                color: color.text.primary,
                               }}
                             >
                               {svc.name}
@@ -506,9 +502,9 @@ export default function NewProposalPage() {
                             {svc.base_price_cents ? (
                               <span
                                 style={{
-                                  fontFamily: 'var(--_typography---font-family--body)',
-                                  fontSize: '13px',
-                                  color: 'var(--_color---text--muted)',
+                                  fontFamily: font.family.body,
+                                  fontSize: font.size.body.xs,
+                                  color: color.text.muted,
                                   marginLeft: '8px',
                                 }}
                               >
@@ -528,10 +524,10 @@ export default function NewProposalPage() {
             {selectedServiceIds.size > 0 && (
               <p
                 style={{
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '13px',
-                  color: 'var(--_color---text--secondary)',
-                  margin: '16px 0 0',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.xs,
+                  color: color.text.secondary,
+                  margin: `${space.md} 0 0`,
                 }}
               >
                 {selectedServiceIds.size} service{selectedServiceIds.size !== 1 ? 's' : ''} selected
@@ -542,10 +538,10 @@ export default function NewProposalPage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--sm)',
-                margin: '0 0 16px',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                margin: `0 0 ${space.md}`,
                 maxWidth: '720px',
               }}
             >
@@ -554,7 +550,7 @@ export default function NewProposalPage() {
           )}
 
           {/* Step 1 Actions */}
-          <div style={{ display: 'flex', gap: '12px', maxWidth: '720px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: gap.sm, maxWidth: '720px', justifyContent: 'flex-end' }}>
             <a href={`/admin/companies/${slug}`}>
               <Button type="button" variant="outline" size="md">
                 Cancel
@@ -600,10 +596,10 @@ export default function NewProposalPage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--sm)',
-                margin: '0 0 16px',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                margin: `0 0 ${space.md}`,
                 maxWidth: '720px',
               }}
             >
@@ -611,7 +607,7 @@ export default function NewProposalPage() {
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', maxWidth: '720px', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: gap.sm, maxWidth: '720px', justifyContent: 'space-between' }}>
             <Button type="button" variant="outline" size="md" onClick={() => setStep(1)}>
               <FontAwesomeIcon icon={faArrowLeft} style={iconSize} /> Back
             </Button>
@@ -631,8 +627,8 @@ export default function NewProposalPage() {
       {/* ═══ STEP 3: Review & Save ═══ */}
       {step === 3 && (
         <form onSubmit={handleSubmit}>
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
               <TextInput
                 label="Proposal Title"
                 type="text"
@@ -651,8 +647,8 @@ export default function NewProposalPage() {
             </div>
           </Card>
 
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
               <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
               <Button type="button" variant="secondary" size="sm" onClick={addItem}>
                 <FontAwesomeIcon icon={faPlus} style={iconSize} /> Add Item
@@ -662,17 +658,17 @@ export default function NewProposalPage() {
             {items.length === 0 ? (
               <p
                 style={{
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '14px',
-                  color: 'var(--_color---text--muted)',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.sm,
+                  color: color.text.muted,
                   textAlign: 'center',
-                  padding: '24px 0',
+                  padding: `${space.lg} 0`,
                 }}
               >
                 No line items yet. Click &quot;Add Item&quot; to add services to this proposal.
               </p>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
                 {items.map((item) => {
                   const selectedService = services.find((s) => s.id === item.service_id);
                   const categorySlug = selectedService?.service_categories?.slug;
@@ -682,12 +678,12 @@ export default function NewProposalPage() {
                       key={item.key}
                       style={{
                         display: 'flex',
-                        gap: '12px',
+                        gap: gap.sm,
                         alignItems: 'flex-start',
-                        padding: '16px',
-                        border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
-                        borderRadius: 'var(--_border-radius---md)',
-                        backgroundColor: 'var(--_color---surface--secondary)',
+                        padding: space.md,
+                        border: `${border.width.sm} solid ${color.border.muted}`,
+                        borderRadius: border.radius.md,
+                        backgroundColor: color.surface.secondary,
                       }}
                     >
                       {categorySlug && (
@@ -695,7 +691,7 @@ export default function NewProposalPage() {
                           <ServiceBadge category={categorySlug} size={16} />
                         </div>
                       )}
-                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: gap.sm }}>
                         <Select
                           label="Service"
                           value={item.service_id}
@@ -722,7 +718,7 @@ export default function NewProposalPage() {
                           placeholder="Optional description"
                           fullWidth
                         />
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.sm }}>
                           <TextInput
                             label="Qty"
                             type="number"
@@ -740,9 +736,9 @@ export default function NewProposalPage() {
                         </div>
                         <p
                           style={{
-                            fontFamily: 'var(--_typography---font-family--body)',
-                            fontSize: '13px',
-                            color: 'var(--_color---text--secondary)',
+                            fontFamily: font.family.body,
+                            fontSize: font.size.body.xs,
+                            color: color.text.secondary,
                             margin: 0,
                             textAlign: 'right',
                           }}
@@ -757,9 +753,9 @@ export default function NewProposalPage() {
                           background: 'none',
                           border: 'none',
                           cursor: 'pointer',
-                          color: 'var(--_color---text--muted)',
+                          color: color.text.muted,
                           padding: '4px',
-                          marginTop: '24px',
+                          marginTop: space.lg,
                         }}
                         aria-label="Remove item"
                       >
@@ -773,16 +769,16 @@ export default function NewProposalPage() {
                   style={{
                     display: 'flex',
                     justifyContent: 'flex-end',
-                    paddingTop: '8px',
-                    borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+                    paddingTop: gap.xs,
+                    borderTop: `${border.width.sm} solid ${color.border.muted}`,
                   }}
                 >
                   <p
                     style={{
-                      fontFamily: 'var(--_typography---font-family--heading)',
-                      fontSize: 'var(--_typography---heading--small, 18px)',
-                      fontWeight: 600,
-                      color: 'var(--_color---text--primary)',
+                      fontFamily: font.family.heading,
+                      fontSize: font.size.heading.small,
+                      fontWeight: font.weight.semibold,
+                      color: color.text.primary,
                       margin: 0,
                     }}
                   >
@@ -806,10 +802,10 @@ export default function NewProposalPage() {
             {error && (
               <p
                 style={{
-                  color: 'var(--system--red, #eb5757)',
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: 'var(--_typography---body--sm)',
-                  margin: 'var(--_space---lg) 0 0',
+                  color: color.system.red,
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.sm,
+                  margin: `${space.lg} 0 0`,
                 }}
               >
                 {error}
@@ -819,8 +815,8 @@ export default function NewProposalPage() {
             <div
               style={{
                 display: 'flex',
-                gap: 'var(--_space---gap--md)',
-                marginTop: 'var(--_space---xl)',
+                gap: gap.md,
+                marginTop: space.xl,
                 justifyContent: 'space-between',
               }}
             >

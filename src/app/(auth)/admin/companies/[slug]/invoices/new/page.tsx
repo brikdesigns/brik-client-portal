@@ -7,6 +7,8 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap } from '@/lib/tokens';
 
 export default function NewInvoicePage() {
   const params = useParams();
@@ -75,24 +77,16 @@ export default function NewInvoicePage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: 0,
-          }}
-        >
+      <div style={{ marginBottom: space.xl }}>
+        <h1 style={heading.page}>
           Add invoice
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${gap.xs} 0 0`,
           }}
         >
           Create a new invoice for this client.
@@ -101,7 +95,7 @@ export default function NewInvoicePage() {
 
       <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
             <TextInput
               label="Description"
               type="text"
@@ -110,7 +104,7 @@ export default function NewInvoicePage() {
               onChange={(e) => setDescription(e.target.value)}
               fullWidth
             />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
               <TextInput
                 label="Amount (USD)"
                 type="number"
@@ -132,7 +126,7 @@ export default function NewInvoicePage() {
                 fullWidth
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
               <TextInput
                 label="Invoice date"
                 type="date"
@@ -161,17 +155,17 @@ export default function NewInvoicePage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                margin: '16px 0 0',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                margin: `${space.md} 0 0`,
               }}
             >
               {error}
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
             <Button type="submit" variant="primary" size="md" disabled={loading}>
               {loading ? 'Creating...' : 'Create invoice'}
             </Button>

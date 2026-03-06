@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { font, color } from '@/lib/tokens';
 
 export function SignOutButton() {
   const router = useRouter();
@@ -17,9 +18,9 @@ export function SignOutButton() {
     <button
       onClick={handleSignOut}
       style={{
-        fontFamily: 'var(--_typography---font-family--body)',
-        fontSize: '13px',
-        color: 'var(--_color---text--secondary, #828282)',
+        fontFamily: font.family.body,
+        fontSize: font.size.body.xs,
+        color: color.text.secondary,
         background: 'none',
         border: 'none',
         padding: 0,

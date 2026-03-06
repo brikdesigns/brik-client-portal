@@ -6,6 +6,7 @@ import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
+import { font, color } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -91,7 +92,7 @@ export default async function ClientReportListPage({ params }: Props) {
               accessor: (r) => (
                 <a
                   href={`/admin/reporting/${slug}/${r.report_type}`}
-                  style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
+                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
                 >
                   {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
                 </a>
@@ -111,7 +112,7 @@ export default async function ClientReportListPage({ params }: Props) {
                 r.score !== null && r.max_score !== null
                   ? `${r.score} / ${r.max_score}`
                   : '—',
-              style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+              style: { color: color.text.secondary, fontSize: font.size.body.xs },
             },
             {
               header: '',

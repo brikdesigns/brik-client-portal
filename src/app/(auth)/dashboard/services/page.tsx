@@ -7,6 +7,7 @@ import { ServiceStatusBadge } from '@/components/status-badges';
 import { EmptyState } from '@/components/empty-state';
 import { formatCurrency } from '@/lib/format';
 import { getCurrentClientId } from '@/lib/current-client';
+import { font, color, space, gap } from '@/lib/tokens';
 
 export default async function ServicesPage() {
   const supabase = createClient();
@@ -69,8 +70,8 @@ export default async function ServicesPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: space.md,
+          marginBottom: space.xl,
         }}
       >
         <CardSummary label="Total services" value={services.length} />
@@ -82,7 +83,7 @@ export default async function ServicesPage() {
       </div>
 
       {services.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm }}>
           {services.map((cs) => {
             const svc = cs.services as unknown as {
               id: string;
@@ -100,7 +101,7 @@ export default async function ServicesPage() {
               <Card key={cs.id} variant="elevated" padding="lg">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: gap.sm, marginBottom: gap.xs }}>
                       {svc.service_categories && (
                         <ServiceCategoryLabel category={svc.service_categories.slug} />
                       )}
@@ -108,10 +109,10 @@ export default async function ServicesPage() {
                     </div>
                     <h2
                       style={{
-                        fontFamily: 'var(--_typography---font-family--heading)',
-                        fontSize: 'var(--_typography---heading--small, 18px)',
-                        fontWeight: 600,
-                        color: 'var(--_color---text--primary)',
+                        fontFamily: font.family.heading,
+                        fontSize: font.size.heading.small,
+                        fontWeight: font.weight.semibold,
+                        color: color.text.primary,
                         margin: 0,
                       }}
                     >
@@ -120,11 +121,11 @@ export default async function ServicesPage() {
                     {svc.description && (
                       <p
                         style={{
-                          fontFamily: 'var(--_typography---font-family--body)',
-                          fontSize: '14px',
-                          color: 'var(--_color---text--secondary)',
-                          margin: '8px 0 0',
-                          lineHeight: 1.5,
+                          fontFamily: font.family.body,
+                          fontSize: font.size.body.sm,
+                          color: color.text.secondary,
+                          margin: `${gap.xs} 0 0`,
+                          lineHeight: font.lineHeight.normal,
                         }}
                       >
                         {svc.description}
@@ -133,24 +134,24 @@ export default async function ServicesPage() {
                     {cs.started_at && (
                       <p
                         style={{
-                          fontFamily: 'var(--_typography---font-family--body)',
-                          fontSize: '13px',
-                          color: 'var(--_color---text--muted)',
-                          margin: '8px 0 0',
+                          fontFamily: font.family.body,
+                          fontSize: font.size.body.xs,
+                          color: color.text.muted,
+                          margin: `${gap.xs} 0 0`,
                         }}
                       >
                         Since {new Date(cs.started_at).toLocaleDateString()}
                       </p>
                     )}
                   </div>
-                  <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: '24px' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: space.lg }}>
                     {svc.base_price_cents && (
                       <p
                         style={{
-                          fontFamily: 'var(--_typography---font-family--heading)',
-                          fontSize: '16px',
-                          fontWeight: 600,
-                          color: 'var(--_color---text--primary)',
+                          fontFamily: font.family.heading,
+                          fontSize: font.size.body.md,
+                          fontWeight: font.weight.semibold,
+                          color: color.text.primary,
                           margin: 0,
                         }}
                       >
@@ -158,9 +159,9 @@ export default async function ServicesPage() {
                         {svc.billing_frequency === 'monthly' && (
                           <span
                             style={{
-                              fontSize: '12px',
-                              fontWeight: 400,
-                              color: 'var(--_color---text--muted)',
+                              fontSize: font.size.body.xs,
+                              fontWeight: font.weight.regular,
+                              color: color.text.muted,
                             }}
                           >
                             /mo
@@ -170,10 +171,10 @@ export default async function ServicesPage() {
                     )}
                     <p
                       style={{
-                        fontFamily: 'var(--_typography---font-family--label)',
-                        fontSize: '11px',
-                        color: 'var(--_color---text--muted)',
-                        margin: '4px 0 0',
+                        fontFamily: font.family.label,
+                        fontSize: font.size.body.tiny,
+                        color: color.text.muted,
+                        margin: `${gap.tiny} 0 0`,
                         textTransform: 'capitalize',
                       }}
                     >

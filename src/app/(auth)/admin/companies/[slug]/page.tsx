@@ -26,7 +26,8 @@ import { RunAnalysisButton } from '@/components/run-analysis-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
-import { font } from '@/lib/tokens';
+import { font, color, gap, space } from '@/lib/tokens';
+import { heading } from '@/lib/styles';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -166,52 +167,46 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const activeTab = tab && tabs.some((t) => t.key === tab) ? tab : 'overview';
 
   const tabStyle = (active: boolean) => ({
-    fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
+    fontFamily: font.family.label,
     fontSize: font.size.body.md,
-    fontWeight: 600,
-    color: active ? 'var(--brand--primary, #E35335)' : 'var(--_color---text--secondary)',
+    fontWeight: font.weight.semibold,
+    color: active ? color.text.brand : color.text.secondary,
     textDecoration: 'none' as const,
-    padding: '8px 0',
-    borderBottom: active ? '2px solid var(--brand--primary, #E35335)' : '2px solid transparent',
-    display: 'inline-block',
+    padding: `${gap.sm} 0`,
+    borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
+    display: 'inline-block' as const,
   });
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   const sectionLabelStyle = {
-    fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
+    fontFamily: font.family.label,
     fontSize: font.size.body.lg,
-    fontWeight: 600,
-    color: 'var(--_color---text--accent, #adaaa0)',
+    fontWeight: font.weight.semibold,
+    color: color.text.muted,
     margin: 0,
-    paddingTop: '32px',
+    paddingTop: space.xl,
   };
 
   const fieldLabelStyle = {
-    fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
+    fontFamily: font.family.label,
     fontSize: font.size.body.sm,
-    fontWeight: 600,
-    color: 'var(--_color---text--secondary)',
+    fontWeight: font.weight.semibold,
+    color: color.text.muted,
     margin: 0,
   };
 
   const fieldValueStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
+    fontFamily: font.family.body,
     fontSize: font.size.body.sm,
-    color: 'var(--_color---text--primary)',
+    color: color.text.primary,
     margin: 0,
   };
 
   const linkStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
+    fontFamily: font.family.body,
     fontSize: font.size.body.xs,
-    color: 'var(--_color---system--link, #0034ea)',
+    color: color.system.link,
     textDecoration: 'none' as const,
   };
 
@@ -228,17 +223,17 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           />
         }
         actions={
-          <div style={{ display: 'flex', gap: 'var(--_space---gap--md)' }}>
+          <div style={{ display: 'flex', gap: gap.md }}>
             <DeleteCompanyButton companyId={client.id} companyName={client.name} />
+            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
+              Edit
+            </Button>
             {companyType === 'lead' && <QualifyLeadButton companyId={client.id} />}
             {companyType === 'prospect' && (
               <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}?tab=onboarding`}>
                 Onboard Prospect
               </Button>
             )}
-            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
-              Edit
-            </Button>
           </div>
         }
         metadata={[
@@ -270,7 +265,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         style={{
           display: 'flex',
           gap: '24px',
-          borderBottom: '1px solid var(--_color---border--primary)',
+          borderBottom: `1px solid ${color.border.primary}`,
           marginBottom: '24px',
         }}
       >
@@ -329,7 +324,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldLabelStyle}>Website</p>
               <p style={fieldValueStyle}>
                 {client.website_url ? (
-                  <a href={client.website_url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}>
+                  <a href={client.website_url} target="_blank" rel="noopener noreferrer" style={{ color: color.system.link, textDecoration: 'none' }}>
                     {client.website_url}
                   </a>
                 ) : '—'}
@@ -397,9 +392,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={sectionLabelStyle}>Notes</p>
               <p
                 style={{
-                  fontFamily: 'var(--_typography---font-family--body)',
+                  fontFamily: font.family.body,
                   fontSize: font.size.body.sm,
-                  color: 'var(--_color---text--secondary)',
+                  color: color.text.secondary,
                   margin: 0,
                   lineHeight: font.lineHeight.relaxed,
                   whiteSpace: 'pre-wrap',
@@ -432,7 +427,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   accessor: (r) => (
                     <a
                       href={`/admin/reporting/${client.slug}/${r.report_type}`}
-                      style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
+                      style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
                     >
                       {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
                     </a>
@@ -452,7 +447,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     r.score !== null && r.max_score !== null
                       ? `${r.score} / ${r.max_score}`
                       : '—',
-                  style: { color: 'var(--_color---text--secondary)', fontSize: font.size.body.xs },
+                  style: { color: color.text.secondary, fontSize: font.size.body.xs },
                 },
                 {
                   header: '',
@@ -471,7 +466,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
       {/* ── Onboarding Tab (prospects only) ────────────────────── */}
       {activeTab === 'onboarding' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           <CardControl
             title="Proposal"
             description={
@@ -545,7 +540,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   cs.services ? (
                     <a
                       href={`/admin/services/${cs.services.slug}`}
-                      style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
+                      style={{ color: color.text.primary, textDecoration: 'none' }}
                     >
                       {cs.services.name}
                     </a>
@@ -563,7 +558,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   cs.services?.base_price_cents
                     ? `${formatCurrency(cs.services.base_price_cents)}${cs.services.billing_frequency === 'monthly' ? '/mo' : ''}`
                     : '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
               {
                 header: 'Status',
@@ -589,7 +584,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Name',
                 accessor: (p) => p.name,
-                style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
+                style: { fontWeight: font.weight.medium, color: color.text.primary },
               },
               {
                 header: 'Status',
@@ -598,12 +593,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Start',
                 accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
               {
                 header: 'End',
                 accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
             ]}
           />
@@ -625,7 +620,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Description',
                 accessor: (inv) => inv.description || 'Invoice',
-                style: { fontWeight: 500, color: 'var(--_color---text--primary)' },
+                style: { fontWeight: font.weight.medium, color: color.text.primary },
               },
               {
                 header: 'Amount',
@@ -634,7 +629,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Due',
                 accessor: (inv) => inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
               {
                 header: 'Status',
@@ -674,33 +669,33 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Name',
                 accessor: (c) => (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 500, color: 'var(--_color---text--primary)' }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: font.weight.medium, color: color.text.primary }}>
                     {c.full_name}
                     {c.is_primary && (
-                      <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>Primary</Tag>
+                      <Tag size="sm" style={{ color: color.text.muted }}>Primary</Tag>
                     )}
                   </span>
                 ),
               },
               {
-                header: 'Title',
+                header: 'Job Title',
                 accessor: (c) => c.title || '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary, minWidth: '120px' },
               },
               {
                 header: 'Email',
                 accessor: (c) => c.email || '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
               {
                 header: 'Phone',
                 accessor: (c) => c.phone || '—',
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
               {
                 header: 'Role',
                 accessor: (c) => (
-                  <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>
+                  <Tag size="sm" style={{ color: color.text.muted }}>
                     {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
                   </Tag>
                 ),

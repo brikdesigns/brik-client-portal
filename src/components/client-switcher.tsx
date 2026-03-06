@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faCheck, faBuilding } from '@fortawesome/free-solid-svg-icons';
+import { font, color, border } from '@/lib/tokens';
 
 interface ClientSwitcherProps {
   clients: Array<{ id: string; name: string }>;
@@ -54,29 +55,29 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
           alignItems: 'center',
           gap: '8px',
           padding: '6px 12px',
-          backgroundColor: 'var(--_color---surface--secondary)',
-          border: '1px solid var(--_color---border--secondary)',
-          borderRadius: '6px',
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: '13px',
-          fontWeight: 500,
-          color: 'var(--_color---text--primary)',
+          backgroundColor: color.surface.secondary,
+          border: `${border.width.sm} solid ${color.border.secondary}`,
+          borderRadius: border.radius.sm,
+          fontFamily: font.family.body,
+          fontSize: font.size.body.sm,
+          fontWeight: font.weight.medium,
+          color: color.text.primary,
           cursor: 'pointer',
           transition: 'background-color 0.15s, border-color 0.15s',
         }}
         onMouseEnter={(e) => {
-          e.currentTarget.style.borderColor = 'var(--_color---border--primary)';
+          e.currentTarget.style.borderColor = color.border.primary;
         }}
         onMouseLeave={(e) => {
-          e.currentTarget.style.borderColor = 'var(--_color---border--secondary)';
+          e.currentTarget.style.borderColor = color.border.secondary;
         }}
       >
-        <FontAwesomeIcon icon={faBuilding} style={{ fontSize: '12px' }} />
+        <FontAwesomeIcon icon={faBuilding} style={{ fontSize: font.size.body.xs }} />
         <span>{displayName}</span>
         <FontAwesomeIcon
           icon={faChevronDown}
           style={{
-            fontSize: '10px',
+            fontSize: font.size.body.tiny,
             transition: 'transform 0.15s',
             transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
@@ -92,9 +93,9 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
             minWidth: '200px',
             maxHeight: '300px',
             overflowY: 'auto',
-            backgroundColor: 'var(--_color---surface--primary)',
-            border: '1px solid var(--_color---border--secondary)',
-            borderRadius: '8px',
+            backgroundColor: color.surface.primary,
+            border: `${border.width.sm} solid ${color.border.secondary}`,
+            borderRadius: border.radius.md,
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             padding: '4px 0',
             zIndex: 1000,
@@ -112,19 +113,19 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
                   justifyContent: 'space-between',
                   gap: '8px',
                   padding: '8px 12px',
-                  backgroundColor: currentClientId === null ? 'var(--_color---page--secondary)' : 'transparent',
+                  backgroundColor: currentClientId === null ? color.page.secondary : 'transparent',
                   border: 'none',
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '13px',
-                  fontWeight: currentClientId === null ? 600 : 400,
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.sm,
+                  fontWeight: currentClientId === null ? font.weight.semibold : font.weight.regular,
+                  color: color.text.primary,
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'background-color 0.15s',
                 }}
                 onMouseEnter={(e) => {
                   if (currentClientId !== null) {
-                    e.currentTarget.style.backgroundColor = 'var(--_color---page--secondary)';
+                    e.currentTarget.style.backgroundColor = color.page.secondary;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -135,13 +136,13 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
               >
                 <span>All Clients (Admin)</span>
                 {currentClientId === null && (
-                  <FontAwesomeIcon icon={faCheck} style={{ fontSize: '12px', color: 'var(--_color---text--brand)' }} />
+                  <FontAwesomeIcon icon={faCheck} style={{ fontSize: font.size.body.xs, color: color.text.brand }} />
                 )}
               </button>
               <div
                 style={{
                   height: '1px',
-                  backgroundColor: 'var(--_color---border--secondary)',
+                  backgroundColor: color.border.secondary,
                   margin: '4px 0',
                 }}
               />
@@ -162,19 +163,19 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
                   justifyContent: 'space-between',
                   gap: '8px',
                   padding: '8px 12px',
-                  backgroundColor: isCurrent ? 'var(--_color---page--secondary)' : 'transparent',
+                  backgroundColor: isCurrent ? color.page.secondary : 'transparent',
                   border: 'none',
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '13px',
-                  fontWeight: isCurrent ? 600 : 400,
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.sm,
+                  fontWeight: isCurrent ? font.weight.semibold : font.weight.regular,
+                  color: color.text.primary,
                   textAlign: 'left',
                   cursor: 'pointer',
                   transition: 'background-color 0.15s',
                 }}
                 onMouseEnter={(e) => {
                   if (!isCurrent) {
-                    e.currentTarget.style.backgroundColor = 'var(--_color---page--secondary)';
+                    e.currentTarget.style.backgroundColor = color.page.secondary;
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -185,7 +186,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
               >
                 <span>{client.name}</span>
                 {isCurrent && (
-                  <FontAwesomeIcon icon={faCheck} style={{ fontSize: '12px', color: 'var(--_color---text--brand)' }} />
+                  <FontAwesomeIcon icon={faCheck} style={{ fontSize: font.size.body.xs, color: color.text.brand }} />
                 )}
               </button>
             );

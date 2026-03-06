@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space } from '@/lib/tokens';
 
 export function ForgotPasswordForm() {
   const [email, setEmail] = useState('');
@@ -40,11 +41,11 @@ export function ForgotPasswordForm() {
       <div style={{ textAlign: 'center' }}>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: '14px',
-            color: 'var(--_color---text--primary)',
-            marginBottom: '24px',
-            lineHeight: 1.6,
+            fontFamily: font.family.body,
+            fontSize: font.size.body.sm,
+            color: color.text.primary,
+            marginBottom: space.lg,
+            lineHeight: font.lineHeight.relaxed,
           }}
         >
           Check your email for a password reset link. It may take a minute to arrive.
@@ -52,9 +53,9 @@ export function ForgotPasswordForm() {
         <a
           href="/login"
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: '14px',
-            color: 'var(--_color---system--link, #0034ea)',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.sm,
+            color: color.system.link,
             textDecoration: 'none',
           }}
         >
@@ -66,7 +67,7 @@ export function ForgotPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: space.lg }}>
         <TextInput
           label="Email"
           type="email"
@@ -83,13 +84,13 @@ export function ForgotPasswordForm() {
         {loading ? 'Sending...' : 'Send reset link'}
       </Button>
 
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+      <div style={{ textAlign: 'center', marginTop: space.md }}>
         <a
           href="/login"
           style={{
-            color: 'var(--_color---system--link, #0034ea)',
-            fontSize: 'var(--_typography---body--sm)',
-            fontFamily: 'var(--_typography---font-family--body)',
+            color: color.system.link,
+            fontSize: font.size.body.sm,
+            fontFamily: font.family.body,
             textDecoration: 'none',
           }}
         >

@@ -14,7 +14,7 @@
 
 import ReactMarkdown from 'react-markdown';
 import { text, heading, list } from '@/lib/styles';
-import { font, color, space, gap } from '@/lib/tokens';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 interface ProseProps {
   content: string;
@@ -66,7 +66,7 @@ export function Prose({ content }: ProseProps) {
           hr: () => (
             <hr style={{
               border: 'none',
-              borderTop: `var(--_border-width---sm) solid ${color.border.muted}`,
+              borderTop: `${border.width.sm} solid ${color.border.muted}`,
               margin: `${space.lg} 0`,
             }} />
           ),

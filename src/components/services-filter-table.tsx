@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { Select } from '@bds/components/ui/Select/Select';
 
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { ServiceBadge } from './service-badge';
 import { ServiceTypeTag, CompanyStatusBadge } from './status-badges';
@@ -71,23 +72,23 @@ export function ServicesFilterTable({
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '12px',
-          marginBottom: '16px',
+          gap: gap.sm,
+          marginBottom: space.md,
           flexWrap: 'wrap',
         }}
       >
         <span
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--sm)',
-            color: 'var(--_color---text--secondary)',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.sm,
+            color: color.text.secondary,
             whiteSpace: 'nowrap',
           }}
         >
           Showing {filtered.length} of {services.length}
         </span>
 
-        <div style={{ display: 'flex', gap: '8px', marginLeft: 'auto', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <Select
             value={categoryFilter}
             onChange={(e) => setCategoryFilter(e.target.value)}
@@ -148,7 +149,7 @@ export function ServicesFilterTable({
             {
               header: 'Category',
               accessor: (s) => s.category?.name ?? '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Type',
@@ -160,12 +161,12 @@ export function ServicesFilterTable({
                 s.base_price_cents
                   ? `${formatCurrency(s.base_price_cents)}${s.billing_frequency === 'monthly' ? '/mo' : ''}`
                   : '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Clients',
               accessor: (s) => s.client_count,
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Status',
@@ -183,8 +184,8 @@ export function ServicesFilterTable({
                     height: '8px',
                     borderRadius: '50%',
                     backgroundColor: s.stripe_product_id
-                      ? 'var(--services--green-dark, #4caf50)'
-                      : 'var(--_color---border--secondary)',
+                      ? color.system.green
+                      : color.border.secondary,
                   }}
                   title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
                 />

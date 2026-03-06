@@ -142,14 +142,16 @@ export const list = {
   ul: {
     margin: `0 0 ${gap.md}`,
     paddingLeft: space.lg,
+    listStyleType: 'disc',
     fontFamily: font.family.body,
     fontSize: font.size.body.md,
     lineHeight: font.lineHeight.normal,
     color: color.text.secondary,
   } satisfies CSSProperties,
 
-  /** Standard list item */
+  /** Standard list item (fontSize: inherit overrides BDS webflow.css li{font-size:14px}) */
   li: {
+    fontSize: 'inherit',
     marginBottom: gap.xs,
   } satisfies CSSProperties,
 } as const;

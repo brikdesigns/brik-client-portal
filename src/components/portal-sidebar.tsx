@@ -9,6 +9,7 @@ import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ClientSwitcher } from '@/components/client-switcher';
 import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
+import { font, color, gap } from '@/lib/tokens';
 
 const adminNavItems = [
   { label: 'Overview', href: '/admin' },
@@ -115,7 +116,7 @@ export function PortalSidebar({
         }
         navItems={navItems}
         footerActions={
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
             {role === 'client' && clients.length > 1 && (
               <ClientSwitcher
                 clients={clients}
@@ -130,10 +131,10 @@ export function PortalSidebar({
           <>
             <p
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                color: 'var(--_color---text--secondary)',
-                margin: '0 0 8px',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                color: color.text.secondary,
+                margin: `0 0 ${gap.xs}`,
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -141,7 +142,7 @@ export function PortalSidebar({
             >
               {userName}
             </p>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
               <SignOutButton />
               <ThemeToggle />
             </div>

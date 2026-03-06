@@ -7,6 +7,8 @@ import { Tag } from '@bds/components/ui/Tag/Tag';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { AgreementStatusBadge } from '@/components/status-badges';
+import { heading } from '@/lib/styles';
+import { font, color, space } from '@/lib/tokens';
 
 export default async function AdminAgreementsPage() {
   const supabase = createClient();
@@ -42,8 +44,8 @@ export default async function AdminAgreementsPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
+          gap: space.md,
+          marginBottom: space.lg,
         }}
       >
         <CardSummary label="Draft" value={draft.length} />
@@ -54,16 +56,8 @@ export default async function AdminAgreementsPage() {
 
       {/* Pending agreements */}
       {pending.length > 0 && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-          <h2
-            style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: '18px',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
-              margin: '0 0 16px',
-            }}
-          >
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
+          <h2 style={heading.section}>
             Pending signature
           </h2>
           <DataTable<AgreementRow>
@@ -81,12 +75,12 @@ export default async function AdminAgreementsPage() {
                     </TextLink>
                   ) : '—';
                 },
-                style: { fontWeight: 500 },
+                style: { fontWeight: font.weight.medium },
               },
               {
                 header: 'Title',
                 accessor: (a) => a.title,
-                style: { color: 'var(--_color---text--primary)' },
+                style: { color: color.text.primary },
               },
               {
                 header: 'Type',
@@ -99,7 +93,7 @@ export default async function AdminAgreementsPage() {
               {
                 header: 'Created',
                 accessor: (a) => new Date(a.created_at).toLocaleDateString(),
-                style: { color: 'var(--_color---text--secondary)' },
+                style: { color: color.text.secondary },
               },
               {
                 header: '',
@@ -120,15 +114,7 @@ export default async function AdminAgreementsPage() {
 
       {/* All agreements */}
       <Card variant="elevated" padding="lg">
-        <h2
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: '18px',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: '0 0 16px',
-          }}
-        >
+        <h2 style={heading.section}>
           All agreements
         </h2>
         <DataTable<AgreementRow>
@@ -146,12 +132,12 @@ export default async function AdminAgreementsPage() {
                   </TextLink>
                 ) : '—';
               },
-              style: { fontWeight: 500 },
+              style: { fontWeight: font.weight.medium },
             },
             {
               header: 'Title',
               accessor: (a) => a.title,
-              style: { color: 'var(--_color---text--primary)' },
+              style: { color: color.text.primary },
             },
             {
               header: 'Type',
@@ -164,12 +150,12 @@ export default async function AdminAgreementsPage() {
             {
               header: 'Created',
               accessor: (a) => new Date(a.created_at).toLocaleDateString(),
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Signed by',
               accessor: (a) => a.signed_by_name || '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: '',

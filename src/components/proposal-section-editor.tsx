@@ -8,6 +8,8 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faRotateRight, faEye, faEdit } from '@fortawesome/free-solid-svg-icons';
 import ReactMarkdown from 'react-markdown';
+import { font, color, space, gap, border } from '@/lib/tokens';
+import { label as labelStyle } from '@/lib/styles';
 
 export interface ProposalSection {
   type: string;
@@ -40,7 +42,7 @@ export function ProposalSectionEditor({
   const isFeeSection = section.type === 'fee_summary';
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '16px' }}>
+    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.md }}>
       <div
         style={{
           display: 'flex',
@@ -50,31 +52,28 @@ export function ProposalSectionEditor({
         }}
         onClick={() => setCollapsed(!collapsed)}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: gap.sm }}>
           <span
             style={{
-              fontFamily: 'var(--_typography---font-family--label)',
-              fontSize: '11px',
-              fontWeight: 600,
-              color: 'var(--_color---text--muted)',
-              textTransform: 'uppercase' as const,
-              letterSpacing: '0.05em',
+              ...labelStyle.subtitle,
+              fontSize: font.size.body.xs,
+              color: color.text.muted,
             }}
           >
             {sectionLabel}
           </span>
           <span
             style={{
-              fontFamily: 'var(--_typography---font-family--heading)',
-              fontSize: 'var(--_typography---heading--small, 18px)',
-              fontWeight: 600,
-              color: 'var(--_color---text--primary)',
+              fontFamily: font.family.heading,
+              fontSize: font.size.heading.small,
+              fontWeight: font.weight.semibold,
+              color: color.text.primary,
             }}
           >
             {section.title}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
           {!isFeeSection && !collapsed && (
             <>
               <Button
@@ -108,14 +107,14 @@ export function ProposalSectionEditor({
           )}
           <FontAwesomeIcon
             icon={collapsed ? faChevronDown : faChevronUp}
-            style={{ ...iconSize, color: 'var(--_color---text--muted)' }}
+            style={{ ...iconSize, color: color.text.muted }}
           />
         </div>
       </div>
 
       {!collapsed && !isFeeSection && (
-        <div style={{ marginTop: '16px' }}>
-          <div style={{ marginBottom: '12px' }}>
+        <div style={{ marginTop: space.md }}>
+          <div style={{ marginBottom: space.sm }}>
             <TextInput
               label="Section Title"
               type="text"
@@ -128,13 +127,13 @@ export function ProposalSectionEditor({
           {preview ? (
             <div
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '14px',
-                lineHeight: 1.6,
-                color: 'var(--_color---text--primary)',
-                padding: '16px',
-                backgroundColor: 'var(--_color---surface--secondary)',
-                borderRadius: 'var(--_border-radius---md)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                lineHeight: font.lineHeight.relaxed,
+                color: color.text.primary,
+                padding: space.md,
+                backgroundColor: color.surface.secondary,
+                borderRadius: border.radius.md,
                 minHeight: '200px',
               }}
               className="proposal-preview"
@@ -154,12 +153,12 @@ export function ProposalSectionEditor({
       )}
 
       {!collapsed && isFeeSection && (
-        <div style={{ marginTop: '16px' }}>
+        <div style={{ marginTop: space.md }}>
           <p
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--muted)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.text.muted,
               margin: 0,
               fontStyle: 'italic',
             }}

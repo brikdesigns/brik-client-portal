@@ -1,6 +1,8 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { EditCompanyForm } from '@/components/edit-company-form';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -28,24 +30,16 @@ export default async function EditClientPage({ params }: Props) {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: 0,
-          }}
-        >
+      <div style={{ marginBottom: space.xl }}>
+        <h1 style={heading.page}>
           Edit company
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${gap.xs} 0 0`,
           }}
         >
           Update {client.name}&apos;s details.

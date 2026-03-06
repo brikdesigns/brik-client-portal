@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { EditServiceForm } from '@/components/edit-service-form';
+import { font, color, space, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -24,13 +25,13 @@ export default async function EditServicePage({ params }: Props) {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: space.xl }}>
         <h1
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.large,
+            fontWeight: font.weight.semibold,
+            color: color.text.primary,
             margin: 0,
           }}
         >
@@ -38,10 +39,10 @@ export default async function EditServicePage({ params }: Props) {
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${gap.xs} 0 0`,
           }}
         >
           Update {service.name}.

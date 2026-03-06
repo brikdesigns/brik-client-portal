@@ -36,6 +36,7 @@
     "brik-bds/node_modules",
     "brik-bds/**/*.stories.ts",
     "brik-bds/**/*.stories.tsx",
-    "brik-bds/.storybook"
+    "brik-bds/.storybook",
+    "brik-bds/vite.config*.ts"
   ]
 }

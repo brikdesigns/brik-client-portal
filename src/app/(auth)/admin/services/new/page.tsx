@@ -7,28 +7,29 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 const textareaStyle = {
   width: '100%',
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: 'var(--_typography---body--sm)',
-  lineHeight: 'var(--font-line-height--150)',
-  padding: 'var(--_space---input)',
-  borderRadius: 'var(--_border-radius---input)',
-  border: 'var(--_border-width---sm) solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input)',
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.body,
+  fontSize: font.size.body.sm,
+  lineHeight: font.lineHeight.normal,
+  padding: space.input,
+  borderRadius: border.radius.input,
+  border: `${border.width.sm} solid ${color.border.input}`,
+  backgroundColor: color.background.input,
+  color: color.text.primary,
   resize: 'vertical' as const,
   boxSizing: 'border-box' as const,
 };
 
 const textareaLabelStyle = {
   display: 'block' as const,
-  marginBottom: 'var(--_space---sm, 8px)',
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontWeight: 'var(--font-weight--semi-bold)' as string,
-  fontSize: 'var(--_typography---label--md-base)',
-  color: 'var(--_color---text--primary)',
+  marginBottom: space.sm,
+  fontFamily: font.family.label,
+  fontWeight: font.weight.semibold,
+  fontSize: font.size.label.md,
+  color: color.text.primary,
 };
 
 interface Category {
@@ -106,13 +107,13 @@ export default function NewServicePage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: space.xl }}>
         <h1
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.large,
+            fontWeight: font.weight.semibold,
+            color: color.text.primary,
             margin: 0,
           }}
         >
@@ -120,10 +121,10 @@ export default function NewServicePage() {
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${gap.xs} 0 0`,
           }}
         >
           Add a new service to the catalog.
@@ -132,7 +133,7 @@ export default function NewServicePage() {
 
       <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
             <TextInput
               label="Service name"
               type="text"
@@ -165,7 +166,7 @@ export default function NewServicePage() {
               fullWidth
             />
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
               <Select
                 label="Service type"
                 value={serviceType}
@@ -196,7 +197,7 @@ export default function NewServicePage() {
               onChange={(e) => setBasePrice(e.target.value)}
               fullWidth
             />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
               <TextInput
                 label="Stripe product ID"
                 type="text"
@@ -214,7 +215,7 @@ export default function NewServicePage() {
                 fullWidth
               />
             </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
               <input
                 type="checkbox"
                 id="active"
@@ -225,9 +226,9 @@ export default function NewServicePage() {
               <label
                 htmlFor="active"
                 style={{
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '14px',
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.sm,
+                  color: color.text.primary,
                 }}
               >
                 Active
@@ -238,17 +239,17 @@ export default function NewServicePage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                margin: '16px 0 0',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                margin: `${space.md} 0 0`,
               }}
             >
               {error}
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
             <Button type="submit" variant="primary" size="md" disabled={loading}>
               {loading ? 'Creating...' : 'Create service'}
             </Button>

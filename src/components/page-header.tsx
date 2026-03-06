@@ -1,5 +1,6 @@
 import { PageHeader as BDSPageHeader, type PageHeaderProps, type MetadataItem } from '@bds/components/ui/PageHeader/PageHeader';
 import { Breadcrumb, type BreadcrumbItem } from '@bds/components/ui/Breadcrumb/Breadcrumb';
+import { space } from '@/lib/tokens';
 
 // Re-export types for convenience
 export type { PageHeaderProps, MetadataItem, BreadcrumbItem };
@@ -27,8 +28,8 @@ export function PageHeader(props: PageHeaderProps) {
         ...props.style,
         paddingLeft: 0,
         paddingRight: 0,
-        paddingTop: 'var(--_space---xl)',
-        paddingBottom: 'var(--_space---xl)',
+        paddingTop: space.xl,
+        paddingBottom: space.xl,
       }}
     />
   );

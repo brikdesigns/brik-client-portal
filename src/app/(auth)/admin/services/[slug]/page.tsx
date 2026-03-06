@@ -8,6 +8,8 @@ import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
+import { heading } from '@/lib/styles';
+import { font, color, space } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -49,19 +51,13 @@ export default async function ServiceDetailPage({ params }: Props) {
   const activeAssignments = assignments.filter((a) => a.status === 'active').length;
 
   const linkStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '13px',
-    color: 'var(--_color---system--link, #0034ea)',
+    fontFamily: font.family.body,
+    fontSize: font.size.body.xs,
+    color: color.system.link,
     textDecoration: 'none' as const,
   };
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   return (
     <div>
@@ -107,8 +103,8 @@ export default async function ServiceDetailPage({ params }: Props) {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
+          gap: space.md,
+          marginBottom: space.lg,
         }}
       >
         <CardSummary label="Active clients" value={activeAssignments} />
@@ -117,26 +113,26 @@ export default async function ServiceDetailPage({ params }: Props) {
 
       {/* Stripe integration */}
       {(service.stripe_product_id || service.stripe_price_id) && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <h2 style={sectionHeadingStyle}>Stripe</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.lg }}>
             <div>
               <p style={{
-                fontFamily: 'var(--_typography---font-family--label)',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--_color---text--secondary)',
+                fontFamily: font.family.label,
+                fontSize: font.size.body.xs,
+                fontWeight: font.weight.semibold,
+                color: color.text.secondary,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.5px',
                 margin: '0 0 4px',
               }}>Product</p>
-              <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px', color: 'var(--_color---text--primary)', margin: 0 }}>
+              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
                 {service.stripe_product_id ? (
                   <a
                     href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: font.size.body.xs }}
                   >
                     {service.stripe_product_id} &#x2197;
                   </a>
@@ -145,21 +141,21 @@ export default async function ServiceDetailPage({ params }: Props) {
             </div>
             <div>
               <p style={{
-                fontFamily: 'var(--_typography---font-family--label)',
-                fontSize: '12px',
-                fontWeight: 600,
-                color: 'var(--_color---text--secondary)',
+                fontFamily: font.family.label,
+                fontSize: font.size.body.xs,
+                fontWeight: font.weight.semibold,
+                color: color.text.secondary,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.5px',
                 margin: '0 0 4px',
               }}>Price</p>
-              <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px', color: 'var(--_color---text--primary)', margin: 0 }}>
+              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
                 {service.stripe_price_id ? (
                   <a
                     href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: '12px' }}
+                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: font.size.body.xs }}
                   >
                     {service.stripe_price_id} &#x2197;
                   </a>
@@ -177,7 +173,7 @@ export default async function ServiceDetailPage({ params }: Props) {
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '16px',
+            marginBottom: space.md,
           }}
         >
           <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Client assignments</h2>
@@ -193,14 +189,14 @@ export default async function ServiceDetailPage({ params }: Props) {
                 a.companies ? (
                   <a
                     href={`/admin/companies/${a.companies.slug}`}
-                    style={{ color: 'var(--_color---text--primary)', textDecoration: 'none' }}
+                    style={{ color: color.text.primary, textDecoration: 'none' }}
                   >
                     {a.companies.name}
                   </a>
                 ) : (
                   '—'
                 ),
-              style: { fontWeight: 500 },
+              style: { fontWeight: font.weight.medium },
             },
             {
               header: 'Status',
@@ -210,12 +206,12 @@ export default async function ServiceDetailPage({ params }: Props) {
               header: 'Started',
               accessor: (a) =>
                 a.started_at ? new Date(a.started_at).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Notes',
               accessor: (a) => a.notes || '—',
-              style: { color: 'var(--_color---text--muted)', fontSize: '13px' },
+              style: { color: color.text.muted, fontSize: font.size.body.xs },
             },
           ]}
         />

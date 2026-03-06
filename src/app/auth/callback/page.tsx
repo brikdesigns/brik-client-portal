@@ -3,6 +3,7 @@
 import { useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { font, color } from '@/lib/tokens';
 
 function AuthCallbackHandler() {
   const router = useRouter();
@@ -77,8 +78,8 @@ function AuthCallbackHandler() {
         justifyContent: 'center',
         alignItems: 'center',
         minHeight: '100vh',
-        fontFamily: 'var(--_typography---font-family--body)',
-        color: 'var(--_color---text--secondary)',
+        fontFamily: font.family.body,
+        color: color.text.secondary,
       }}
     >
       Signing you in...
@@ -96,8 +97,8 @@ export default function AuthCallbackPage() {
             justifyContent: 'center',
             alignItems: 'center',
             minHeight: '100vh',
-            fontFamily: 'var(--_typography---font-family--body)',
-            color: 'var(--_color---text--secondary)',
+            fontFamily: font.family.body,
+            color: color.text.secondary,
           }}
         >
           Signing you in...

@@ -2,6 +2,7 @@
 
 import { useSessionTimeout } from '@/hooks/use-session-timeout';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, border, shadow } from '@/lib/tokens';
 
 export function SessionTimeoutProvider({ children }: { children: React.ReactNode }) {
   const { showWarning, secondsLeft, dismissWarning } = useSessionTimeout();
@@ -23,37 +24,37 @@ export function SessionTimeoutProvider({ children }: { children: React.ReactNode
         >
           <div
             style={{
-              backgroundColor: 'var(--_color---surface--primary, white)',
-              borderRadius: 'var(--_border-radius---lg, 12px)',
-              padding: '32px',
+              backgroundColor: color.surface.primary,
+              borderRadius: border.radius.lg,
+              padding: space.xl,
               maxWidth: '400px',
               width: '90%',
-              boxShadow: 'var(--_box-shadow---lg, 0 8px 32px rgba(0,0,0,0.2))',
+              boxShadow: shadow.lg,
               textAlign: 'center',
             }}
           >
             <h2
               style={{
-                fontFamily: 'var(--_typography---font-family--heading)',
-                fontSize: 'var(--_typography---heading--small, 18px)',
-                fontWeight: 600,
-                color: 'var(--_color---text--primary)',
-                margin: '0 0 8px',
+                fontFamily: font.family.heading,
+                fontSize: font.size.heading.small,
+                fontWeight: font.weight.semibold,
+                color: color.text.primary,
+                margin: `0 0 ${space.xs}`,
               }}
             >
               Session expiring
             </h2>
             <p
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--md-base, 14px)',
-                color: 'var(--_color---text--secondary)',
-                margin: '0 0 24px',
-                lineHeight: 1.5,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.md,
+                color: color.text.secondary,
+                margin: `0 0 ${space.lg}`,
+                lineHeight: font.lineHeight.normal,
               }}
             >
               You&apos;ll be signed out in{' '}
-              <span style={{ fontWeight: 600, color: 'var(--_color---text--primary)' }}>
+              <span style={{ fontWeight: font.weight.semibold, color: color.text.primary }}>
                 {Math.floor(secondsLeft / 60)}:{String(secondsLeft % 60).padStart(2, '0')}
               </span>{' '}
               due to inactivity.

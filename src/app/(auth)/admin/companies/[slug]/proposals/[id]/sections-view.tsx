@@ -1,7 +1,8 @@
 'use client';
 
-import { CollapsibleCard } from '@bds/components/ui/CollapsibleCard/CollapsibleCard';
+import { Accordion, type AccordionItemData } from '@bds/components/ui/Accordion/Accordion';
 import { AlertBanner } from '@bds/components/ui/AlertBanner/AlertBanner';
+import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
 import {
   ScopeOfProjectContent,
@@ -105,30 +106,30 @@ export function ProposalSectionsView({
       )}
 
       {/* Collapsible section cards */}
-      {sortedSections.map((section, index) => (
-        <CollapsibleCard
-          key={section.type}
-          sectionLabel={`Section ${padSectionNumber(index + 1)}`}
-          title={section.title}
-          defaultOpen={false}
-        >
-          {renderSectionContent(section, feeSummaryItems, totalAmountCents)}
-        </CollapsibleCard>
-      ))}
-
-      {/* Fee Summary as its own card if not already in sections */}
-      {!sortedSections.some(s => s.type === 'fee_summary') && feeSummaryItems.length > 0 && (
-        <CollapsibleCard
-          sectionLabel={`Section ${padSectionNumber(sortedSections.length + 1)}`}
-          title="Fee Summary"
-          defaultOpen={false}
-        >
-          <FeeSummaryContent
-            items={feeSummaryItems}
-            totalAmountCents={totalAmountCents}
-          />
-        </CollapsibleCard>
-      )}
+      <Card variant="elevated" padding="lg">
+        <Accordion
+          allowMultiple
+          items={[
+            ...sortedSections.map((section, index): AccordionItemData => ({
+              id: section.type,
+              title: `${padSectionNumber(index + 1)}. ${section.title}`,
+              content: renderSectionContent(section, feeSummaryItems, totalAmountCents),
+            })),
+            ...(!sortedSections.some(s => s.type === 'fee_summary') && feeSummaryItems.length > 0
+              ? [{
+                  id: 'fee_summary',
+                  title: `${padSectionNumber(sortedSections.length + 1)}. Fee Summary`,
+                  content: (
+                    <FeeSummaryContent
+                      items={feeSummaryItems}
+                      totalAmountCents={totalAmountCents}
+                    />
+                  ),
+                }]
+              : []),
+          ]}
+        />
+      </Card>
     </div>
   );
 }

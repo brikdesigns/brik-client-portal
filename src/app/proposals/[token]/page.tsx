@@ -8,6 +8,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { formatCurrency } from '@/lib/format';
+import { font, color, border } from '@/lib/tokens';
 
 interface ProposalItem {
   id: string;
@@ -109,7 +110,7 @@ export default function PublicProposalPage() {
   if (loading) {
     return (
       <div style={containerStyle}>
-        <p style={{ textAlign: 'center', color: '#999', fontFamily: 'var(--_typography---font-family--body)' }}>
+        <p style={{ textAlign: 'center', color: '#999', fontFamily: font.family.body }}>
           Loading proposal...
         </p>
       </div>
@@ -155,7 +156,7 @@ export default function PublicProposalPage() {
               (e.target as HTMLImageElement).src = '/images/brik-logo.svg';
             }}
           />
-          <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '13px', color: '#999', margin: '0 0 24px' }}>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.xs, color: '#999', margin: '0 0 24px' }}>
             Proposal for {proposal.companies.name}
           </p>
           <nav style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -175,9 +176,9 @@ export default function PublicProposalPage() {
                     borderLeft: isActive ? '3px solid #E35335' : '3px solid transparent',
                     cursor: 'pointer',
                     textAlign: 'left',
-                    fontFamily: 'var(--_typography---font-family--body)',
-                    fontSize: '14px',
-                    fontWeight: isActive ? 600 : 400,
+                    fontFamily: font.family.body,
+                    fontSize: font.size.body.sm,
+                    fontWeight: isActive ? font.weight.semibold : font.weight.regular,
                     color: isActive ? '#E35335' : '#ccc',
                     transition: 'all 0.15s ease',
                   }}
@@ -189,8 +190,8 @@ export default function PublicProposalPage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '11px',
-                    fontWeight: 600,
+                    fontSize: font.size.body.tiny,
+                    fontWeight: font.weight.semibold,
                     backgroundColor: isActive ? '#E35335' : '#333',
                     color: isActive ? '#fff' : '#999',
                     flexShrink: 0,
@@ -205,7 +206,7 @@ export default function PublicProposalPage() {
         </div>
 
         {proposal.valid_until && (
-          <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '12px', color: '#666', marginTop: 'auto' }}>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.tiny, color: '#666', marginTop: 'auto' }}>
             Valid until {new Date(proposal.valid_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         )}
@@ -236,7 +237,7 @@ export default function PublicProposalPage() {
 
         {/* Content card */}
         <div style={cardStyle}>
-          <h1 style={{ fontFamily: 'var(--_typography---font-family--heading)', fontSize: '24px', fontWeight: 600, color: '#fff', margin: '0 0 24px' }}>
+          <h1 style={{ fontFamily: font.family.heading, fontSize: font.size.heading.medium, fontWeight: font.weight.semibold, color: '#fff', margin: '0 0 24px' }}>
             {currentSection.title}
           </h1>
 
@@ -246,13 +247,13 @@ export default function PublicProposalPage() {
             <div style={proseStyle}>
               <ReactMarkdown
                 components={{
-                  h2: ({ children }) => <h2 style={{ fontSize: '18px', fontWeight: 600, color: '#fff', margin: '28px 0 12px' }}>{children}</h2>,
-                  h3: ({ children }) => <h3 style={{ fontSize: '16px', fontWeight: 600, color: '#fff', margin: '24px 0 8px' }}>{children}</h3>,
-                  p: ({ children }) => <p style={{ margin: '0 0 14px', lineHeight: 1.7, color: '#ccc' }}>{children}</p>,
+                  h2: ({ children }) => <h2 style={{ fontSize: font.size.body.lg, fontWeight: font.weight.semibold, color: '#fff', margin: '28px 0 12px' }}>{children}</h2>,
+                  h3: ({ children }) => <h3 style={{ fontSize: font.size.body.md, fontWeight: font.weight.semibold, color: '#fff', margin: '24px 0 8px' }}>{children}</h3>,
+                  p: ({ children }) => <p style={{ margin: '0 0 14px', lineHeight: font.lineHeight.relaxed, color: '#ccc' }}>{children}</p>,
                   ul: ({ children }) => <ul style={{ paddingLeft: '24px', margin: '0 0 14px', color: '#ccc' }}>{children}</ul>,
                   ol: ({ children }) => <ol style={{ paddingLeft: '24px', margin: '0 0 14px', color: '#ccc' }}>{children}</ol>,
-                  li: ({ children }) => <li style={{ marginBottom: '6px', lineHeight: 1.6 }}>{children}</li>,
-                  strong: ({ children }) => <strong style={{ fontWeight: 600, color: '#fff' }}>{children}</strong>,
+                  li: ({ children }) => <li style={{ marginBottom: '6px', lineHeight: font.lineHeight.normal }}>{children}</li>,
+                  strong: ({ children }) => <strong style={{ fontWeight: font.weight.semibold, color: '#fff' }}>{children}</strong>,
                   hr: () => <hr style={{ border: 'none', borderTop: '1px solid #333', margin: '24px 0' }} />,
                 }}
               >
@@ -290,7 +291,7 @@ export default function PublicProposalPage() {
                   </Button>
                 </div>
                 {error && (
-                  <p style={{ color: '#eb5757', fontSize: '13px', fontFamily: 'var(--_typography---font-family--body)', margin: 0 }}>
+                  <p style={{ color: color.system.red, fontSize: font.size.body.xs, fontFamily: font.family.body, margin: 0 }}>
                     {error}
                   </p>
                 )}
@@ -322,27 +323,27 @@ function FeeSummaryContent({ items, total }: { items: ProposalItem[]; total: num
           }}
         >
           <div style={{ flex: 1 }}>
-            <p style={{ fontFamily: 'var(--_typography---font-family--label)', fontWeight: 500, fontSize: '15px', color: '#fff', margin: 0 }}>
+            <p style={{ fontFamily: font.family.label, fontWeight: font.weight.medium, fontSize: font.size.body.sm, color: '#fff', margin: 0 }}>
               {item.name}
-              {item.quantity > 1 && <span style={{ color: '#999', fontWeight: 400 }}> x{item.quantity}</span>}
+              {item.quantity > 1 && <span style={{ color: '#999', fontWeight: font.weight.regular }}> x{item.quantity}</span>}
             </p>
             {item.description && (
-              <p style={{ fontFamily: 'var(--_typography---font-family--body)', color: '#999', marginTop: '4px', fontSize: '13px', margin: '4px 0 0' }}>
+              <p style={{ fontFamily: font.family.body, color: '#999', marginTop: '4px', fontSize: font.size.body.xs, margin: '4px 0 0' }}>
                 {item.description}
               </p>
             )}
           </div>
-          <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '15px', fontWeight: 500, color: '#fff', margin: 0, whiteSpace: 'nowrap' }}>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, fontWeight: font.weight.medium, color: '#fff', margin: 0, whiteSpace: 'nowrap' }}>
             {formatCurrency(item.unit_price_cents * item.quantity)}
           </p>
         </div>
       ))}
 
       <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '20px', marginTop: '8px', borderTop: '2px solid #444' }}>
-        <p style={{ fontFamily: 'var(--_typography---font-family--heading)', fontWeight: 600, fontSize: '18px', color: '#fff', margin: 0 }}>
+        <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: '#fff', margin: 0 }}>
           Total
         </p>
-        <p style={{ fontFamily: 'var(--_typography---font-family--heading)', fontWeight: 600, fontSize: '18px', color: '#E35335', margin: 0 }}>
+        <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: '#E35335', margin: 0 }}>
           {formatCurrency(total)}
         </p>
       </div>
@@ -364,7 +365,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
   onAccept: () => void;
 }) {
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--_color---surface--secondary)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: color.surface.secondary }}>
       <div style={containerStyle}>
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
           <Image
@@ -375,16 +376,16 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
             priority
             style={{ marginBottom: '32px' }}
           />
-          <p style={{ ...bodyStyle, color: 'var(--_color---text--muted)', marginBottom: '8px' }}>
+          <p style={{ ...bodyStyle, color: color.text.muted, marginBottom: '8px' }}>
             Proposal for {proposal.companies.name}
           </p>
-          <h1 style={{ ...headingStyle, fontSize: '28px' }}>{proposal.title}</h1>
+          <h1 style={{ ...headingStyle, fontSize: font.size.heading.large }}>{proposal.title}</h1>
         </div>
 
         <div style={{
-          backgroundColor: 'var(--_color---surface--primary)',
-          borderRadius: 'var(--_border-radius---lg)',
-          border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+          backgroundColor: color.surface.primary,
+          borderRadius: border.radius.lg,
+          border: `${border.width.sm} solid ${color.border.muted}`,
           overflow: 'hidden',
           marginBottom: '24px',
         }}>
@@ -393,7 +394,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
               key={item.id}
               style={{
                 padding: '20px 24px',
-                borderBottom: index < items.length - 1 ? 'var(--_border-width---sm) solid var(--_color---border--muted)' : undefined,
+                borderBottom: index < items.length - 1 ? `${border.width.sm} solid ${color.border.muted}` : undefined,
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'flex-start',
@@ -401,54 +402,54 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
               }}
             >
               <div style={{ flex: 1 }}>
-                <p style={{ fontFamily: 'var(--_typography---font-family--label)', fontWeight: 500, fontSize: '16px', color: 'var(--_color---text--primary)', margin: 0 }}>
+                <p style={{ fontFamily: font.family.label, fontWeight: font.weight.medium, fontSize: font.size.body.md, color: color.text.primary, margin: 0 }}>
                   {item.name}
-                  {item.quantity > 1 && <span style={{ color: 'var(--_color---text--muted)', fontWeight: 400 }}> x{item.quantity}</span>}
+                  {item.quantity > 1 && <span style={{ color: color.text.muted, fontWeight: font.weight.regular }}> x{item.quantity}</span>}
                 </p>
                 {item.description && (
-                  <p style={{ ...bodyStyle, color: 'var(--_color---text--muted)', marginTop: '4px', fontSize: '14px' }}>
+                  <p style={{ ...bodyStyle, color: color.text.muted, marginTop: '4px', fontSize: font.size.body.sm }}>
                     {item.description}
                   </p>
                 )}
               </div>
-              <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '16px', fontWeight: 500, color: 'var(--_color---text--primary)', margin: 0, whiteSpace: 'nowrap' }}>
+              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.md, fontWeight: font.weight.medium, color: color.text.primary, margin: 0, whiteSpace: 'nowrap' }}>
                 {formatCurrency(item.unit_price_cents * item.quantity)}
               </p>
             </div>
           ))}
           <div style={{
             padding: '20px 24px',
-            backgroundColor: 'var(--_color---surface--secondary)',
+            backgroundColor: color.surface.secondary,
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
           }}>
-            <p style={{ fontFamily: 'var(--_typography---font-family--heading)', fontWeight: 600, fontSize: '18px', color: 'var(--_color---text--primary)', margin: 0 }}>
+            <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: color.text.primary, margin: 0 }}>
               Total
             </p>
-            <p style={{ fontFamily: 'var(--_typography---font-family--heading)', fontWeight: 600, fontSize: '18px', color: 'var(--_color---text--primary)', margin: 0 }}>
+            <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: color.text.primary, margin: 0 }}>
               {formatCurrency(proposal.total_amount_cents)}
             </p>
           </div>
         </div>
 
         {proposal.valid_until && (
-          <p style={{ ...bodyStyle, textAlign: 'center', color: 'var(--_color---text--muted)', marginBottom: '24px' }}>
+          <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, marginBottom: '24px' }}>
             Valid until {new Date(proposal.valid_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </p>
         )}
 
         <div style={{
-          backgroundColor: 'var(--_color---surface--primary)',
-          borderRadius: 'var(--_border-radius---lg)',
-          border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+          backgroundColor: color.surface.primary,
+          borderRadius: border.radius.lg,
+          border: `${border.width.sm} solid ${color.border.muted}`,
           padding: '32px 24px',
           textAlign: 'center',
         }}>
           {accepted ? (
             <>
               <Badge status="positive">Accepted</Badge>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
                 {proposal.accepted_by_email
                   ? `Accepted by ${proposal.accepted_by_email} on ${proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString() : 'today'}`
                   : 'This proposal has been accepted. Thank you!'}
@@ -457,13 +458,13 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
           ) : isExpired ? (
             <>
               <Badge status="warning">Expired</Badge>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
                 This proposal has expired. Please contact us for an updated proposal.
               </p>
             </>
           ) : (
             <>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginBottom: '20px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginBottom: '20px' }}>
                 By clicking Accept, you agree to the scope and pricing outlined in this proposal.
               </p>
               <div style={{ maxWidth: '320px', margin: '0 auto 16px' }}>
@@ -478,7 +479,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
                 />
               </div>
               {error && (
-                <p style={{ color: 'var(--system--red, #eb5757)', fontSize: '14px', fontFamily: 'var(--_typography---font-family--body)', marginBottom: '12px' }}>
+                <p style={{ color: color.system.red, fontSize: font.size.body.sm, fontFamily: font.family.body, marginBottom: '12px' }}>
                   {error}
                 </p>
               )}
@@ -489,7 +490,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
           )}
         </div>
 
-        <p style={{ ...bodyStyle, textAlign: 'center', color: 'var(--_color---text--muted)', fontSize: '13px', marginTop: '32px' }}>
+        <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, fontSize: font.size.body.xs, marginTop: '32px' }}>
           Powered by Brik Designs
         </p>
       </div>
@@ -533,22 +534,22 @@ const cardStyle: React.CSSProperties = {
 };
 
 const proseStyle: React.CSSProperties = {
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '15px',
-  lineHeight: 1.7,
+  fontFamily: font.family.body,
+  fontSize: font.size.body.sm,
+  lineHeight: font.lineHeight.relaxed,
 };
 
 const headingStyle: React.CSSProperties = {
-  fontFamily: 'var(--_typography---font-family--heading)',
-  fontWeight: 600,
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.heading,
+  fontWeight: font.weight.semibold,
+  color: color.text.primary,
   margin: 0,
 };
 
 const bodyStyle: React.CSSProperties = {
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '16px',
-  lineHeight: 1.6,
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.body,
+  fontSize: font.size.body.md,
+  lineHeight: font.lineHeight.normal,
+  color: color.text.primary,
   margin: 0,
 };

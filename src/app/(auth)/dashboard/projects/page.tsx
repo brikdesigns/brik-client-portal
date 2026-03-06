@@ -3,6 +3,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader } from '@/components/page-header';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { EmptyState } from '@/components/empty-state';
+import { font, color, gap, space } from '@/lib/tokens';
 
 export default async function ProjectsPage() {
   const supabase = createClient();
@@ -17,7 +18,7 @@ export default async function ProjectsPage() {
       <PageHeader title="Projects" subtitle="All your projects with Brik Designs." />
 
       {projects && projects.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
           {projects.map((project) => (
             <Card key={project.id} variant="elevated" padding="lg">
               <div
@@ -30,10 +31,10 @@ export default async function ProjectsPage() {
                 <div style={{ flex: 1 }}>
                   <h2
                     style={{
-                      fontFamily: 'var(--_typography---font-family--heading)',
-                      fontSize: 'var(--_typography---heading--small, 18px)',
-                      fontWeight: 600,
-                      color: 'var(--_color---text--primary)',
+                      fontFamily: font.family.heading,
+                      fontSize: font.size.heading.small,
+                      fontWeight: font.weight.semibold,
+                      color: color.text.primary,
                       margin: 0,
                     }}
                   >
@@ -42,11 +43,11 @@ export default async function ProjectsPage() {
                   {project.description && (
                     <p
                       style={{
-                        fontFamily: 'var(--_typography---font-family--body)',
-                        fontSize: '14px',
-                        color: 'var(--_color---text--secondary)',
-                        margin: '8px 0 0',
-                        lineHeight: 1.5,
+                        fontFamily: font.family.body,
+                        fontSize: font.size.body.sm,
+                        color: color.text.secondary,
+                        margin: `${gap.xs} 0 0`,
+                        lineHeight: font.lineHeight.normal,
                       }}
                     >
                       {project.description}
@@ -55,10 +56,10 @@ export default async function ProjectsPage() {
                   {(project.start_date || project.end_date) && (
                     <p
                       style={{
-                        fontFamily: 'var(--_typography---font-family--body)',
-                        fontSize: '13px',
-                        color: 'var(--_color---text--muted)',
-                        margin: '8px 0 0',
+                        fontFamily: font.family.body,
+                        fontSize: font.size.body.xs,
+                        color: color.text.muted,
+                        margin: `${gap.xs} 0 0`,
                       }}
                     >
                       {project.start_date &&

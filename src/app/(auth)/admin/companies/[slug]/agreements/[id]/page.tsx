@@ -5,6 +5,8 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { AgreementStatusBadge } from '@/components/status-badges';
 import { AgreementActions } from '@/components/agreement-actions';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string; id: string }>;
@@ -35,26 +37,20 @@ export default async function AgreementDetailPage({ params }: Props) {
 
   const typeLabel = agreement.type === 'baa' ? 'Business Associate Agreement' : 'Marketing Agreement';
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600 as const,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   const metaLabelStyle = {
-    fontFamily: 'var(--_typography---font-family--label)',
-    fontSize: '13px',
-    fontWeight: 500 as const,
-    color: 'var(--_color---text--muted)',
-    margin: '0 0 4px',
+    fontFamily: font.family.label,
+    fontSize: font.size.body.xs,
+    fontWeight: font.weight.medium,
+    color: color.text.muted,
+    margin: `0 0 ${gap.xs}`,
   };
 
   const metaValueStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    color: 'var(--_color---text--primary)',
+    fontFamily: font.family.body,
+    fontSize: font.size.body.sm,
+    color: color.text.primary,
     margin: 0,
   };
 
@@ -93,8 +89,8 @@ export default async function AgreementDetailPage({ params }: Props) {
 
       {/* Shareable link — visible when sent or later */}
       {(agreement.status === 'sent' || agreement.status === 'viewed' || agreement.status === 'signed') && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+        <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: space.md, flexWrap: 'wrap' }}>
             <div>
               <p style={metaLabelStyle}>Shareable Link</p>
               <p style={{ ...metaValueStyle, wordBreak: 'break-all' }}>
@@ -102,18 +98,18 @@ export default async function AgreementDetailPage({ params }: Props) {
                   href={shareableLink}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
+                  style={{ color: color.system.link, textDecoration: 'none' }}
                 >
                   {shareableLink}
                 </a>
               </p>
             </div>
-            <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: gap.md, flexWrap: 'wrap' }}>
               {agreement.view_count > 0 && (
                 <Badge status="info">{agreement.view_count} view{agreement.view_count !== 1 ? 's' : ''}</Badge>
               )}
               {agreement.first_viewed_at && (
-                <p style={{ ...metaValueStyle, fontSize: '13px', color: 'var(--_color---text--muted)' }}>
+                <p style={{ ...metaValueStyle, fontSize: font.size.body.xs, color: color.text.muted }}>
                   First viewed: {new Date(agreement.first_viewed_at).toLocaleString()}
                 </p>
               )}
@@ -123,21 +119,21 @@ export default async function AgreementDetailPage({ params }: Props) {
       )}
 
       {/* Agreement text preview */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+      <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
         <h2 style={sectionHeadingStyle}>Agreement Text</h2>
         <div
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: '14px',
-            lineHeight: 1.7,
-            color: 'var(--_color---text--secondary)',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.sm,
+            lineHeight: font.lineHeight.relaxed,
+            color: color.text.secondary,
             whiteSpace: 'pre-wrap',
             maxHeight: '400px',
             overflowY: 'auto',
-            padding: '16px',
-            backgroundColor: 'var(--_color---surface--secondary)',
-            borderRadius: 'var(--_border-radius---md)',
-            border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+            padding: space.md,
+            backgroundColor: color.surface.secondary,
+            borderRadius: border.radius.md,
+            border: `${border.width.sm} solid ${color.border.muted}`,
           }}
         >
           {agreement.content_snapshot}
@@ -146,9 +142,9 @@ export default async function AgreementDetailPage({ params }: Props) {
 
       {/* Signing audit trail */}
       {agreement.status === 'signed' && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: '24px' }}>
+        <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
           <h2 style={sectionHeadingStyle}>Signing Record</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
             <div>
               <p style={metaLabelStyle}>Signed By</p>
               <p style={metaValueStyle}>{agreement.signed_by_name}</p>
@@ -169,7 +165,7 @@ export default async function AgreementDetailPage({ params }: Props) {
             </div>
             <div style={{ gridColumn: '1 / -1' }}>
               <p style={metaLabelStyle}>User Agent</p>
-              <p style={{ ...metaValueStyle, fontSize: '12px', wordBreak: 'break-all' }}>
+              <p style={{ ...metaValueStyle, fontSize: font.size.body.xs, wordBreak: 'break-all' }}>
                 {agreement.signed_by_user_agent || '—'}
               </p>
             </div>

@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { font, color, space, border } from '@/lib/tokens';
 
 /**
  * Geoapify autocomplete result
@@ -66,25 +67,25 @@ const dropdownStyles = {
     left: 0,
     right: 0,
     zIndex: 50,
-    marginTop: 'var(--_space---tiny)',
-    backgroundColor: 'var(--_color---background--input)',
-    border: 'var(--_border-width---sm) solid var(--_color---border--input)',
-    borderRadius: 'var(--_border-radius---input)',
+    marginTop: space.tiny,
+    backgroundColor: color.background.input,
+    border: `${border.width.sm} solid ${color.border.input}`,
+    borderRadius: border.radius.input,
     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
     maxHeight: '200px',
     overflowY: 'auto' as const,
   },
   item: {
-    padding: 'var(--_space---md) var(--_space---lg)',
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: 'var(--_typography---body--sm)',
-    color: 'var(--_color---text--primary)',
+    padding: `${space.md} ${space.lg}`,
+    fontFamily: font.family.body,
+    fontSize: font.size.body.sm,
+    color: color.text.primary,
     cursor: 'pointer',
-    borderBottom: 'var(--_border-width---sm) solid var(--_color---border--secondary)',
+    borderBottom: `${border.width.sm} solid ${color.border.secondary}`,
     transition: 'background-color 0.15s',
   },
   itemHover: {
-    backgroundColor: 'var(--_color---surface--secondary)',
+    backgroundColor: color.surface.secondary,
   },
 };
 

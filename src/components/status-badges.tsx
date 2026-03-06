@@ -16,6 +16,7 @@ import {
   faUser,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle as faCircleRegular } from '@fortawesome/free-regular-svg-icons';
+import { color } from '@/lib/tokens';
 
 const iconSize = { width: 12, height: 12 };
 
@@ -223,9 +224,9 @@ const companyTypeLabels: Record<string, string> = {
 
 // Company type tag colors (BDS system palette tokens)
 const companyTypeColors: Record<string, { bg: string; text: string }> = {
-  lead:     { bg: 'var(--system--purple)', text: 'var(--_color---text--on-color-dark)' },
-  prospect: { bg: 'var(--system--blue)',   text: 'var(--_color---text--on-color-dark)' },
-  client:   { bg: 'var(--system--green)',  text: 'var(--_color---text--on-color-dark)' },
+  lead:     { bg: 'var(--system--purple)', text: color.text.inverse },
+  prospect: { bg: color.system.blue,       text: color.text.inverse },
+  client:   { bg: color.system.green,      text: color.text.inverse },
 };
 
 const roleLabels: Record<string, string> = {
@@ -262,8 +263,8 @@ export function ProposalStatusBadge({ status }: { status: string }) {
 
 export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: boolean }) {
   const colors = muted
-    ? { bg: 'var(--_color---background--secondary)', text: 'var(--_color---text--muted)' }
-    : companyTypeColors[type] ?? { bg: 'var(--_color---background--secondary)', text: 'var(--_color---text--primary)' };
+    ? { bg: color.background.secondary, text: color.text.muted }
+    : companyTypeColors[type] ?? { bg: color.background.secondary, text: color.text.primary };
   return (
     <Tag
       icon={<FontAwesomeIcon icon={faUser} style={{ width: 10, height: 10 }} />}

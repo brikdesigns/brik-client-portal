@@ -10,6 +10,7 @@ import {
   TableCell,
 } from '@bds/components/ui/Table/Table';
 import { ItemStatusBadge } from '@/components/report-badges';
+import { font, color, space } from '@/lib/tokens';
 import { type ColumnConfig, getColumnConfig, type ReportType } from '@/lib/analysis/report-config';
 
 interface ReportItem {
@@ -54,11 +55,11 @@ export function ReportDetailTable({ items, reportType }: ReportDetailTableProps)
     <div>
       <h3
         style={{
-          fontFamily: 'var(--_typography---font-family--heading)',
-          fontSize: 'var(--_typography---heading--small)',
-          fontWeight: 600,
-          color: 'var(--_color---text--primary)',
-          marginBottom: 'var(--_spacing---md)',
+          fontFamily: font.family.heading,
+          fontSize: font.size.heading.small,
+          fontWeight: font.weight.semibold,
+          color: color.text.primary,
+          marginBottom: space.md,
         }}
       >
         Audit details
@@ -79,7 +80,7 @@ export function ReportDetailTable({ items, reportType }: ReportDetailTableProps)
               <TableRow>
                 <TableCell
                   colSpan={columns.length}
-                  style={{ textAlign: 'center', color: 'var(--_color---text--muted)' }}
+                  style={{ textAlign: 'center', color: color.text.muted }}
                 >
                   No items yet.
                 </TableCell>

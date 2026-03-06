@@ -12,6 +12,8 @@ import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ServiceBadge } from '@/components/service-badge';
 import { ProposalSectionEditor, type ProposalSection } from '@/components/proposal-section-editor';
 import { formatCurrency } from '@/lib/format';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap, border } from '@/lib/tokens';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPlus, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 
@@ -303,13 +305,7 @@ export default function EditProposalPage() {
     }
   }
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600 as const,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   const hasSections = sections.length > 0 && sections.some(s => s.content);
 
@@ -318,9 +314,9 @@ export default function EditProposalPage() {
       <div>
         <PageHeader title="Edit Proposal" />
         <p style={{
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: '14px',
-          color: 'var(--_color---text--muted)',
+          fontFamily: font.family.body,
+          fontSize: font.size.body.sm,
+          color: color.text.muted,
         }}>
           Loading...
         </p>
@@ -346,8 +342,8 @@ export default function EditProposalPage() {
 
       <form onSubmit={handleSubmit}>
         {/* Title + validity */}
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
+        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
             <TextInput
               label="Proposal Title"
               type="text"
@@ -367,8 +363,8 @@ export default function EditProposalPage() {
         </Card>
 
         {/* Sections */}
-        <div style={{ marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '720px', marginBottom: '16px' }}>
+        <div style={{ marginBottom: space.lg }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '720px', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Proposal Sections</h2>
             <Button
               type="button"
@@ -406,9 +402,9 @@ export default function EditProposalPage() {
           ) : (
             <Card variant="outlined" padding="lg" style={{ maxWidth: '720px', textAlign: 'center' }}>
               <p style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '14px',
-                color: 'var(--_color---text--muted)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                color: color.text.muted,
                 margin: 0,
               }}>
                 No AI-generated sections yet. Click &quot;Generate Sections&quot; to create proposal content from Notion meeting notes.
@@ -418,8 +414,8 @@ export default function EditProposalPage() {
         </div>
 
         {/* Line items */}
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
             <Button type="button" variant="secondary" size="sm" onClick={addItem}>
               <FontAwesomeIcon icon={faPlus} style={iconSize} /> Add Item
@@ -428,16 +424,16 @@ export default function EditProposalPage() {
 
           {items.length === 0 ? (
             <p style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--muted)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.text.muted,
               textAlign: 'center',
-              padding: '24px 0',
+              padding: `${space.lg} 0`,
             }}>
               No line items yet.
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
               {items.map(item => {
                 const selectedService = services.find(s => s.id === item.service_id);
                 const categorySlug = selectedService?.service_categories?.slug;
@@ -447,12 +443,12 @@ export default function EditProposalPage() {
                     key={item.key}
                     style={{
                       display: 'flex',
-                      gap: '12px',
+                      gap: gap.sm,
                       alignItems: 'flex-start',
-                      padding: '16px',
-                      border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
-                      borderRadius: 'var(--_border-radius---md)',
-                      backgroundColor: 'var(--_color---surface--secondary)',
+                      padding: space.md,
+                      border: `${border.width.sm} solid ${color.border.muted}`,
+                      borderRadius: border.radius.md,
+                      backgroundColor: color.surface.secondary,
                     }}
                   >
                     {categorySlug && (
@@ -460,7 +456,7 @@ export default function EditProposalPage() {
                         <ServiceBadge category={categorySlug} size={16} />
                       </div>
                     )}
-                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: gap.sm }}>
                       <Select
                         label="Service"
                         value={item.service_id}
@@ -487,7 +483,7 @@ export default function EditProposalPage() {
                         placeholder="Optional description"
                         fullWidth
                       />
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.sm }}>
                         <TextInput
                           label="Qty"
                           type="number"
@@ -504,9 +500,9 @@ export default function EditProposalPage() {
                         />
                       </div>
                       <p style={{
-                        fontFamily: 'var(--_typography---font-family--body)',
-                        fontSize: '13px',
-                        color: 'var(--_color---text--secondary)',
+                        fontFamily: font.family.body,
+                        fontSize: font.size.body.xs,
+                        color: color.text.secondary,
                         margin: 0,
                         textAlign: 'right',
                       }}>
@@ -520,9 +516,9 @@ export default function EditProposalPage() {
                         background: 'none',
                         border: 'none',
                         cursor: 'pointer',
-                        color: 'var(--_color---text--muted)',
+                        color: color.text.muted,
                         padding: '4px',
-                        marginTop: '24px',
+                        marginTop: space.lg,
                       }}
                       aria-label="Remove item"
                     >
@@ -535,14 +531,14 @@ export default function EditProposalPage() {
               <div style={{
                 display: 'flex',
                 justifyContent: 'flex-end',
-                paddingTop: '8px',
-                borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+                paddingTop: gap.xs,
+                borderTop: `${border.width.sm} solid ${color.border.muted}`,
               }}>
                 <p style={{
-                  fontFamily: 'var(--_typography---font-family--heading)',
-                  fontSize: 'var(--_typography---heading--small, 18px)',
-                  fontWeight: 600,
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.heading,
+                  fontSize: font.size.heading.small,
+                  fontWeight: font.weight.semibold,
+                  color: color.text.primary,
                   margin: 0,
                 }}>
                   Total: {formatCurrency(total)}
@@ -565,10 +561,10 @@ export default function EditProposalPage() {
 
           {error && (
             <p style={{
-              color: 'var(--system--red, #eb5757)',
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: 'var(--_typography---body--sm)',
-              margin: 'var(--_space---lg) 0 0',
+              color: color.system.red,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              margin: `${space.lg} 0 0`,
             }}>
               {error}
             </p>
@@ -576,8 +572,8 @@ export default function EditProposalPage() {
 
           <div style={{
             display: 'flex',
-            gap: 'var(--_space---gap--md)',
-            marginTop: 'var(--_space---xl)',
+            gap: gap.md,
+            marginTop: space.xl,
             justifyContent: 'space-between',
           }}>
             <Button

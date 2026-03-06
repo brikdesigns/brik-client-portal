@@ -5,6 +5,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ReportSetStatusBadge, ScoreTierBadge } from '@/components/report-badges';
+import { font, color, space } from '@/lib/tokens';
 
 export default async function AdminReportingPage() {
   const supabase = createClient();
@@ -33,8 +34,8 @@ export default async function AdminReportingPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: space.md,
+          marginBottom: space.xl,
         }}
       >
         <CardSummary label="Total analyses" value={all.length} />
@@ -55,7 +56,7 @@ export default async function AdminReportingPage() {
                 return client ? (
                   <a
                     href={`/admin/companies/${client.slug}`}
-                    style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
+                    style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
                   >
                     {client.name}
                   </a>
@@ -74,7 +75,7 @@ export default async function AdminReportingPage() {
                   ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
                   : '—';
               },
-              style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+              style: { color: color.text.secondary, fontSize: font.size.body.xs },
             },
             {
               header: 'Progress',
@@ -84,7 +85,7 @@ export default async function AdminReportingPage() {
                 const done = reports.filter((r) => r.status === 'completed').length;
                 return `${done} / ${reports.length} complete`;
               },
-              style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+              style: { color: color.text.secondary, fontSize: font.size.body.xs },
             },
             {
               header: 'Tier',
@@ -96,7 +97,7 @@ export default async function AdminReportingPage() {
             {
               header: 'Created',
               accessor: (rs) => new Date(rs.created_at).toLocaleDateString(),
-              style: { color: 'var(--_color---text--secondary)', fontSize: '13px' },
+              style: { color: color.text.secondary, fontSize: font.size.body.xs },
             },
             {
               header: '',

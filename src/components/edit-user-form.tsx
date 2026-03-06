@@ -6,6 +6,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 interface EditUserFormProps {
   user: {
@@ -61,7 +62,7 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
   return (
     <form onSubmit={handleSubmit}>
       <Card variant="elevated" padding="lg">
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           <TextInput
             label="Full Name"
             id="full_name"
@@ -124,19 +125,19 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
           {error && (
             <div
               style={{
-                padding: '12px 16px',
-                backgroundColor: 'var(--_color---surface--negative)',
-                border: '1px solid var(--_color---border--negative)',
-                borderRadius: 'var(--_layout---border-radius--md, 8px)',
-                color: 'var(--_color---text--negative)',
-                fontSize: 'var(--_typography---body--sm, 14px)',
+                padding: `${space.sm} ${space.md}`,
+                backgroundColor: color.surface.negative,
+                border: `${border.width.sm} solid ${color.border.negative}`,
+                borderRadius: border.radius.md,
+                color: color.text.negative,
+                fontSize: font.size.body.sm,
               }}
             >
               {error}
             </div>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
             <Button
               type="button"
               variant="secondary"

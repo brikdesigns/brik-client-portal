@@ -1,6 +1,7 @@
 import { Suspense } from 'react';
 import Image from 'next/image';
 import { LoginForm } from '@/components/login-form';
+import { font, color, space, border, shadow } from '@/lib/tokens';
 
 export default function LoginPage() {
   return (
@@ -10,21 +11,21 @@ export default function LoginPage() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--_color---page--accent, #f1f0ec)',
+        backgroundColor: color.page.accent,
       }}
     >
       <div
         style={{
-          backgroundColor: 'var(--_color---surface--primary, white)',
-          borderRadius: '8px',
-          padding: '48px',
+          backgroundColor: color.surface.primary,
+          borderRadius: border.radius.md,
+          padding: space.huge,
           width: '100%',
           maxWidth: '420px',
-          boxShadow: 'var(--_box-shadow---md)',
+          boxShadow: shadow.md,
         }}
       >
         {/* Logo */}
-        <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: space.xl }}>
           <Image
             src="/images/brik-logo.svg"
             alt="Brik Designs"
@@ -38,12 +39,12 @@ export default function LoginPage() {
         {/* Heading */}
         <h1
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--medium)',
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.medium,
+            color: color.text.primary,
             textAlign: 'center',
-            marginBottom: '32px',
-            fontWeight: 600,
+            marginBottom: space.xl,
+            fontWeight: font.weight.semibold,
           }}
         >
           Sign in to your account

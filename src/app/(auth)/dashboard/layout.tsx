@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { PortalSidebar } from '@/components/portal-sidebar';
 import { getCurrentClientId, getUserClients } from '@/lib/current-client';
+import { color } from '@/lib/tokens';
 
 export default async function DashboardLayout({
   children,
@@ -32,7 +33,7 @@ export default async function DashboardLayout({
       <main
         style={{
           flex: 1,
-          backgroundColor: 'var(--_color---page--secondary, #f2f2f2)',
+          backgroundColor: color.page.secondary,
           padding: '32px',
           marginLeft: '260px',
           minHeight: '100vh',

@@ -7,42 +7,38 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 const textareaStyle = {
   width: '100%',
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: 'var(--_typography---body--sm)',
-  lineHeight: 'var(--font-line-height--150)',
-  padding: 'var(--_space---input)',
-  borderRadius: 'var(--_border-radius---input)',
-  border: 'var(--_border-width---sm) solid var(--_color---border--input)',
-  backgroundColor: 'var(--_color---background--input)',
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.body,
+  fontSize: font.size.body.sm,
+  lineHeight: font.lineHeight.normal,
+  padding: space.input,
+  borderRadius: border.radius.input,
+  border: `${border.width.sm} solid ${color.border.input}`,
+  backgroundColor: color.background.input,
+  color: color.text.primary,
   resize: 'vertical' as const,
   boxSizing: 'border-box' as const,
 };
 
 const textareaLabelStyle = {
   display: 'block' as const,
-  marginBottom: 'var(--_space---sm, 8px)',
-  fontFamily: 'var(--_typography---font-family--label)',
-  fontWeight: 'var(--font-weight--semi-bold)' as string,
-  fontSize: 'var(--_typography---label--md-base)',
-  color: 'var(--_color---text--primary)',
+  marginBottom: space.sm,
+  fontFamily: font.family.label,
+  fontWeight: font.weight.semibold,
+  fontSize: font.size.label.md,
+  color: color.text.primary,
 };
 
-const sectionHeadingStyle = {
-  fontFamily: 'var(--_typography---font-family--heading)',
-  fontSize: 'var(--_typography---heading--small, 18px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--primary)',
-  margin: '0 0 16px',
-};
+const sectionHeadingStyle = heading.section;
 
 const dividerStyle = {
   height: '1px',
-  backgroundColor: 'var(--_color---border--secondary)',
-  margin: '24px 0',
+  backgroundColor: color.border.secondary,
+  margin: `${space.lg} 0`,
 };
 
 interface Client {
@@ -245,13 +241,13 @@ export default function NewProjectPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
+      <div style={{ marginBottom: space.xl }}>
         <h1
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.large,
+            fontWeight: font.weight.semibold,
+            color: color.text.primary,
             margin: 0,
           }}
         >
@@ -259,10 +255,10 @@ export default function NewProjectPage() {
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${gap.xs} 0 0`,
           }}
         >
           Create a new project for a client.
@@ -274,7 +270,7 @@ export default function NewProjectPage() {
           {/* ── Project Details ──────────────────────────── */}
           <h2 style={sectionHeadingStyle}>Project details</h2>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
             <Select
               label="Client"
               value={clientId}
@@ -318,7 +314,7 @@ export default function NewProjectPage() {
               ]}
               fullWidth
             />
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
               <TextInput
                 label="Start date"
                 type="date"
@@ -343,20 +339,20 @@ export default function NewProjectPage() {
           {clickupError ? (
             <p
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                color: 'var(--_color---text--secondary)',
-                margin: '0 0 16px',
-                padding: '12px',
-                backgroundColor: 'var(--_color---surface--secondary)',
-                borderRadius: '6px',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                color: color.text.secondary,
+                margin: `0 0 ${space.md}`,
+                padding: space.sm,
+                backgroundColor: color.surface.secondary,
+                borderRadius: border.radius.md,
               }}
             >
               {clickupError}
             </p>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
                 <Select
                   label="Client folder"
                   value={folderId}
@@ -389,7 +385,7 @@ export default function NewProjectPage() {
                   fullWidth
                 />
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: space.md }}>
                 <Select
                   label="Assignee"
                   value={assigneeId}
@@ -424,10 +420,10 @@ export default function NewProjectPage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                margin: '16px 0 0',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                margin: `${space.md} 0 0`,
               }}
             >
               {error}
@@ -437,10 +433,10 @@ export default function NewProjectPage() {
           {warning && (
             <p
               style={{
-                color: 'var(--system--orange, #f2994a)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                margin: '16px 0 0',
+                color: color.system.orange,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                margin: `${space.md} 0 0`,
               }}
             >
               {warning}
@@ -448,7 +444,7 @@ export default function NewProjectPage() {
           )}
 
           {/* ── Actions ─────────────────────────────────── */}
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
             <Button type="submit" variant="primary" size="md" disabled={loading}>
               {loading ? 'Creating...' : 'Create project'}
             </Button>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
+import { font, color, gap, space } from '@/lib/tokens';
 
 interface InviteUserFormProps {
   clients: { id: string; name: string }[];
@@ -70,8 +71,8 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
         style={{
           display: 'grid',
           gridTemplateColumns: '1fr 1fr',
-          gap: '16px',
-          marginBottom: '16px',
+          gap: gap.lg,
+          marginBottom: space.md,
         }}
       >
         <TextInput
@@ -97,7 +98,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
         style={{
           display: 'grid',
           gridTemplateColumns: 'auto 1fr auto',
-          gap: '16px',
+          gap: gap.lg,
           alignItems: 'flex-end',
         }}
       >
@@ -137,10 +138,10 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
       {error && (
         <p
           style={{
-            color: 'var(--system--red, #eb5757)',
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: '13px',
-            margin: '12px 0 0',
+            color: color.system.red,
+            fontFamily: font.family.body,
+            fontSize: font.size.body.xs,
+            margin: `${space.sm} 0 0`,
           }}
         >
           {error}
@@ -149,10 +150,10 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
       {success && (
         <p
           style={{
-            color: 'var(--system--green, #27ae60)',
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: '13px',
-            margin: '12px 0 0',
+            color: color.system.green,
+            fontFamily: font.family.body,
+            fontSize: font.size.body.xs,
+            margin: `${space.sm} 0 0`,
           }}
         >
           {success}

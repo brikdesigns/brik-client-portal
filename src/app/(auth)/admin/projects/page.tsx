@@ -5,7 +5,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
-import { font } from '@/lib/tokens';
+import { font, color, space } from '@/lib/tokens';
 
 export default async function AdminProjectsPage() {
   const supabase = createClient();
@@ -40,8 +40,8 @@ export default async function AdminProjectsPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: space.md,
+          marginBottom: space.xl,
         }}
       >
         <CardSummary label="In progress" value={inProgress} />
@@ -59,7 +59,7 @@ export default async function AdminProjectsPage() {
               accessor: (p) => (
                 <a
                   href={`/admin/projects/${p.slug}`}
-                  style={{ color: 'var(--_color---text--primary)', textDecoration: 'none', fontWeight: 500 }}
+                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
                 >
                   {p.name}
                 </a>
@@ -72,7 +72,7 @@ export default async function AdminProjectsPage() {
                 return client ? (
                   <a
                     href={`/admin/companies/${client.slug}`}
-                    style={{ color: 'var(--_color---system--link, #0034ea)', textDecoration: 'none', fontSize: font.size.body.xs }}
+                    style={{ color: color.system.link, textDecoration: 'none', fontSize: font.size.body.xs }}
                   >
                     {client.name}
                   </a>
@@ -86,12 +86,12 @@ export default async function AdminProjectsPage() {
             {
               header: 'Start',
               accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)', fontSize: font.size.body.xs },
+              style: { color: color.text.secondary, fontSize: font.size.body.xs },
             },
             {
               header: 'End',
               accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-              style: { color: 'var(--_color---text--secondary)', fontSize: font.size.body.xs },
+              style: { color: color.text.secondary, fontSize: font.size.body.xs },
             },
             {
               header: '',

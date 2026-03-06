@@ -6,6 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 export default function NewProjectPage() {
   const params = useParams();
@@ -62,24 +64,16 @@ export default function NewProjectPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: '32px' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: 0,
-          }}
-        >
+      <div style={{ marginBottom: space.xl }}>
+        <h1 style={heading.page}>
           Add project
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base, 14px)',
-            color: 'var(--_color---text--secondary)',
-            margin: '8px 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${gap.xs} 0 0`,
           }}
         >
           Create a new project for this client.
@@ -88,7 +82,7 @@ export default function NewProjectPage() {
 
       <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
         <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
             <TextInput
               label="Project name"
               type="text"
@@ -102,10 +96,10 @@ export default function NewProjectPage() {
               <label
                 style={{
                   display: 'block',
-                  fontFamily: 'var(--_typography---font-family--label)',
-                  fontSize: 'var(--_typography---label--sm, 12px)',
-                  fontWeight: 600,
-                  color: 'var(--_color---text--secondary)',
+                  fontFamily: font.family.label,
+                  fontSize: font.size.label.sm,
+                  fontWeight: font.weight.semibold,
+                  color: color.text.secondary,
                   marginBottom: '6px',
                 }}
               >
@@ -118,19 +112,19 @@ export default function NewProjectPage() {
                 rows={3}
                 style={{
                   width: '100%',
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '14px',
-                  padding: '8px 12px',
-                  borderRadius: 'var(--_border-radius---sm, 4px)',
-                  border: '1px solid var(--_color---border--input)',
-                  backgroundColor: 'var(--_color---background--input, white)',
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.sm,
+                  padding: `${gap.xs} ${gap.sm}`,
+                  borderRadius: border.radius.sm,
+                  border: `${border.width.sm} solid ${color.border.input}`,
+                  backgroundColor: color.background.input,
+                  color: color.text.primary,
                   resize: 'vertical',
                   boxSizing: 'border-box',
                 }}
               />
             </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
               <TextInput
                 label="Start date"
                 type="date"
@@ -151,17 +145,17 @@ export default function NewProjectPage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: '13px',
-                margin: '16px 0 0',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.xs,
+                margin: `${space.md} 0 0`,
               }}
             >
               {error}
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
+          <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
             <Button type="submit" variant="primary" size="md" disabled={loading}>
               {loading ? 'Creating...' : 'Create project'}
             </Button>

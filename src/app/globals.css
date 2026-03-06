@@ -1,5 +1,6 @@
-/* BDS Design System CSS — provides component classes and base token structure */
-@import '../../brik-bds/updates/brik-bds.webflow/css/brik-bds.webflow.css';
+/* BDS Design System — fonts + token definitions */
+@import '../../brik-bds/tokens/fonts.css';
+@import '../../brik-bds/tokens/webflow-tokens.css';
 
 /* Tailwind layers */
 @tailwind base;
@@ -68,50 +69,50 @@
   /* ---- Semantic color tokens (mapped to Brik brand) ---- */
 
   /* Page */
-  --_color---page--primary: var(--grayscale--white);
-  --_color---page--secondary: var(--grayscale--lightest);
-  --_color---page--accent: var(--tan--lightest);
+  --page-primary: var(--grayscale--white);
+  --page-secondary: var(--grayscale--lightest);
+  --page-accent: var(--tan--lightest);
 
   /* Text */
-  --_color---text--primary: var(--grayscale--darkest);
-  --_color---text--secondary: var(--grayscale--dark);
-  --_color---text--muted: var(--grayscale--light);
-  --_color---text--inverse: var(--grayscale--white);
-  --_color---text--brand: var(--brand--primary);
+  --text-primary: var(--grayscale--darkest);
+  --text-secondary: var(--grayscale--dark);
+  --text-muted: var(--grayscale--light);
+  --text-inverse: var(--grayscale--white);
+  --text-brand-primary: var(--brand--primary);
 
   /* Surface */
-  --_color---surface--primary: var(--grayscale--white);
-  --_color---surface--secondary: var(--grayscale--lightest);
-  --_color---surface--brand-primary: var(--brand--primary);
+  --surface-primary: var(--grayscale--white);
+  --surface-secondary: var(--grayscale--lightest);
+  --surface-brand-primary: var(--brand--primary);
 
   /* Background */
-  --_color---background--brand-primary: var(--brand--primary);
-  --_color---background--primary: var(--grayscale--white);
-  --_color---background--secondary: var(--grayscale--lightest);
-  --_color---background--inverse: var(--grayscale--darkest);
-  --_color---background--input: var(--grayscale--white);
+  --background-brand-primary: var(--brand--primary);
+  --background-primary: var(--grayscale--white);
+  --background-secondary: var(--grayscale--lightest);
+  --background-inverse: var(--grayscale--darkest);
+  --background-input: var(--grayscale--white);
 
   /* Border */
-  --_color---border--primary: var(--grayscale--darkest);
-  --_color---border--secondary: var(--grayscale--lighter);
-  --_color---border--muted: var(--grayscale--lighter);
-  --_color---border--brand: var(--brand--primary);
-  --_color---border--input: var(--grayscale--light);
-  --_color---border--inverse: var(--grayscale--white);
+  --border-primary: var(--grayscale--darkest);
+  --border-secondary: var(--grayscale--lighter);
+  --border-muted: var(--grayscale--lighter);
+  --border-brand-primary: var(--brand--primary);
+  --border-input: var(--grayscale--light);
+  --border-inverse: var(--grayscale--white);
 
   /* System */
-  --_color---system--link: #0034ea;
+  --color-system-link: #0034ea;
 
   /* ---- Typography (Poppins — Brik brand font) ---- */
-  --_typography---font-family--body: Poppins, sans-serif;
-  --_typography---font-family--label: Poppins, sans-serif;
-  --_typography---font-family--heading: Poppins, sans-serif;
-  --_typography---font-family--display: Poppins, sans-serif;
+  --font-family-body: Poppins, sans-serif;
+  --font-family-label: Poppins, sans-serif;
+  --font-family-heading: Poppins, sans-serif;
+  --font-family-display: Poppins, sans-serif;
 
   /*
    * Component-level spacing — matches BDS :root definitions.
    *
-   * The BDS Webflow CSS has TWO spacing "modes":
+   * The BDS CSS has TWO spacing "modes":
    * - :root = component-level (buttons, badges, inputs) — 12px, 16px, 24px
    * - .body = section/layout-level (page sections) — 24px, 32px, 40px
    *
@@ -119,30 +120,25 @@
    * to the :root (component) values here. Without this, components would
    * inherit the section-level spacing (way too large for UI elements).
    *
-   * Reference: brik-bds.webflow.css :root {} block
+   * Reference: brik-bds tokens/webflow-tokens.css :root {} block
    */
-  --_space---none: var(--space--0);
-  --_space---tiny: var(--space--200);
-  --_space---xs: var(--space--250);
-  --_space---sm: var(--space--300);
-  --_space---md: var(--space--400);
-  --_space---lg: var(--space--600);
-  --_space---xl: var(--space--800);
-  --_space---xxl: var(--space--800);
-  --_space---huge: var(--space--1200);
+  --padding-none: var(--space-0);
+  --padding-tiny: var(--space-200);
+  --padding-xs: var(--space-250);
+  --padding-sm: var(--space-300);
+  --padding-md: var(--space-400);
+  --padding-lg: var(--space-600);
+  --padding-xl: var(--space-800);
+  --padding-huge: var(--space-1200);
 
-  --_space---gap--none: var(--space--0);
-  --_space---gap--tiny: var(--space--50);
-  --_space---gap--xs: var(--space--100);
-  --_space---gap--sm: var(--space--150);
-  --_space---gap--md: var(--space--200);
-  --_space---gap--lg: var(--space--400);
-  --_space---gap--xl: var(--space--600);
-  --_space---gap--xxl: var(--space--600);
-  --_space---gap--huge: var(--space--800);
-
-  --_space---button: var(--space--200);
-  --_space---input: var(--space--200);
+  --gap-none: var(--space-0);
+  --gap-tiny: var(--space-50);
+  --gap-xs: var(--space-100);
+  --gap-sm: var(--space-150);
+  --gap-md: var(--space-200);
+  --gap-lg: var(--space-400);
+  --gap-xl: var(--space-600);
+  --gap-huge: var(--space-800);
 
   /* ---- Service category colors (from brikdesigns.com) ---- */
   --services--yellow: #f4d364;
@@ -174,39 +170,39 @@
  */
 :root[data-theme="dark"] .body {
   /* Text */
-  --_color---text--primary: var(--grayscale--lightest);
-  --_color---text--secondary: var(--grayscale--light);
-  --_color---text--muted: var(--grayscale--dark);
-  --_color---text--brand: var(--brand--primary);
-  --_color---text--inverse: var(--grayscale--darkest);
+  --text-primary: var(--grayscale--lightest);
+  --text-secondary: var(--grayscale--light);
+  --text-muted: var(--grayscale--dark);
+  --text-brand-primary: var(--brand--primary);
+  --text-inverse: var(--grayscale--darkest);
 
   /* Surface */
-  --_color---surface--primary: var(--grayscale--black);
-  --_color---surface--secondary: var(--grayscale--darkest);
-  --_color---surface--brand-primary: var(--brand--primary);
+  --surface-primary: var(--grayscale--black);
+  --surface-secondary: var(--grayscale--darkest);
+  --surface-brand-primary: var(--brand--primary);
 
   /* Page */
-  --_color---page--primary: var(--grayscale--black);
-  --_color---page--secondary: var(--grayscale--darker);
-  --_color---page--accent: var(--grayscale--darkest);
+  --page-primary: var(--grayscale--black);
+  --page-secondary: var(--grayscale--darker);
+  --page-accent: var(--grayscale--darkest);
 
   /* Background */
-  --_color---background--brand-primary: var(--brand--primary);
-  --_color---background--primary: var(--grayscale--darker);
-  --_color---background--secondary: var(--grayscale--darkest);
-  --_color---background--inverse: var(--brand--primary);
-  --_color---background--input: var(--grayscale--black);
+  --background-brand-primary: var(--brand--primary);
+  --background-primary: var(--grayscale--darker);
+  --background-secondary: var(--grayscale--darkest);
+  --background-inverse: var(--brand--primary);
+  --background-input: var(--grayscale--black);
 
   /* Border */
-  --_color---border--primary: var(--grayscale--darkest);
-  --_color---border--secondary: var(--grayscale--darker);
-  --_color---border--muted: var(--grayscale--darker);
-  --_color---border--brand: var(--brand--primary);
-  --_color---border--input: var(--grayscale--dark);
-  --_color---border--inverse: var(--grayscale--black);
+  --border-primary: var(--grayscale--darkest);
+  --border-secondary: var(--grayscale--darker);
+  --border-muted: var(--grayscale--darker);
+  --border-brand-primary: var(--brand--primary);
+  --border-input: var(--grayscale--dark);
+  --border-inverse: var(--grayscale--black);
 
   /* System */
-  --_color---system--link: #6b8aff;
+  --color-system-link: #6b8aff;
 
   /* Service category colors (dark mode — slightly muted for dark backgrounds) */
   --services--yellow: #d4b54a;
@@ -235,23 +231,24 @@
  * content. Override them here so all text inherits the Brik brand tokens.
  */
 li {
-  color: var(--_color---text--primary);
-  font-family: var(--_typography---font-family--body);
+  color: var(--text-primary);
+  font-family: var(--font-family-body);
+  font-size: inherit;
 }
 
 h3 {
-  color: var(--_color---text--primary);
-  font-family: var(--_typography---font-family--heading);
+  color: var(--text-primary);
+  font-family: var(--font-family-heading);
 }
 
 h4 {
-  color: var(--_color---text--primary);
-  font-family: var(--_typography---font-family--heading);
+  color: var(--text-primary);
+  font-family: var(--font-family-heading);
 }
 
 blockquote {
-  color: var(--_color---text--primary);
-  font-family: var(--_typography---font-family--body);
+  color: var(--text-primary);
+  font-family: var(--font-family-body);
 }
 
 /* Dark mode logo inversion — filter to white */
@@ -259,4 +256,3 @@ blockquote {
   filter: brightness(0) invert(1);
   transition: filter 0.3s ease;
 }
-

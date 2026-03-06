@@ -6,6 +6,8 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap } from '@/lib/tokens';
 
 interface SyncResponse {
   dry_run: boolean;
@@ -23,18 +25,12 @@ interface SyncResponse {
 
 type SyncState = 'idle' | 'previewing' | 'previewed' | 'syncing' | 'complete' | 'error';
 
-const sectionHeadingStyle = {
-  fontFamily: 'var(--_typography---font-family--heading)',
-  fontSize: 'var(--_typography---heading--small, 18px)',
-  fontWeight: 600,
-  color: 'var(--_color---text--primary)',
-  margin: '0 0 16px',
-};
+const sectionHeadingStyle = heading.section;
 
 const monoStyle = {
   fontFamily: 'monospace',
-  fontSize: '12px',
-  color: 'var(--_color---text--secondary)',
+  fontSize: font.size.body.xs,
+  color: color.text.secondary,
 };
 
 export default function StripeSyncPage() {
@@ -86,33 +82,33 @@ export default function StripeSyncPage() {
 
       {/* Initial / error state */}
       {(state === 'idle' || state === 'error') && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <p
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--secondary)',
-              margin: '0 0 8px',
-              lineHeight: 1.6,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.text.secondary,
+              margin: `0 0 ${gap.xs}`,
+              lineHeight: font.lineHeight.normal,
             }}
           >
             This will fetch all active products from your Stripe account, match them
             to portal services by name (case-insensitive), and populate the{' '}
-            <code style={{ fontSize: '12px', backgroundColor: 'var(--_color---background--secondary)', padding: '2px 4px', borderRadius: '2px' }}>
+            <code style={{ fontSize: font.size.body.xs, backgroundColor: color.background.secondary, padding: '2px 4px', borderRadius: '2px' }}>
               stripe_product_id
             </code>{' '}
             and{' '}
-            <code style={{ fontSize: '12px', backgroundColor: 'var(--_color---background--secondary)', padding: '2px 4px', borderRadius: '2px' }}>
+            <code style={{ fontSize: font.size.body.xs, backgroundColor: color.background.secondary, padding: '2px 4px', borderRadius: '2px' }}>
               stripe_price_id
             </code>{' '}
             fields.
           </p>
           <p
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
-              color: 'var(--_color---text--muted)',
-              margin: '0 0 20px',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.xs,
+              color: color.text.muted,
+              margin: `0 0 ${space.lg}`,
             }}
           >
             Services that already have Stripe IDs will be overwritten with fresh values.
@@ -121,7 +117,7 @@ export default function StripeSyncPage() {
             Preview sync
           </Button>
           {error && (
-            <p style={{ color: 'var(--system--red, #d32f2f)', marginTop: '12px', fontSize: '14px' }}>
+            <p style={{ color: color.system.red, marginTop: gap.sm, fontSize: font.size.body.sm }}>
               {error}
             </p>
           )}
@@ -133,9 +129,9 @@ export default function StripeSyncPage() {
         <Card variant="elevated" padding="lg">
           <p
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--secondary)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.text.secondary,
               margin: 0,
             }}
           >
@@ -152,8 +148,8 @@ export default function StripeSyncPage() {
             style={{
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: '16px',
-              marginBottom: '24px',
+              gap: space.md,
+              marginBottom: space.lg,
             }}
           >
             <CardSummary label="Matched" value={result.summary.matched} />
@@ -164,13 +160,13 @@ export default function StripeSyncPage() {
 
           {/* Matched */}
           {result.matched.length > 0 && (
-            <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
               <h2 style={sectionHeadingStyle}>Matched services ({result.matched.length})</h2>
               <DataTable
                 data={result.matched}
                 rowKey={(m) => m.stripe_product_id}
                 columns={[
-                  { header: 'Service', accessor: (m) => m.service_name, style: { fontWeight: 500 } },
+                  { header: 'Service', accessor: (m) => m.service_name, style: { fontWeight: font.weight.medium } },
                   { header: 'Product ID', accessor: (m) => m.stripe_product_id, style: monoStyle },
                   { header: 'Price ID', accessor: (m) => m.stripe_price_id || '—', style: monoStyle },
                 ]}
@@ -180,7 +176,7 @@ export default function StripeSyncPage() {
 
           {/* Unmatched Stripe */}
           {result.unmatched_stripe.length > 0 && (
-            <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
               <h2 style={sectionHeadingStyle}>
                 Stripe products without portal match ({result.unmatched_stripe.length})
               </h2>
@@ -197,7 +193,7 @@ export default function StripeSyncPage() {
 
           {/* Unmatched portal */}
           {result.unmatched_portal.length > 0 && (
-            <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
+            <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
               <h2 style={sectionHeadingStyle}>
                 Portal services without Stripe match ({result.unmatched_portal.length})
               </h2>
@@ -213,11 +209,11 @@ export default function StripeSyncPage() {
 
           {/* Errors */}
           {result.errors.length > 0 && (
-            <Card variant="elevated" padding="lg" style={{ marginBottom: '24px' }}>
-              <h2 style={{ ...sectionHeadingStyle, color: 'var(--system--red, #d32f2f)' }}>
+            <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
+              <h2 style={{ ...sectionHeadingStyle, color: color.system.red }}>
                 Errors ({result.errors.length})
               </h2>
-              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '13px', color: 'var(--_color---text--secondary)' }}>
+              <ul style={{ margin: 0, paddingLeft: '20px', fontSize: font.size.body.xs, color: color.text.secondary }}>
                 {result.errors.map((e, i) => (
                   <li key={i}>{e}</li>
                 ))}
@@ -226,7 +222,7 @@ export default function StripeSyncPage() {
           )}
 
           {/* Actions */}
-          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: gap.sm, alignItems: 'center' }}>
             {state === 'previewed' && (
               <>
                 <Button variant="primary" size="md" onClick={() => runSync(false)}>
@@ -245,9 +241,9 @@ export default function StripeSyncPage() {
               <>
                 <p
                   style={{
-                    fontFamily: 'var(--_typography---font-family--body)',
-                    fontSize: '14px',
-                    fontWeight: 500,
+                    fontFamily: font.family.body,
+                    fontSize: font.size.body.sm,
+                    fontWeight: font.weight.medium,
                     color: 'var(--services--green-dark)',
                     margin: 0,
                   }}

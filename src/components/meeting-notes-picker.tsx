@@ -6,6 +6,7 @@ import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faMagnifyingGlass, faCheck, faSpinner, faFileLines } from '@fortawesome/free-solid-svg-icons';
+import { font, color, gap, space, border } from '@/lib/tokens';
 
 interface MeetingPage {
   id: string;
@@ -59,24 +60,24 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
   }
 
   const sectionStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600 as const,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 8px',
+    fontFamily: font.family.heading,
+    fontSize: font.size.heading.small,
+    fontWeight: font.weight.semibold,
+    color: color.text.primary,
+    margin: `0 0 ${gap.sm}`,
   };
 
   const bodyStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    color: 'var(--_color---text--secondary)',
-    margin: '0 0 16px',
+    fontFamily: font.family.body,
+    fontSize: font.size.body.sm,
+    color: color.text.secondary,
+    margin: `0 0 ${space.md}`,
   };
 
   const iconSize = { width: 14, height: 14 };
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: '24px' }}>
+    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
         <h2 style={sectionStyle}>Meeting Notes</h2>
         {!searching && (
@@ -90,16 +91,16 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
       </p>
 
       {searching && (
-        <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--_color---text--muted)' }}>
+        <div style={{ textAlign: 'center', padding: `${space.lg} 0`, color: color.text.muted }}>
           <FontAwesomeIcon icon={faSpinner} spin style={{ width: 16, height: 16, marginBottom: 8 }} />
-          <p style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px', margin: 0 }}>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, margin: 0 }}>
             Searching Notion for &quot;{companyName}&quot;...
           </p>
         </div>
       )}
 
       {!searching && meetings.length > 0 && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm, marginBottom: space.md }}>
           {meetings.map((meeting) => (
             <button
               key={meeting.id}
@@ -108,19 +109,19 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '12px 16px',
+                gap: gap.md,
+                padding: `${space.sm} ${space.md}`,
                 border: selectedId === meeting.id
-                  ? '2px solid var(--_color---brand--primary, #E35335)'
-                  : 'var(--_border-width---sm) solid var(--_color---border--muted)',
-                borderRadius: 'var(--_border-radius---md)',
+                  ? `2px solid ${color.brand.primary}`
+                  : `${border.width.sm} solid ${color.border.muted}`,
+                borderRadius: border.radius.md,
                 backgroundColor: selectedId === meeting.id
-                  ? 'var(--_color---surface--secondary)'
+                  ? color.surface.secondary
                   : 'transparent',
                 cursor: 'pointer',
                 textAlign: 'left',
                 width: '100%',
-                fontFamily: 'var(--_typography---font-family--body)',
+                fontFamily: font.family.body,
               }}
             >
               <FontAwesomeIcon
@@ -128,24 +129,24 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
                 style={{
                   ...iconSize,
                   color: selectedId === meeting.id
-                    ? 'var(--_color---brand--primary, #E35335)'
-                    : 'var(--_color---text--muted)',
+                    ? color.brand.primary
+                    : color.text.muted,
                 }}
               />
               <div style={{ flex: 1 }}>
                 <p style={{
-                  fontFamily: 'var(--_typography---font-family--label)',
-                  fontWeight: 600,
-                  fontSize: '14px',
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.label,
+                  fontWeight: font.weight.semibold,
+                  fontSize: font.size.body.sm,
+                  color: color.text.primary,
                   margin: 0,
                 }}>
                   {meeting.title}
                 </p>
                 {meeting.lastEdited && (
                   <p style={{
-                    fontSize: '12px',
-                    color: 'var(--_color---text--muted)',
+                    fontSize: font.size.body.xs,
+                    color: color.text.muted,
                     margin: '2px 0 0',
                   }}>
                     Last edited: {new Date(meeting.lastEdited).toLocaleDateString()}
@@ -153,7 +154,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
                 )}
               </div>
               {selectedId === meeting.id && (
-                <FontAwesomeIcon icon={faCheck} style={{ ...iconSize, color: 'var(--_color---brand--primary, #E35335)' }} />
+                <FontAwesomeIcon icon={faCheck} style={{ ...iconSize, color: color.brand.primary }} />
               )}
             </button>
           ))}
@@ -161,11 +162,11 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
       )}
 
       {/* Manual URL fallback */}
-      <div style={{ borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)', paddingTop: '16px' }}>
-        <p style={{ ...bodyStyle, fontSize: '12px', marginBottom: '8px' }}>
+      <div style={{ borderTop: `${border.width.sm} solid ${color.border.muted}`, paddingTop: space.md }}>
+        <p style={{ ...bodyStyle, fontSize: font.size.body.xs, marginBottom: gap.sm }}>
           Or paste a Notion page URL directly:
         </p>
-        <div style={{ display: 'flex', gap: '8px' }}>
+        <div style={{ display: 'flex', gap: gap.sm }}>
           <div style={{ flex: 1 }}>
             <TextInput
               type="text"
@@ -193,10 +194,10 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
 
       {error && (
         <p style={{
-          color: 'var(--system--yellow, #f2c94c)',
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: '13px',
-          margin: '12px 0 0',
+          color: color.system.yellow,
+          fontFamily: font.family.body,
+          fontSize: font.size.body.sm,
+          margin: `${gap.md} 0 0`,
         }}>
           {error}
         </p>
@@ -204,10 +205,10 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
 
       {loaded && (
         <p style={{
-          color: 'var(--system--green, #27ae60)',
-          fontFamily: 'var(--_typography---font-family--body)',
-          fontSize: '13px',
-          margin: '12px 0 0',
+          color: color.system.green,
+          fontFamily: font.family.body,
+          fontSize: font.size.body.sm,
+          margin: `${gap.md} 0 0`,
         }}>
           Meeting notes selected. Proceed to select services and generate.
         </p>

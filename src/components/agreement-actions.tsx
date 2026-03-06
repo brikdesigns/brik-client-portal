@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@bds/components/ui/Button/Button';
+import { gap } from '@/lib/tokens';
 
 interface AgreementActionsProps {
   agreementId: string;
@@ -59,7 +60,7 @@ export function AgreementActions({ agreementId, status, shareableLink, clientSlu
   }
 
   return (
-    <div style={{ display: 'flex', gap: 'var(--_space---gap--md)' }}>
+    <div style={{ display: 'flex', gap: gap.md }}>
       {status === 'draft' && (
         <>
           <Button variant="secondary" size="sm" onClick={handleDelete}>

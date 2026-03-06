@@ -5,6 +5,8 @@ import { ServiceCard } from '@/components/service-card';
 import { EmptyState } from '@/components/empty-state';
 import { formatCurrency } from '@/lib/format';
 import { getCurrentClientId } from '@/lib/current-client';
+import { heading } from '@/lib/styles';
+import { gap } from '@/lib/tokens';
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -81,19 +83,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* Services */}
-      <h2
-        style={{
-          fontFamily: 'var(--_typography---font-family--heading)',
-          fontSize: 'var(--_typography---heading--small, 18px)',
-          fontWeight: 600,
-          color: 'var(--_color---text--primary)',
-          margin: '0 0 16px',
-        }}
-      >
-        Services
-      </h2>
+      <h2 style={heading.section}>Services</h2>
       {clientServices.length > 0 ? (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm }}>
           {clientServices.map((cs) => {
             const svc = cs.services as unknown as {
               id: string;

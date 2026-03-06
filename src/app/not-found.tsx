@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { font, color, space, gap } from '@/lib/tokens';
 
 export default function NotFound() {
   return (
@@ -8,13 +9,13 @@ export default function NotFound() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        backgroundColor: 'var(--_color---page--accent, #f1f0ec)',
+        backgroundColor: color.page.accent,
       }}
     >
       <div
         style={{
           textAlign: 'center',
-          fontFamily: 'var(--_typography---font-family--body)',
+          fontFamily: font.family.body,
         }}
       >
         <Image
@@ -22,25 +23,25 @@ export default function NotFound() {
           alt="Brik Designs"
           width={100}
           height={35}
-          style={{ marginBottom: '32px' }}
+          style={{ marginBottom: space.xl }}
           className="portal-logo"
         />
         <h1
           style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large, 28px)',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
-            margin: '0 0 8px',
+            fontFamily: font.family.heading,
+            fontSize: font.size.heading.large,
+            fontWeight: font.weight.semibold,
+            color: color.text.primary,
+            margin: `0 0 ${gap.xs}`,
           }}
         >
           Page not found
         </h1>
         <p
           style={{
-            fontSize: '14px',
-            color: 'var(--_color---text--secondary)',
-            marginBottom: '24px',
+            fontSize: font.size.body.sm,
+            color: color.text.secondary,
+            marginBottom: space.lg,
           }}
         >
           The page you&apos;re looking for doesn&apos;t exist.
@@ -48,8 +49,8 @@ export default function NotFound() {
         <a
           href="/"
           style={{
-            color: 'var(--_color---system--link, #0034ea)',
-            fontSize: '14px',
+            color: color.system.link,
+            fontSize: font.size.body.sm,
             textDecoration: 'none',
           }}
         >

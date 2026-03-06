@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { font, color, border } from '@/lib/tokens';
 
 interface Agreement {
   id: string;
@@ -101,7 +102,7 @@ export default function PublicAgreementPage() {
   if (loading) {
     return (
       <div style={containerStyle}>
-        <p style={{ textAlign: 'center', color: 'var(--_color---text--muted)', fontFamily: 'var(--_typography---font-family--body)' }}>
+        <p style={{ textAlign: 'center', color: color.text.muted, fontFamily: font.family.body }}>
           Loading agreement...
         </p>
       </div>
@@ -124,7 +125,7 @@ export default function PublicAgreementPage() {
   const canSign = !signed && !isDraft && !isExpired;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: 'var(--_color---surface--secondary)' }}>
+    <div style={{ minHeight: '100vh', backgroundColor: color.surface.secondary }}>
       <div style={containerStyle}>
         {/* Header */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -136,18 +137,18 @@ export default function PublicAgreementPage() {
             priority
             style={{ marginBottom: '32px' }}
           />
-          <p style={{ ...bodyStyle, color: 'var(--_color---text--muted)', marginBottom: '8px' }}>
+          <p style={{ ...bodyStyle, color: color.text.muted, marginBottom: '8px' }}>
             {agreement.title} for {agreement.companies.name}
           </p>
-          <h1 style={{ ...headingStyle, fontSize: '28px' }}>{agreement.title}</h1>
+          <h1 style={{ ...headingStyle, fontSize: font.size.heading.large }}>{agreement.title}</h1>
         </div>
 
         {/* Agreement text */}
         <div
           style={{
-            backgroundColor: 'var(--_color---surface--primary)',
-            borderRadius: 'var(--_border-radius---lg)',
-            border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+            backgroundColor: color.surface.primary,
+            borderRadius: border.radius.lg,
+            border: `${border.width.sm} solid ${color.border.muted}`,
             padding: '40px 32px',
             marginBottom: '24px',
           }}
@@ -155,28 +156,28 @@ export default function PublicAgreementPage() {
           <div style={proseStyle}>
             <ReactMarkdown
               components={{
-                h1: ({ children }) => <h1 style={{ ...headingStyle, fontSize: '24px', marginBottom: '16px', marginTop: '32px' }}>{children}</h1>,
-                h2: ({ children }) => <h2 style={{ ...headingStyle, fontSize: '20px', marginBottom: '12px', marginTop: '28px' }}>{children}</h2>,
-                h3: ({ children }) => <h3 style={{ ...headingStyle, fontSize: '17px', marginBottom: '8px', marginTop: '24px' }}>{children}</h3>,
+                h1: ({ children }) => <h1 style={{ ...headingStyle, fontSize: font.size.heading.medium, marginBottom: '16px', marginTop: '32px' }}>{children}</h1>,
+                h2: ({ children }) => <h2 style={{ ...headingStyle, fontSize: font.size.heading.small, marginBottom: '12px', marginTop: '28px' }}>{children}</h2>,
+                h3: ({ children }) => <h3 style={{ ...headingStyle, fontSize: font.size.heading.tiny, marginBottom: '8px', marginTop: '24px' }}>{children}</h3>,
                 p: ({ children }) => <p style={{ ...bodyStyle, marginBottom: '12px' }}>{children}</p>,
-                strong: ({ children }) => <strong style={{ fontWeight: 600 }}>{children}</strong>,
+                strong: ({ children }) => <strong style={{ fontWeight: font.weight.semibold }}>{children}</strong>,
                 ul: ({ children }) => <ul style={{ ...bodyStyle, paddingLeft: '24px', marginBottom: '12px' }}>{children}</ul>,
                 li: ({ children }) => <li style={{ marginBottom: '4px' }}>{children}</li>,
-                hr: () => <hr style={{ border: 'none', borderTop: 'var(--_border-width---sm) solid var(--_color---border--muted)', margin: '24px 0' }} />,
+                hr: () => <hr style={{ border: 'none', borderTop: `${border.width.sm} solid ${color.border.muted}`, margin: '24px 0' }} />,
                 table: ({ children }) => (
                   <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '14px', fontFamily: 'var(--_typography---font-family--body)' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: font.size.body.sm, fontFamily: font.family.body }}>
                       {children}
                     </table>
                   </div>
                 ),
                 th: ({ children }) => (
-                  <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: '2px solid var(--_color---border--muted)', fontWeight: 600, fontSize: '13px', color: 'var(--_color---text--muted)' }}>
+                  <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: `${border.width.md} solid ${color.border.muted}`, fontWeight: font.weight.semibold, fontSize: font.size.body.xs, color: color.text.muted }}>
                     {children}
                   </th>
                 ),
                 td: ({ children }) => (
-                  <td style={{ padding: '8px 12px', borderBottom: 'var(--_border-width---sm) solid var(--_color---border--muted)' }}>
+                  <td style={{ padding: '8px 12px', borderBottom: `${border.width.sm} solid ${color.border.muted}` }}>
                     {children}
                   </td>
                 ),
@@ -190,9 +191,9 @@ export default function PublicAgreementPage() {
         {/* Signing section */}
         <div
           style={{
-            backgroundColor: 'var(--_color---surface--primary)',
-            borderRadius: 'var(--_border-radius---lg)',
-            border: 'var(--_border-width---sm) solid var(--_color---border--muted)',
+            backgroundColor: color.surface.primary,
+            borderRadius: border.radius.lg,
+            border: `${border.width.sm} solid ${color.border.muted}`,
             padding: '32px 24px',
             textAlign: 'center',
           }}
@@ -200,7 +201,7 @@ export default function PublicAgreementPage() {
           {signed ? (
             <>
               <Badge status="positive">Signed</Badge>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
                 {agreement.signed_by_name
                   ? `Signed by ${agreement.signed_by_name} on ${agreement.signed_at ? new Date(agreement.signed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'today'}`
                   : 'This agreement has been signed. Thank you!'}
@@ -209,21 +210,21 @@ export default function PublicAgreementPage() {
           ) : isDraft ? (
             <>
               <Badge status="neutral">Pending</Badge>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
                 This agreement is being prepared. You&apos;ll be notified when it&apos;s ready for signing.
               </p>
             </>
           ) : isExpired ? (
             <>
               <Badge status="warning">Expired</Badge>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
                 This agreement has expired. Please contact us for an updated agreement.
               </p>
             </>
           ) : canSign ? (
             <>
-              <h2 style={{ ...headingStyle, fontSize: '20px', marginBottom: '8px' }}>Sign this agreement</h2>
-              <p style={{ ...bodyStyle, color: 'var(--_color---text--secondary)', marginBottom: '24px' }}>
+              <h2 style={{ ...headingStyle, fontSize: font.size.heading.small, marginBottom: '8px' }}>Sign this agreement</h2>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginBottom: '24px' }}>
                 By signing below, you agree to all terms outlined in this {agreement.title.toLowerCase()}.
               </p>
 
@@ -266,15 +267,15 @@ export default function PublicAgreementPage() {
                     type="checkbox"
                     checked={consent}
                     onChange={(e) => setConsent(e.target.checked)}
-                    style={{ marginTop: '3px', width: '18px', height: '18px', flexShrink: 0, accentColor: 'var(--_color---brand--primary)' }}
+                    style={{ marginTop: '3px', width: '18px', height: '18px', flexShrink: 0, accentColor: color.brand.primary }}
                   />
-                  <span style={{ fontFamily: 'var(--_typography---font-family--body)', fontSize: '14px', lineHeight: 1.5, color: 'var(--_color---text--secondary)' }}>
+                  <span style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, lineHeight: font.lineHeight.normal, color: color.text.secondary }}>
                     I have read and agree to the terms of this {agreement.title.toLowerCase()}. I understand that typing my name and clicking &quot;Sign Agreement&quot; constitutes a legally binding electronic signature under the ESIGN Act.
                   </span>
                 </label>
 
                 {error && (
-                  <p style={{ color: 'var(--system--red, #eb5757)', fontSize: '14px', fontFamily: 'var(--_typography---font-family--body)', marginBottom: '12px' }}>
+                  <p style={{ color: color.system.red, fontSize: font.size.body.sm, fontFamily: font.family.body, marginBottom: '12px' }}>
                     {error}
                   </p>
                 )}
@@ -288,7 +289,7 @@ export default function PublicAgreementPage() {
         </div>
 
         {/* Footer */}
-        <p style={{ ...bodyStyle, textAlign: 'center', color: 'var(--_color---text--muted)', fontSize: '13px', marginTop: '32px' }}>
+        <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, fontSize: font.size.body.xs, marginTop: '32px' }}>
           Powered by Brik Designs
         </p>
       </div>
@@ -303,23 +304,23 @@ const containerStyle: React.CSSProperties = {
 };
 
 const headingStyle: React.CSSProperties = {
-  fontFamily: 'var(--_typography---font-family--heading)',
-  fontWeight: 600,
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.heading,
+  fontWeight: font.weight.semibold,
+  color: color.text.primary,
   margin: 0,
 };
 
 const bodyStyle: React.CSSProperties = {
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '16px',
-  lineHeight: 1.6,
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.body,
+  fontSize: font.size.body.md,
+  lineHeight: font.lineHeight.normal,
+  color: color.text.primary,
   margin: 0,
 };
 
 const proseStyle: React.CSSProperties = {
-  fontFamily: 'var(--_typography---font-family--body)',
-  fontSize: '15px',
-  lineHeight: 1.7,
-  color: 'var(--_color---text--primary)',
+  fontFamily: font.family.body,
+  fontSize: font.size.body.sm,
+  lineHeight: font.lineHeight.relaxed,
+  color: color.text.primary,
 };

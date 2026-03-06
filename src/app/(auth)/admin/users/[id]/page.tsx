@@ -6,6 +6,8 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { RoleTag } from '@/components/status-badges';
+import { heading } from '@/lib/styles';
+import { font, color, space } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -52,26 +54,20 @@ export default async function UserDetailPage({ params }: Props) {
   }
 
   const fieldStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: 'var(--_typography---body--md, 16px)',
-    color: 'var(--_color---text--primary)',
+    fontFamily: font.family.body,
+    fontSize: font.size.body.md,
+    color: color.text.primary,
     margin: 0,
   };
 
   const labelStyle = {
-    fontFamily: 'var(--_typography---font-family--label)',
-    fontSize: 'var(--_typography---body--sm, 14px)',
-    color: 'var(--_color---text--muted)',
+    fontFamily: font.family.label,
+    fontSize: font.size.body.sm,
+    color: color.text.muted,
     margin: '0 0 4px',
   };
 
-  const sectionHeadingStyle = {
-    fontFamily: 'var(--_typography---font-family--heading)',
-    fontSize: 'var(--_typography---heading--small, 18px)',
-    fontWeight: 600,
-    color: 'var(--_color---text--primary)',
-    margin: '0 0 16px',
-  };
+  const sectionHeadingStyle = heading.section;
 
   const formatDate = (date: string | null) =>
     date ? new Date(date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : '—';
@@ -107,7 +103,7 @@ export default async function UserDetailPage({ params }: Props) {
             value: client ? (
               <a
                 href={`/admin/companies/${client.slug}`}
-                style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}
+                style={{ color: color.system.link, textDecoration: 'none' }}
               >
                 {client.name}
               </a>
@@ -131,7 +127,7 @@ export default async function UserDetailPage({ params }: Props) {
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '24px',
+            gap: space.lg,
           }}
         >
           <div>

@@ -11,6 +11,8 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { heading } from '@/lib/styles';
+import { font, color, space, gap } from '@/lib/tokens';
 
 const iconSize = { width: 14, height: 14 };
 
@@ -100,13 +102,13 @@ export default function NewCompanyPage() {
   const toggleStyle = (active: boolean) => ({
     flex: 1,
     padding: '10px 16px',
-    border: `2px solid ${active ? 'var(--brand--primary)' : 'var(--_color---border--secondary)'}`,
+    border: `2px solid ${active ? color.brand.primary : color.border.secondary}`,
     borderRadius: '8px',
-    background: active ? 'var(--_color---background--elevated)' : 'transparent',
-    color: active ? 'var(--_color---text--primary)' : 'var(--_color---text--secondary)',
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    fontWeight: active ? 600 : 400,
+    background: active ? color.background.elevated : 'transparent',
+    color: active ? color.text.primary : color.text.secondary,
+    fontFamily: font.family.body,
+    fontSize: font.size.body.sm,
+    fontWeight: active ? font.weight.semibold : font.weight.regular,
     cursor: 'pointer' as const,
     textAlign: 'center' as const,
     transition: 'all 0.15s ease',
@@ -114,24 +116,16 @@ export default function NewCompanyPage() {
 
   return (
     <div>
-      <div style={{ marginBottom: 'var(--_space---xxl)' }}>
-        <h1
-          style={{
-            fontFamily: 'var(--_typography---font-family--heading)',
-            fontSize: 'var(--_typography---heading--large)',
-            fontWeight: 'var(--font-weight--semi-bold)' as unknown as number,
-            color: 'var(--_color---text--primary)',
-            margin: 0,
-          }}
-        >
+      <div style={{ marginBottom: space.xxl }}>
+        <h1 style={heading.page}>
           Add {type === 'lead' ? 'Lead' : 'Client'}
         </h1>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--body)',
-            fontSize: 'var(--_typography---body--md-base)',
-            color: 'var(--_color---text--secondary)',
-            margin: 'var(--_space---md) 0 0',
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.text.secondary,
+            margin: `${space.md} 0 0`,
           }}
         >
           {type === 'lead'
@@ -146,24 +140,24 @@ export default function NewCompanyPage() {
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: 'var(--_space---gap--lg)',
+              gap: gap.lg,
             }}
           >
             {/* Type toggle */}
             <div>
               <label
                 style={{
-                  fontFamily: 'var(--_typography---font-family--body)',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  color: 'var(--_color---text--primary)',
+                  fontFamily: font.family.body,
+                  fontSize: font.size.body.xs,
+                  fontWeight: font.weight.medium,
+                  color: color.text.primary,
                   display: 'block',
-                  marginBottom: '8px',
+                  marginBottom: gap.xs,
                 }}
               >
                 Type
               </label>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div style={{ display: 'flex', gap: gap.sm }}>
                 <button type="button" style={toggleStyle(type === 'lead')} onClick={() => setType('lead')}>
                   Lead
                 </button>
@@ -201,7 +195,7 @@ export default function NewCompanyPage() {
               style={{
                 display: 'grid',
                 gridTemplateColumns: '1fr 1fr',
-                gap: 'var(--_space---gap--lg)',
+                gap: gap.lg,
               }}
             >
               <TextInput
@@ -249,10 +243,10 @@ export default function NewCompanyPage() {
           {error && (
             <p
               style={{
-                color: 'var(--system--red, #eb5757)',
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--sm)',
-                margin: 'var(--_space---lg) 0 0',
+                color: color.system.red,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                margin: `${space.lg} 0 0`,
               }}
             >
               {error}
@@ -262,8 +256,8 @@ export default function NewCompanyPage() {
           <div
             style={{
               display: 'flex',
-              gap: 'var(--_space---gap--md)',
-              marginTop: 'var(--_space---xl)',
+              gap: gap.md,
+              marginTop: space.xl,
               justifyContent: 'flex-end',
             }}
           >

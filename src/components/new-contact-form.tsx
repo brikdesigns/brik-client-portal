@@ -10,6 +10,7 @@ import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { font, color, space, gap } from '@/lib/tokens';
 
 const iconSize = { width: 14, height: 14 };
 
@@ -89,7 +90,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
   return (
     <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
       <form onSubmit={handleSubmit}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'var(--_space---gap--lg)' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           <TextInput
             label="Full Name"
             type="text"
@@ -104,7 +105,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: 'var(--_space---gap--lg)',
+              gap: gap.lg,
             }}
           >
             <TextInput
@@ -131,7 +132,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
             style={{
               display: 'grid',
               gridTemplateColumns: '1fr 1fr',
-              gap: 'var(--_space---gap--lg)',
+              gap: gap.lg,
             }}
           >
             <TextInput
@@ -163,7 +164,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
             fullWidth
           />
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
             <input
               type="checkbox"
               id="is-primary"
@@ -173,9 +174,9 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
             <label
               htmlFor="is-primary"
               style={{
-                fontFamily: 'var(--_typography---font-family--body)',
-                fontSize: 'var(--_typography---body--sm)',
-                color: 'var(--_color---text--primary)',
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                color: color.text.primary,
               }}
             >
               Primary contact for this company
@@ -195,10 +196,10 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
         {error && (
           <p
             style={{
-              color: 'var(--system--red, #eb5757)',
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: 'var(--_typography---body--sm)',
-              margin: 'var(--_space---lg) 0 0',
+              color: color.system.red,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              margin: `${space.lg} 0 0`,
             }}
           >
             {error}
@@ -208,8 +209,8 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
         <div
           style={{
             display: 'flex',
-            gap: 'var(--_space---gap--md)',
-            marginTop: 'var(--_space---xl)',
+            gap: gap.md,
+            marginTop: space.xl,
             justifyContent: 'flex-end',
           }}
         >

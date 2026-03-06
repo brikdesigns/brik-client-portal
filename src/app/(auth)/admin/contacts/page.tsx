@@ -6,6 +6,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
+import { color, font, gap } from '@/lib/tokens';
 
 export default async function AdminContactsPage() {
   const supabase = createClient();
@@ -45,10 +46,10 @@ export default async function AdminContactsPage() {
             {
               header: 'Name',
               accessor: (c) => (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: 500, color: 'var(--_color---text--primary)' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.sm, fontWeight: font.weight.medium, color: color.text.primary }}>
                   {c.full_name}
                   {c.is_primary && (
-                    <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>Primary</Tag>
+                    <Tag size="sm" style={{ color: color.text.muted }}>Primary</Tag>
                   )}
                 </span>
               ),
@@ -65,19 +66,19 @@ export default async function AdminContactsPage() {
               },
             },
             {
-              header: 'Title',
+              header: 'Job Title',
               accessor: (c) => c.title || '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary, minWidth: '120px' },
             },
             {
               header: 'Email',
               accessor: (c) => c.email || '—',
-              style: { color: 'var(--_color---text--secondary)' },
+              style: { color: color.text.secondary },
             },
             {
               header: 'Role',
               accessor: (c) => (
-                <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>
+                <Tag size="sm" style={{ color: color.text.muted }}>
                   {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
                 </Tag>
               ),
@@ -93,7 +94,7 @@ export default async function AdminContactsPage() {
             {
               header: '',
               accessor: (c) => (
-                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
                   <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
                     View
                   </Button>

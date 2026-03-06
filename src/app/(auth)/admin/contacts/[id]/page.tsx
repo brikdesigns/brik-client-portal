@@ -6,6 +6,7 @@ import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
+import { font, color, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -41,17 +42,17 @@ export default async function ContactDetailPage({ params }: Props) {
   const company = contact.companies as unknown as { id: string; name: string; slug: string } | null;
 
   const fieldLabelStyle = {
-    fontFamily: 'var(--_typography---font-family--label, var(--_typography---font-family--body))',
-    fontSize: '14px',
-    fontWeight: 600,
-    color: 'var(--_color---text--secondary)',
+    fontFamily: font.family.label,
+    fontSize: font.size.body.sm,
+    fontWeight: font.weight.semibold,
+    color: color.text.muted,
     margin: 0,
   };
 
   const fieldValueStyle = {
-    fontFamily: 'var(--_typography---font-family--body)',
-    fontSize: '14px',
-    color: 'var(--_color---text--primary)',
+    fontFamily: font.family.body,
+    fontSize: font.size.body.sm,
+    color: color.text.primary,
     margin: 0,
   };
 
@@ -68,7 +69,7 @@ export default async function ContactDetailPage({ params }: Props) {
           />
         }
         actions={
-          <div style={{ display: 'flex', gap: 'var(--_space---gap--md)' }}>
+          <div style={{ display: 'flex', gap: gap.md }}>
             <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${contact.id}/edit`}>
               Edit
             </Button>
@@ -78,7 +79,7 @@ export default async function ContactDetailPage({ params }: Props) {
           {
             label: 'Role',
             value: (
-              <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>
+              <Tag size="sm" style={{ color: color.text.muted }}>
                 {contact.role.charAt(0).toUpperCase() + contact.role.slice(1)}
               </Tag>
             ),
@@ -86,7 +87,7 @@ export default async function ContactDetailPage({ params }: Props) {
           ...(contact.is_primary ? [{
             label: '',
             value: (
-              <Tag size="sm" style={{ color: 'var(--_color---text--muted)' }}>Primary</Tag>
+              <Tag size="sm" style={{ color: color.text.muted }}>Primary</Tag>
             ),
           }] : []),
           {
@@ -101,7 +102,7 @@ export default async function ContactDetailPage({ params }: Props) {
       />
 
       <Card variant="elevated" padding="lg" style={{ maxWidth: '720px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           {/* Company */}
           <div>
             <p style={fieldLabelStyle}>Company</p>
@@ -115,12 +116,12 @@ export default async function ContactDetailPage({ params }: Props) {
           </div>
 
           {/* Contact info grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.lg }}>
             <div>
               <p style={fieldLabelStyle}>Email</p>
               <p style={fieldValueStyle}>
                 {contact.email ? (
-                  <a href={`mailto:${contact.email}`} style={{ color: 'var(--_color---system--link)', textDecoration: 'none' }}>
+                  <a href={`mailto:${contact.email}`} style={{ color: color.system.link, textDecoration: 'none' }}>
                     {contact.email}
                   </a>
                 ) : '—'}
@@ -132,9 +133,9 @@ export default async function ContactDetailPage({ params }: Props) {
             </div>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.lg }}>
             <div>
-              <p style={fieldLabelStyle}>Title</p>
+              <p style={fieldLabelStyle}>Job Title</p>
               <p style={fieldValueStyle}>{contact.title || '—'}</p>
             </div>
             <div>
@@ -152,8 +153,8 @@ export default async function ContactDetailPage({ params }: Props) {
               <p
                 style={{
                   ...fieldValueStyle,
-                  color: 'var(--_color---text--secondary)',
-                  lineHeight: 1.6,
+                  color: color.text.secondary,
+                  lineHeight: font.lineHeight.relaxed,
                   whiteSpace: 'pre-wrap',
                 }}
               >

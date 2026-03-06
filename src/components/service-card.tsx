@@ -1,4 +1,5 @@
 import { ServiceBadge } from '@/components/service-badge';
+import { font, color, gap, border } from '@/lib/tokens';
 
 interface ServiceCardProps {
   name: string;
@@ -24,10 +25,10 @@ export function ServiceCard({
       style={{
         display: 'flex',
         alignItems: 'center',
-        gap: '16px',
+        gap: gap.md,
         padding: '16px 20px',
-        backgroundColor: 'var(--_color---surface--secondary, #f2f2f2)',
-        borderRadius: '8px',
+        backgroundColor: color.surface.secondary,
+        borderRadius: border.radius.md,
       }}
     >
       <ServiceBadge category={categorySlug} serviceName={name} size={40} />
@@ -35,10 +36,10 @@ export function ServiceCard({
       <div style={{ flex: 1, minWidth: 0 }}>
         <p
           style={{
-            fontFamily: 'var(--_typography---font-family--label)',
-            fontSize: '16px',
-            fontWeight: 600,
-            color: 'var(--_color---text--primary)',
+            fontFamily: font.family.label,
+            fontSize: font.size.label.md,
+            fontWeight: font.weight.semibold,
+            color: color.text.primary,
             margin: 0,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
@@ -50,9 +51,9 @@ export function ServiceCard({
         {description && (
           <p
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '14px',
-              color: 'var(--_color---text--secondary)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.text.secondary,
               margin: '2px 0 0',
               overflow: 'hidden',
               textOverflow: 'ellipsis',
@@ -68,10 +69,10 @@ export function ServiceCard({
         {isRecurring && (
           <span
             style={{
-              fontFamily: 'var(--_typography---font-family--label)',
-              fontSize: '11px',
-              fontWeight: 500,
-              color: 'var(--_color---text--muted)',
+              fontFamily: font.family.label,
+              fontSize: font.size.body.xs,
+              fontWeight: font.weight.medium,
+              color: color.text.muted,
               textTransform: 'uppercase',
               letterSpacing: '0.5px',
             }}
@@ -82,17 +83,17 @@ export function ServiceCard({
         {status && status !== 'active' && (
           <span
             style={{
-              fontFamily: 'var(--_typography---font-family--label)',
-              fontSize: '11px',
-              fontWeight: 500,
+              fontFamily: font.family.label,
+              fontSize: font.size.body.xs,
+              fontWeight: font.weight.medium,
               padding: '2px 8px',
-              borderRadius: '4px',
+              borderRadius: border.radius.sm,
               backgroundColor: status === 'paused'
                 ? 'var(--services--yellow-light)'
-                : 'var(--_color---background--secondary)',
+                : color.background.secondary,
               color: status === 'paused'
                 ? 'var(--services--yellow-dark)'
-                : 'var(--_color---text--secondary)',
+                : color.text.secondary,
             }}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -102,9 +103,9 @@ export function ServiceCard({
           <a
             href={href}
             style={{
-              fontFamily: 'var(--_typography---font-family--body)',
-              fontSize: '13px',
-              color: 'var(--_color---system--link)',
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.system.link,
               textDecoration: 'none',
             }}
           >

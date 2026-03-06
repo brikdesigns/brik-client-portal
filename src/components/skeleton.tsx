@@ -1,4 +1,5 @@
 import { type HTMLAttributes, type CSSProperties } from 'react';
+import { border } from '@/lib/tokens';
 
 export type SkeletonVariant = 'text' | 'circular' | 'rectangular';
 
@@ -31,7 +32,7 @@ const baseStyles: CSSProperties = {
 const variantDefaults: Record<SkeletonVariant, { width: string; height: string; borderRadius: string }> = {
   text: { width: '100%', height: '1em', borderRadius: '4px' },
   circular: { width: '40px', height: '40px', borderRadius: '50%' },
-  rectangular: { width: '100%', height: '140px', borderRadius: 'var(--_border-radius---md, 8px)' },
+  rectangular: { width: '100%', height: '140px', borderRadius: border.radius.md },
 };
 
 export function Skeleton({
