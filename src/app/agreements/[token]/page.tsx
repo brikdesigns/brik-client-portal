@@ -7,7 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Badge } from '@bds/components/ui/Badge/Badge';
-import { font, color, border } from '@/lib/tokens';
+import { font, color, border, space, gap } from '@/lib/tokens';
 
 interface Agreement {
   id: string;
@@ -112,8 +112,8 @@ export default function PublicAgreementPage() {
   if (notFound || !agreement) {
     return (
       <div style={containerStyle}>
-        <div style={{ textAlign: 'center', padding: '48px 0' }}>
-          <h1 style={{ ...headingStyle, marginBottom: '8px' }}>Agreement not found</h1>
+        <div style={{ textAlign: 'center', padding: `${space.huge} 0` }}>
+          <h1 style={{ ...headingStyle, marginBottom: space.tiny }}>Agreement not found</h1>
           <p style={bodyStyle}>This agreement may have been removed or the link is invalid.</p>
         </div>
       </div>
@@ -128,16 +128,16 @@ export default function PublicAgreementPage() {
     <div style={{ minHeight: '100vh', backgroundColor: color.surface.secondary }}>
       <div style={containerStyle}>
         {/* Header */}
-        <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+        <div style={{ textAlign: 'center', marginBottom: space.xl }}>
           <Image
             src="/images/brik-logo.svg"
             alt="Brik Designs"
             width={120}
             height={42}
             priority
-            style={{ marginBottom: '32px' }}
+            style={{ marginBottom: space.xl }}
           />
-          <p style={{ ...bodyStyle, color: color.text.muted, marginBottom: '8px' }}>
+          <p style={{ ...bodyStyle, color: color.text.muted, marginBottom: space.tiny }}>
             {agreement.title} for {agreement.companies.name}
           </p>
           <h1 style={{ ...headingStyle, fontSize: font.size.heading.large }}>{agreement.title}</h1>
@@ -149,35 +149,35 @@ export default function PublicAgreementPage() {
             backgroundColor: color.surface.primary,
             borderRadius: border.radius.lg,
             border: `${border.width.sm} solid ${color.border.muted}`,
-            padding: '40px 32px',
-            marginBottom: '24px',
+            padding: `${space.xl} ${space.lg}`,
+            marginBottom: space.lg,
           }}
         >
           <div style={proseStyle}>
             <ReactMarkdown
               components={{
-                h1: ({ children }) => <h1 style={{ ...headingStyle, fontSize: font.size.heading.medium, marginBottom: '16px', marginTop: '32px' }}>{children}</h1>,
-                h2: ({ children }) => <h2 style={{ ...headingStyle, fontSize: font.size.heading.small, marginBottom: '12px', marginTop: '28px' }}>{children}</h2>,
-                h3: ({ children }) => <h3 style={{ ...headingStyle, fontSize: font.size.heading.tiny, marginBottom: '8px', marginTop: '24px' }}>{children}</h3>,
-                p: ({ children }) => <p style={{ ...bodyStyle, marginBottom: '12px' }}>{children}</p>,
+                h1: ({ children }) => <h1 style={{ ...headingStyle, fontSize: font.size.heading.medium, marginBottom: space.md, marginTop: space.xl }}>{children}</h1>,
+                h2: ({ children }) => <h2 style={{ ...headingStyle, fontSize: font.size.heading.small, marginBottom: space.sm, marginTop: space.lg }}>{children}</h2>,
+                h3: ({ children }) => <h3 style={{ ...headingStyle, fontSize: font.size.heading.tiny, marginBottom: space.tiny, marginTop: space.lg }}>{children}</h3>,
+                p: ({ children }) => <p style={{ ...bodyStyle, marginBottom: space.sm }}>{children}</p>,
                 strong: ({ children }) => <strong style={{ fontWeight: font.weight.semibold }}>{children}</strong>,
-                ul: ({ children }) => <ul style={{ ...bodyStyle, paddingLeft: '24px', marginBottom: '12px' }}>{children}</ul>,
-                li: ({ children }) => <li style={{ marginBottom: '4px' }}>{children}</li>,
-                hr: () => <hr style={{ border: 'none', borderTop: `${border.width.sm} solid ${color.border.muted}`, margin: '24px 0' }} />,
+                ul: ({ children }) => <ul style={{ ...bodyStyle, paddingLeft: space.lg, marginBottom: space.sm }}>{children}</ul>,
+                li: ({ children }) => <li style={{ marginBottom: gap.xs }}>{children}</li>,
+                hr: () => <hr style={{ border: 'none', borderTop: `${border.width.sm} solid ${color.border.muted}`, margin: `${space.lg} 0` }} />,
                 table: ({ children }) => (
-                  <div style={{ overflowX: 'auto', marginBottom: '16px' }}>
+                  <div style={{ overflowX: 'auto', marginBottom: space.md }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: font.size.body.sm, fontFamily: font.family.body }}>
                       {children}
                     </table>
                   </div>
                 ),
                 th: ({ children }) => (
-                  <th style={{ textAlign: 'left', padding: '8px 12px', borderBottom: `${border.width.md} solid ${color.border.muted}`, fontWeight: font.weight.semibold, fontSize: font.size.body.sm, color: color.text.muted }}>
+                  <th style={{ textAlign: 'left', padding: `${space.tiny} ${space.sm}`, borderBottom: `${border.width.md} solid ${color.border.muted}`, fontWeight: font.weight.semibold, fontSize: font.size.body.sm, color: color.text.muted }}>
                     {children}
                   </th>
                 ),
                 td: ({ children }) => (
-                  <td style={{ padding: '8px 12px', borderBottom: `${border.width.sm} solid ${color.border.muted}` }}>
+                  <td style={{ padding: `${space.tiny} ${space.sm}`, borderBottom: `${border.width.sm} solid ${color.border.muted}` }}>
                     {children}
                   </td>
                 ),
@@ -194,14 +194,14 @@ export default function PublicAgreementPage() {
             backgroundColor: color.surface.primary,
             borderRadius: border.radius.lg,
             border: `${border.width.sm} solid ${color.border.muted}`,
-            padding: '32px 24px',
+            padding: `${space.xl} ${space.lg}`,
             textAlign: 'center',
           }}
         >
           {signed ? (
             <>
               <Badge status="positive">Signed</Badge>
-              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: space.sm }}>
                 {agreement.signed_by_name
                   ? `Signed by ${agreement.signed_by_name} on ${agreement.signed_at ? new Date(agreement.signed_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : 'today'}`
                   : 'This agreement has been signed. Thank you!'}
@@ -210,26 +210,26 @@ export default function PublicAgreementPage() {
           ) : isDraft ? (
             <>
               <Badge status="neutral">Pending</Badge>
-              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: space.sm }}>
                 This agreement is being prepared. You&apos;ll be notified when it&apos;s ready for signing.
               </p>
             </>
           ) : isExpired ? (
             <>
               <Badge status="warning">Expired</Badge>
-              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: '12px' }}>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: space.sm }}>
                 This agreement has expired. Please contact us for an updated agreement.
               </p>
             </>
           ) : canSign ? (
             <>
-              <h2 style={{ ...headingStyle, fontSize: font.size.heading.small, marginBottom: '8px' }}>Sign this agreement</h2>
-              <p style={{ ...bodyStyle, color: color.text.secondary, marginBottom: '24px' }}>
+              <h2 style={{ ...headingStyle, fontSize: font.size.heading.small, marginBottom: space.tiny }}>Sign this agreement</h2>
+              <p style={{ ...bodyStyle, color: color.text.secondary, marginBottom: space.lg }}>
                 By signing below, you agree to all terms outlined in this {agreement.title.toLowerCase()}.
               </p>
 
               <div style={{ maxWidth: '400px', margin: '0 auto' }}>
-                <div style={{ marginBottom: '16px' }}>
+                <div style={{ marginBottom: space.md }}>
                   <TextInput
                     label="Full Legal Name"
                     type="text"
@@ -240,7 +240,7 @@ export default function PublicAgreementPage() {
                     fullWidth
                   />
                 </div>
-                <div style={{ marginBottom: '20px' }}>
+                <div style={{ marginBottom: space.md }}>
                   <TextInput
                     label="Email Address"
                     type="email"
@@ -257,10 +257,10 @@ export default function PublicAgreementPage() {
                   style={{
                     display: 'flex',
                     alignItems: 'flex-start',
-                    gap: '10px',
+                    gap: gap.md,
                     textAlign: 'left',
                     cursor: 'pointer',
-                    marginBottom: '20px',
+                    marginBottom: space.md,
                   }}
                 >
                   <input
@@ -275,7 +275,7 @@ export default function PublicAgreementPage() {
                 </label>
 
                 {error && (
-                  <p style={{ color: color.system.red, fontSize: font.size.body.sm, fontFamily: font.family.body, marginBottom: '12px' }}>
+                  <p style={{ color: color.system.red, fontSize: font.size.body.sm, fontFamily: font.family.body, marginBottom: space.sm }}>
                     {error}
                   </p>
                 )}
@@ -289,7 +289,7 @@ export default function PublicAgreementPage() {
         </div>
 
         {/* Footer */}
-        <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, fontSize: font.size.body.xs, marginTop: '32px' }}>
+        <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, fontSize: font.size.body.xs, marginTop: space.xl }}>
           Powered by Brik Designs
         </p>
       </div>
@@ -300,7 +300,7 @@ export default function PublicAgreementPage() {
 const containerStyle: React.CSSProperties = {
   maxWidth: '720px',
   margin: '0 auto',
-  padding: '48px 24px',
+  padding: `${space.huge} ${space.lg}`,
 };
 
 const headingStyle: React.CSSProperties = {
