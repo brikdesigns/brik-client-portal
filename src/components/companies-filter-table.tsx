@@ -37,16 +37,24 @@ const statusOptions = [
 export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] }) {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [industryFilter, setIndustryFilter] = useState('');
+
+  const industryOptions = useMemo(() => {
+    const unique = Array.from(new Set(companies.map((c) => c.industry).filter(Boolean) as string[]));
+    unique.sort((a, b) => a.localeCompare(b));
+    return unique.map((i) => ({ label: i, value: i }));
+  }, [companies]);
 
   const filtered = useMemo(() => {
     return companies.filter((c) => {
       if (typeFilter && c.type !== typeFilter) return false;
       if (statusFilter && c.status !== statusFilter) return false;
+      if (industryFilter && c.industry !== industryFilter) return false;
       return true;
     });
-  }, [companies, typeFilter, statusFilter]);
+  }, [companies, typeFilter, statusFilter, industryFilter]);
 
-  const hasFilters = typeFilter || statusFilter;
+  const hasFilters = typeFilter || statusFilter || industryFilter;
 
   return (
     <div>
@@ -88,6 +96,14 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             size="sm"
             fullWidth={false}
           />
+          <Select
+            value={industryFilter}
+            onChange={(e) => setIndustryFilter(e.target.value)}
+            placeholder="All industries"
+            options={industryOptions}
+            size="sm"
+            fullWidth={false}
+          />
           {hasFilters && (
             <Button
               variant="ghost"
@@ -95,6 +111,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
               onClick={() => {
                 setTypeFilter('');
                 setStatusFilter('');
+                setIndustryFilter('');
               }}
             >
               Clear

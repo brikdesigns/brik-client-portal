@@ -34,6 +34,7 @@ const managerHiddenHrefs = ['/admin/contacts'];
 interface PortalSidebarProps {
   role: 'admin' | 'client';
   portalRole?: 'admin' | 'manager' | 'client';
+  userId: string;
   userName: string;
   isAdmin?: boolean;
   clients?: Array<{ id: string; name: string }>;
@@ -43,6 +44,7 @@ interface PortalSidebarProps {
 export function PortalSidebar({
   role,
   portalRole,
+  userId,
   userName,
   isAdmin = false,
   clients = [],
@@ -129,7 +131,8 @@ export function PortalSidebar({
         }
         userSection={
           <>
-            <p
+            <Link
+              href={role === 'admin' ? `/admin/users/${userId}` : `/dashboard/profile`}
               style={{
                 fontFamily: font.family.body,
                 fontSize: font.size.body.xs,
@@ -138,10 +141,12 @@ export function PortalSidebar({
                 overflow: 'hidden',
                 textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
+                textDecoration: 'none',
+                display: 'block',
               }}
             >
               {userName}
-            </p>
+            </Link>
             <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
               <SignOutButton />
               <ThemeToggle />

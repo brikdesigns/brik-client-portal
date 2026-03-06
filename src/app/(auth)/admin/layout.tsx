@@ -31,6 +31,7 @@ export default async function AdminLayout({
       <PortalSidebar
         role="admin"
         portalRole={profile?.role as 'admin' | 'manager'}
+        userId={user.id}
         userName={profile?.full_name || user.email || 'Admin'}
         isAdmin
       />

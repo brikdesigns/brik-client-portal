@@ -78,6 +78,8 @@
   --text-secondary: var(--grayscale--dark);
   --text-muted: var(--grayscale--light);
   --text-inverse: var(--grayscale--white);
+  --text-on-color-dark: var(--grayscale--white);
+  --text-on-color-light: var(--grayscale--black);
   --text-brand-primary: var(--brand--primary);
 
   /* Surface */

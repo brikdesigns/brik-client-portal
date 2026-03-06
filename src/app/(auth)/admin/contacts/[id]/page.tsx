@@ -1,7 +1,5 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
-import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
@@ -90,80 +88,72 @@ export default async function ContactDetailPage({ params }: Props) {
               <Tag size="sm" style={{ color: color.text.muted }}>Primary</Tag>
             ),
           }] : []),
-          {
-            label: 'Portal',
-            value: (
-              <Badge status={contact.user_id ? 'positive' : 'neutral'}>
-                {contact.user_id ? 'Active' : 'No access'}
-              </Badge>
-            ),
-          },
         ]}
       />
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '720px' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
-          {/* Company */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+        {/* Company */}
+        <div>
+          <p style={fieldLabelStyle}>Company</p>
+          <p style={fieldValueStyle}>
+            {company ? (
+              <TextLink href={`/admin/companies/${company.slug}`} size="small">
+                {company.name}
+              </TextLink>
+            ) : '—'}
+          </p>
+        </div>
+
+        {/* Contact info grid */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
           <div>
-            <p style={fieldLabelStyle}>Company</p>
+            <p style={fieldLabelStyle}>Email</p>
             <p style={fieldValueStyle}>
-              {company ? (
-                <TextLink href={`/admin/companies/${company.slug}`} size="small">
-                  {company.name}
-                </TextLink>
+              {contact.email ? (
+                <a href={`mailto:${contact.email}`} style={{ color: color.system.link, textDecoration: 'none' }}>
+                  {contact.email}
+                </a>
               ) : '—'}
             </p>
           </div>
-
-          {/* Contact info grid */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.lg }}>
-            <div>
-              <p style={fieldLabelStyle}>Email</p>
-              <p style={fieldValueStyle}>
-                {contact.email ? (
-                  <a href={`mailto:${contact.email}`} style={{ color: color.system.link, textDecoration: 'none' }}>
-                    {contact.email}
-                  </a>
-                ) : '—'}
-              </p>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Phone</p>
-              <p style={fieldValueStyle}>{contact.phone || '—'}</p>
-            </div>
+          <div>
+            <p style={fieldLabelStyle}>Phone</p>
+            <p style={fieldValueStyle}>{contact.phone || '—'}</p>
           </div>
-
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.lg }}>
-            <div>
-              <p style={fieldLabelStyle}>Job Title</p>
-              <p style={fieldValueStyle}>{contact.title || '—'}</p>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Added</p>
-              <p style={fieldValueStyle}>
-                {new Date(contact.created_at).toLocaleDateString()}
-              </p>
-            </div>
+          <div>
+            <p style={fieldLabelStyle}>Job Title</p>
+            <p style={fieldValueStyle}>{contact.title || '—'}</p>
           </div>
-
-          {/* Notes */}
-          {contact.notes && (
-            <div>
-              <p style={fieldLabelStyle}>Notes</p>
-              <p
-                style={{
-                  ...fieldValueStyle,
-                  color: color.text.secondary,
-                  lineHeight: font.lineHeight.relaxed,
-                  whiteSpace: 'pre-wrap',
-                }}
-              >
-                {contact.notes}
-              </p>
-            </div>
-          )}
         </div>
-      </Card>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div>
+            <p style={fieldLabelStyle}>Added</p>
+            <p style={fieldValueStyle}>
+              {new Date(contact.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div />
+          <div />
+        </div>
+
+        {/* Notes */}
+        {contact.notes && (
+          <div>
+            <p style={fieldLabelStyle}>Notes</p>
+            <p
+              style={{
+                ...fieldValueStyle,
+                color: color.text.secondary,
+                lineHeight: font.lineHeight.relaxed,
+                whiteSpace: 'pre-wrap',
+              }}
+            >
+              {contact.notes}
+            </p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

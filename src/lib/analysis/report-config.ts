@@ -61,7 +61,7 @@ const STATUS_OPTIONS = [
   { label: 'Pass', value: 'pass' },
   { label: 'Needs Attention', value: 'warning' },
   { label: 'Fail', value: 'fail' },
-  { label: 'Pending', value: 'neutral' },
+  { label: 'Not Started', value: 'neutral' },
 ];
 
 // ── Online Reviews / Listings ────────────────────────────────────

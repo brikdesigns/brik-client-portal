@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
@@ -8,7 +7,6 @@ import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
-import { heading } from '@/lib/styles';
 import { font, color, space, gap } from '@/lib/tokens';
 
 interface Props {
@@ -50,14 +48,36 @@ export default async function ServiceDetailPage({ params }: Props) {
 
   const activeAssignments = assignments.filter((a) => a.status === 'active').length;
 
+  const sectionLabelStyle = {
+    fontFamily: font.family.label,
+    fontSize: font.size.body.lg,
+    fontWeight: font.weight.semibold,
+    color: color.text.muted,
+    margin: 0,
+    paddingTop: space.xl,
+  };
+
+  const fieldLabelStyle = {
+    fontFamily: font.family.label,
+    fontSize: font.size.body.sm,
+    fontWeight: font.weight.semibold,
+    color: color.text.muted,
+    margin: 0,
+  };
+
+  const fieldValueStyle = {
+    fontFamily: font.family.body,
+    fontSize: font.size.body.sm,
+    color: color.text.primary,
+    margin: 0,
+  };
+
   const linkStyle = {
     fontFamily: font.family.body,
     fontSize: font.size.body.xs,
     color: color.system.link,
     textDecoration: 'none' as const,
   };
-
-  const sectionHeadingStyle = heading.section;
 
   return (
     <div>
@@ -113,20 +133,12 @@ export default async function ServiceDetailPage({ params }: Props) {
 
       {/* Stripe integration */}
       {(service.stripe_product_id || service.stripe_price_id) && (
-        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
-          <h2 style={sectionHeadingStyle}>Stripe</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.lg }}>
+        <>
+          <p style={sectionLabelStyle}>Stripe</p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
-              <p style={{
-                fontFamily: font.family.label,
-                fontSize: font.size.body.xs,
-                fontWeight: font.weight.semibold,
-                color: color.text.secondary,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.5px',
-                margin: `0 0 ${gap.xs}`,
-              }}>Product</p>
-              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
+              <p style={fieldLabelStyle}>Product</p>
+              <p style={fieldValueStyle}>
                 {service.stripe_product_id ? (
                   <a
                     href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
@@ -140,16 +152,8 @@ export default async function ServiceDetailPage({ params }: Props) {
               </p>
             </div>
             <div>
-              <p style={{
-                fontFamily: font.family.label,
-                fontSize: font.size.body.xs,
-                fontWeight: font.weight.semibold,
-                color: color.text.secondary,
-                textTransform: 'uppercase' as const,
-                letterSpacing: '0.5px',
-                margin: `0 0 ${gap.xs}`,
-              }}>Price</p>
-              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
+              <p style={fieldLabelStyle}>Price</p>
+              <p style={fieldValueStyle}>
                 {service.stripe_price_id ? (
                   <a
                     href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
@@ -162,60 +166,50 @@ export default async function ServiceDetailPage({ params }: Props) {
                 ) : '—'}
               </p>
             </div>
+            <div />
           </div>
-        </Card>
+        </>
       )}
 
       {/* Client assignments */}
-      <Card variant="elevated" padding="lg">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            marginBottom: space.md,
-          }}
-        >
-          <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Client assignments</h2>
-        </div>
-        <DataTable
-          data={assignments}
-          rowKey={(a) => a.id}
-          emptyMessage="No clients have been assigned this service yet."
-          columns={[
-            {
-              header: 'Client',
-              accessor: (a) =>
-                a.companies ? (
-                  <a
-                    href={`/admin/companies/${a.companies.slug}`}
-                    style={{ color: color.text.primary, textDecoration: 'none' }}
-                  >
-                    {a.companies.name}
-                  </a>
-                ) : (
-                  '—'
-                ),
-              style: { fontWeight: font.weight.medium },
-            },
-            {
-              header: 'Status',
-              accessor: (a) => <ServiceStatusBadge status={a.status} />,
-            },
-            {
-              header: 'Started',
-              accessor: (a) =>
-                a.started_at ? new Date(a.started_at).toLocaleDateString() : '—',
-              style: { color: color.text.secondary },
-            },
-            {
-              header: 'Notes',
-              accessor: (a) => a.notes || '—',
-              style: { color: color.text.muted },
-            },
-          ]}
-        />
-      </Card>
+      <p style={sectionLabelStyle}>Client assignments</p>
+      <DataTable
+        data={assignments}
+        rowKey={(a) => a.id}
+        emptyMessage="No clients have been assigned this service yet."
+        columns={[
+          {
+            header: 'Client',
+            accessor: (a) =>
+              a.companies ? (
+                <a
+                  href={`/admin/companies/${a.companies.slug}`}
+                  style={{ color: color.text.primary, textDecoration: 'none' }}
+                >
+                  {a.companies.name}
+                </a>
+              ) : (
+                '—'
+              ),
+            style: { fontWeight: font.weight.medium },
+          },
+          {
+            header: 'Status',
+            accessor: (a) => <ServiceStatusBadge status={a.status} />,
+          },
+          {
+            header: 'Started',
+            accessor: (a) =>
+              a.started_at ? new Date(a.started_at).toLocaleDateString() : '—',
+            style: { color: color.text.secondary },
+          },
+          {
+            header: 'Notes',
+            accessor: (a) => a.notes || '—',
+            style: { color: color.text.muted },
+          },
+        ]}
+      />
     </div>
   );
 }

@@ -105,6 +105,8 @@ export const color = {
     muted: 'var(--text-muted)',
     brand: 'var(--text-brand-primary)',
     inverse: 'var(--text-inverse)',
+    onColorDark: 'var(--text-on-color-dark)',
+    onColorLight: 'var(--text-on-color-light)',
     negative: 'var(--text-negative)',
   },
   surface: {

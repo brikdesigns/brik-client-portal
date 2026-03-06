@@ -3,12 +3,11 @@
 import { useState } from 'react';
 import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
-import { ProgressBar } from '@bds/components/ui/ProgressBar/ProgressBar';
 import { ReportDetailTable } from '@/components/report-detail-table';
 import { EditableReportTable } from '@/components/editable-report-table';
 import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
-import { font, color, gap } from '@/lib/tokens';
+import { font, color, gap, border } from '@/lib/tokens';
 import { heading as headingStyle, list } from '@/lib/styles';
 
 interface ReportItem {
@@ -54,7 +53,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
   const tier = report.tier as ScoreTier | null;
   const score = report.score ?? 0;
   const maxScore = report.max_score ?? 0;
-  const tierLabel = tier ? TIER_LABELS[tier] : 'Pending';
+  const tierLabel = tier ? TIER_LABELS[tier] : 'Not Started';
   const tierColor = tier ? TIER_COLORS[tier] : color.text.muted;
   const progressPercent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
 
@@ -86,11 +85,35 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
                 {tierLabel}
               </span>
             </div>
-            <ProgressBar
-              value={progressPercent}
-              label={`Score: ${score} of ${maxScore}`}
-              style={{ '--background-brand-primary': tierColor } as React.CSSProperties}
-            />
+            <div
+              role="meter"
+              aria-valuenow={score}
+              aria-valuemin={0}
+              aria-valuemax={maxScore}
+              aria-label={`Score: ${score} of ${maxScore}`}
+              style={{
+                position: 'relative',
+                width: '100%',
+                height: '40px',
+                backgroundColor: color.background.secondary,
+                border: `${border.width.sm} solid ${color.border.primary}`,
+                borderRadius: border.radius.sm,
+                overflow: 'hidden',
+              }}
+            >
+              <div
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  bottom: 0,
+                  width: `${progressPercent}%`,
+                  backgroundColor: tierColor,
+                  borderRadius: border.radius.sm,
+                  transition: 'width 0.3s ease',
+                }}
+              />
+            </div>
           </div>
         </Card>
 

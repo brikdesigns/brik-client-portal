@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 
-import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
@@ -81,14 +80,6 @@ export default async function AdminContactsPage() {
                 <Tag size="sm" style={{ color: color.text.muted }}>
                   {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
                 </Tag>
-              ),
-            },
-            {
-              header: 'Portal',
-              accessor: (c) => (
-                <Badge status={c.user_id ? 'positive' : 'neutral'}>
-                  {c.user_id ? 'Active' : 'No access'}
-                </Badge>
               ),
             },
             {

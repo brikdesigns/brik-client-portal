@@ -50,7 +50,7 @@ const reportSetStatusMap: Record<string, StatusConfig> = {
 
 const reportStatusMap: Record<string, StatusConfig> = {
   draft: {
-    label: 'Draft',
+    label: 'Not Started',
     variant: 'neutral',
     icon: <FontAwesomeIcon icon={faPencil} style={iconSize} />,
   },
@@ -116,7 +116,7 @@ const itemStatusMap: Record<string, StatusConfig> = {
     icon: <FontAwesomeIcon icon={faCircleXmark} style={iconSize} />,
   },
   neutral: {
-    label: 'Pending',
+    label: 'Not Started',
     variant: 'neutral',
   },
 };

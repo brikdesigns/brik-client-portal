@@ -25,6 +25,7 @@ export default async function DashboardLayout({
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PortalSidebar
         role="client"
+        userId={user!.id}
         userName={profile?.full_name || user!.email || 'User'}
         isAdmin={profile?.role === 'admin'}
         clients={clients}

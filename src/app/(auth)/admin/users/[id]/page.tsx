@@ -1,13 +1,12 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { RoleTag } from '@/components/status-badges';
 import { heading } from '@/lib/styles';
-import { font, color, space } from '@/lib/tokens';
+import { font, color, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -121,15 +120,9 @@ export default async function UserDetailPage({ params }: Props) {
       />
 
       {/* Activity */}
-      <Card variant="elevated" padding="lg">
-        <h2 style={sectionHeadingStyle}>Activity</h2>
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: space.lg,
-          }}
-        >
+      <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+        <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Activity</h2>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
           <div>
             <p style={labelStyle}>Last login</p>
             <p style={fieldStyle}>{formatDateTime(user.last_login_at)}</p>
@@ -142,12 +135,16 @@ export default async function UserDetailPage({ params }: Props) {
             <p style={labelStyle}>Invited by</p>
             <p style={fieldStyle}>{invitedByName || '—'}</p>
           </div>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
           <div>
             <p style={labelStyle}>Account created</p>
             <p style={fieldStyle}>{formatDate(user.created_at)}</p>
           </div>
+          <div />
+          <div />
         </div>
-      </Card>
+      </div>
     </div>
   );
 }
