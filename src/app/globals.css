@@ -120,25 +120,96 @@
    * to the :root (component) values here. Without this, components would
    * inherit the section-level spacing (way too large for UI elements).
    *
+   * IMPORTANT: BDS primitive scale vars use DOUBLE dashes (--space--200),
+   * not single dashes (--space-200). Match exactly.
+   *
    * Reference: brik-bds tokens/webflow-tokens.css :root {} block
    */
-  --padding-none: var(--space-0);
-  --padding-tiny: var(--space-200);
-  --padding-xs: var(--space-250);
-  --padding-sm: var(--space-300);
-  --padding-md: var(--space-400);
-  --padding-lg: var(--space-600);
-  --padding-xl: var(--space-800);
-  --padding-huge: var(--space-1200);
+  --padding-none: var(--space--0);
+  --padding-tiny: var(--space--200);
+  --padding-xs: var(--space--250);
+  --padding-sm: var(--space--300);
+  --padding-md: var(--space--400);
+  --padding-lg: var(--space--600);
+  --padding-xl: var(--space--800);
+  --padding-huge: var(--space--1200);
 
-  --gap-none: var(--space-0);
-  --gap-tiny: var(--space-50);
-  --gap-xs: var(--space-100);
-  --gap-sm: var(--space-150);
-  --gap-md: var(--space-200);
-  --gap-lg: var(--space-400);
-  --gap-xl: var(--space-600);
-  --gap-huge: var(--space-800);
+  --gap-none: var(--space--0);
+  --gap-tiny: var(--space--50);
+  --gap-xs: var(--space--100);
+  --gap-sm: var(--space--150);
+  --gap-md: var(--space--200);
+  --gap-lg: var(--space--400);
+  --gap-xl: var(--space--600);
+  --gap-huge: var(--space--800);
+
+  /*
+   * Font size aliases — maps clean names to BDS font-size primitive scale.
+   * BDS defines: --_typography---body--md-base: var(--font-size--100)
+   * We alias to: --body-md: var(--font-size--100)
+   */
+  --body-tiny: var(--font-size--25);
+  --body-xs: var(--font-size--50);
+  --body-sm: var(--font-size--75);
+  --body-md: var(--font-size--100);
+  --body-lg: var(--font-size--200);
+  --body-xl: var(--font-size--300);
+
+  --label-sm: var(--font-size--75);
+  --label-md: var(--font-size--100);
+  --label-lg: var(--font-size--200);
+  --label-xl: var(--font-size--300);
+
+  --heading-tiny: var(--font-size--100);
+  --heading-sm: var(--font-size--300);
+  --heading-md: var(--font-size--500);
+  --heading-lg: var(--font-size--700);
+  --heading-xl: var(--font-size--900);
+  --heading-xxl: var(--font-size--1000);
+  --heading-huge: var(--font-size--1200);
+
+  --icon-sm: var(--font-size--75);
+  --icon-md: var(--font-size--100);
+  --icon-lg: var(--font-size--200);
+
+  /*
+   * Line height aliases — maps semantic names to BDS percentage scale.
+   * BDS defines: --font-line-height--150: 150%
+   * We alias to: --font-line-height-normal: var(--font-line-height--150)
+   */
+  --font-line-height-none: var(--font-line-height--none);
+  --font-line-height-tight: var(--font-line-height--100);
+  --font-line-height-snug: var(--font-line-height--125);
+  --font-line-height-normal: var(--font-line-height--150);
+  --font-line-height-relaxed: var(--font-line-height--175);
+  --font-line-height-loose: var(--font-line-height--200);
+
+  /*
+   * Border radius aliases — maps to BDS border-radius primitive scale.
+   * BDS defines: --_border-radius---sm: var(--border-radius--50)
+   * We alias to: --border-radius-sm: var(--border-radius--50)
+   */
+  --border-radius-none: var(--border-radius--0);
+  --border-radius-sm: var(--border-radius--50);
+  --border-radius-md: var(--border-radius--100);
+  --border-radius-lg: var(--border-radius--200);
+  --border-radius-50: var(--border-radius--50);
+
+  /*
+   * Border width aliases — maps to BDS border-width primitive scale.
+   */
+  --border-width-none: var(--border-width--0);
+  --border-width-sm: var(--border-width--25);
+  --border-width-md: var(--border-width--50);
+  --border-width-lg: var(--border-width--100);
+
+  /*
+   * Box shadow aliases — maps to BDS shadow-spread primitive scale.
+   */
+  --box-shadow-none: var(--shadow-spread--0);
+  --box-shadow-sm: var(--shadow-spread--0);
+  --box-shadow-md: var(--shadow-spread--0);
+  --box-shadow-lg: var(--shadow-spread--0);
 
   /* ---- Service category colors (from brikdesigns.com) ---- */
   --services--yellow: #f4d364;
