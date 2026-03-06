@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -81,51 +80,49 @@ export default async function ClientReportListPage({ params }: Props) {
         ]}
       />
 
-      <Card variant="elevated" padding="lg">
-        <DataTable
-          data={allReports}
-          rowKey={(r) => r.id}
-          emptyMessage="No reports generated yet."
-          columns={[
-            {
-              header: 'Report',
-              accessor: (r) => (
-                <a
-                  href={`/admin/reporting/${slug}/${r.report_type}`}
-                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
-                >
-                  {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
-                </a>
-              ),
-            },
-            {
-              header: 'Status',
-              accessor: (r) => <ReportStatusBadge status={r.status} />,
-            },
-            {
-              header: 'Tier',
-              accessor: (r) => r.tier ? <ScoreTierBadge tier={r.tier} /> : '—',
-            },
-            {
-              header: 'Score',
-              accessor: (r) =>
-                r.score !== null && r.max_score !== null
-                  ? `${r.score} / ${r.max_score}`
-                  : '—',
-              style: { color: color.text.secondary },
-            },
-            {
-              header: '',
-              accessor: (r) => (
-                <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${slug}/${r.report_type}`}>
-                  View Details
-                </Button>
-              ),
-              style: { textAlign: 'right' },
-            },
-          ]}
-        />
-      </Card>
+      <DataTable
+        data={allReports}
+        rowKey={(r) => r.id}
+        emptyMessage="No reports generated yet."
+        columns={[
+          {
+            header: 'Report',
+            accessor: (r) => (
+              <a
+                href={`/admin/reporting/${slug}/${r.report_type}`}
+                style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
+              >
+                {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
+              </a>
+            ),
+          },
+          {
+            header: 'Status',
+            accessor: (r) => <ReportStatusBadge status={r.status} />,
+          },
+          {
+            header: 'Tier',
+            accessor: (r) => r.tier ? <ScoreTierBadge tier={r.tier} /> : '—',
+          },
+          {
+            header: 'Score',
+            accessor: (r) =>
+              r.score !== null && r.max_score !== null
+                ? `${r.score} / ${r.max_score}`
+                : '—',
+            style: { color: color.text.secondary },
+          },
+          {
+            header: '',
+            accessor: (r) => (
+              <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${slug}/${r.report_type}`}>
+                View Details
+              </Button>
+            ),
+            style: { textAlign: 'right' },
+          },
+        ]}
+      />
     </div>
   );
 }

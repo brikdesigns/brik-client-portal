@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
@@ -43,12 +42,11 @@ export default async function AdminReportingPage() {
         <CardSummary label="Needs review" value={needsReview} />
       </div>
 
-      <Card variant="elevated" padding="lg">
-        <DataTable
-          data={all}
-          rowKey={(rs) => rs.id}
-          emptyMessage="No analyses yet. Start one from a prospect client page."
-          columns={[
+      <DataTable
+        data={all}
+        rowKey={(rs) => rs.id}
+        emptyMessage="No analyses yet. Start one from a prospect client page."
+        columns={[
             {
               header: 'Client',
               accessor: (rs) => {
@@ -112,8 +110,7 @@ export default async function AdminReportingPage() {
               style: { textAlign: 'right' },
             },
           ]}
-        />
-      </Card>
+      />
     </div>
   );
 }
