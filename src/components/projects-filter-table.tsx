@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Select } from '@bds/components/ui/Select/Select';
+import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
@@ -38,8 +38,8 @@ export function ProjectsFilterTable({
   projects: ProjectRow[];
   clientOptions: FilterOption[];
 }) {
-  const [clientFilter, setClientFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [clientFilter, setClientFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   const filtered = useMemo(() => {
     return projects.filter((p) => {
@@ -48,8 +48,6 @@ export function ProjectsFilterTable({
       return true;
     });
   }, [projects, clientFilter, statusFilter]);
-
-  const hasFilters = clientFilter || statusFilter;
 
   return (
     <div>
@@ -75,40 +73,24 @@ export function ProjectsFilterTable({
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <Select
+          <FilterButton
+            label="Client"
             value={clientFilter}
-            onChange={(e) => setClientFilter(e.target.value)}
-            placeholder="All clients"
-            options={clientOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setClientFilter}
+            options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="All statuses"
+            onChange={setStatusFilter}
             options={[
-              { label: 'Not Started', value: 'not_started' },
-              { label: 'In Progress', value: 'active' },
-              { label: 'Complete', value: 'completed' },
-              { label: 'On Hold', value: 'on_hold' },
-              { label: 'Canceled', value: 'cancelled' },
+              { id: 'not_started', label: 'Not Started' },
+              { id: 'active', label: 'In Progress' },
+              { id: 'completed', label: 'Complete' },
+              { id: 'on_hold', label: 'On Hold' },
+              { id: 'cancelled', label: 'Canceled' },
             ]}
-            size="sm"
-            fullWidth={false}
           />
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setClientFilter('');
-                setStatusFilter('');
-              }}
-            >
-              Clear
-            </Button>
-          )}
         </div>
       </div>
 

@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Select } from '@bds/components/ui/Select/Select';
-
+import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
@@ -49,9 +48,9 @@ export function ServicesFilterTable({
   categoryOptions: FilterOption[];
   clientOptions: FilterOption[];
 }) {
-  const [categoryFilter, setCategoryFilter] = useState('');
-  const [clientFilter, setClientFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string | undefined>();
+  const [clientFilter, setClientFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   const filtered = useMemo(() => {
     return services.filter((s) => {
@@ -62,8 +61,6 @@ export function ServicesFilterTable({
       return true;
     });
   }, [services, categoryFilter, clientFilter, statusFilter]);
-
-  const hasFilters = categoryFilter || clientFilter || statusFilter;
 
   return (
     <div>
@@ -89,46 +86,27 @@ export function ServicesFilterTable({
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <Select
+          <FilterButton
+            label="Category"
             value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-            placeholder="All services"
-            options={categoryOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setCategoryFilter}
+            options={categoryOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            label="Client"
             value={clientFilter}
-            onChange={(e) => setClientFilter(e.target.value)}
-            placeholder="All clients"
-            options={clientOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setClientFilter}
+            options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="All statuses"
+            onChange={setStatusFilter}
             options={[
-              { label: 'Active', value: 'active' },
-              { label: 'Inactive', value: 'inactive' },
+              { id: 'active', label: 'Active' },
+              { id: 'inactive', label: 'Inactive' },
             ]}
-            size="sm"
-            fullWidth={false}
           />
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setCategoryFilter('');
-                setClientFilter('');
-                setStatusFilter('');
-              }}
-            >
-              Clear
-            </Button>
-          )}
         </div>
       </div>
 

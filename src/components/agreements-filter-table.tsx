@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Select } from '@bds/components/ui/Select/Select';
+import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { Tag } from '@bds/components/ui/Tag/Tag';
@@ -35,8 +35,8 @@ export function AgreementsFilterTable({
   agreements: AgreementRow[];
   clientOptions: FilterOption[];
 }) {
-  const [clientFilter, setClientFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [clientFilter, setClientFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   const filtered = useMemo(() => {
     return agreements.filter((a) => {
@@ -45,8 +45,6 @@ export function AgreementsFilterTable({
       return true;
     });
   }, [agreements, clientFilter, statusFilter]);
-
-  const hasFilters = clientFilter || statusFilter;
 
   return (
     <div>
@@ -72,40 +70,24 @@ export function AgreementsFilterTable({
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <Select
+          <FilterButton
+            label="Client"
             value={clientFilter}
-            onChange={(e) => setClientFilter(e.target.value)}
-            placeholder="All clients"
-            options={clientOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setClientFilter}
+            options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="All statuses"
+            onChange={setStatusFilter}
             options={[
-              { label: 'Draft', value: 'draft' },
-              { label: 'Sent', value: 'sent' },
-              { label: 'Viewed', value: 'viewed' },
-              { label: 'Signed', value: 'signed' },
-              { label: 'Expired', value: 'expired' },
+              { id: 'draft', label: 'Draft' },
+              { id: 'sent', label: 'Sent' },
+              { id: 'viewed', label: 'Viewed' },
+              { id: 'signed', label: 'Signed' },
+              { id: 'expired', label: 'Expired' },
             ]}
-            size="sm"
-            fullWidth={false}
           />
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setClientFilter('');
-                setStatusFilter('');
-              }}
-            >
-              Clear
-            </Button>
-          )}
         </div>
       </div>
 

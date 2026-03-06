@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Select } from '@bds/components/ui/Select/Select';
+import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { font, color, space, gap } from '@/lib/tokens';
@@ -34,8 +34,8 @@ export function InvoicesFilterTable({
   invoices: InvoiceRow[];
   clientOptions: FilterOption[];
 }) {
-  const [clientFilter, setClientFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
+  const [clientFilter, setClientFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
 
   const filtered = useMemo(() => {
     return invoices.filter((inv) => {
@@ -44,8 +44,6 @@ export function InvoicesFilterTable({
       return true;
     });
   }, [invoices, clientFilter, statusFilter]);
-
-  const hasFilters = clientFilter || statusFilter;
 
   return (
     <div>
@@ -71,40 +69,24 @@ export function InvoicesFilterTable({
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <Select
+          <FilterButton
+            label="Client"
             value={clientFilter}
-            onChange={(e) => setClientFilter(e.target.value)}
-            placeholder="All clients"
-            options={clientOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setClientFilter}
+            options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="All statuses"
+            onChange={setStatusFilter}
             options={[
-              { label: 'Draft', value: 'draft' },
-              { label: 'Open', value: 'open' },
-              { label: 'Paid', value: 'paid' },
-              { label: 'Void', value: 'void' },
-              { label: 'Uncollectible', value: 'uncollectible' },
+              { id: 'draft', label: 'Draft' },
+              { id: 'open', label: 'Open' },
+              { id: 'paid', label: 'Paid' },
+              { id: 'void', label: 'Void' },
+              { id: 'uncollectible', label: 'Uncollectible' },
             ]}
-            size="sm"
-            fullWidth={false}
           />
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setClientFilter('');
-                setStatusFilter('');
-              }}
-            >
-              Clear
-            </Button>
-          )}
         </div>
       </div>
 
