@@ -8,8 +8,8 @@ import { ReportDetailTable } from '@/components/report-detail-table';
 import { EditableReportTable } from '@/components/editable-report-table';
 import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
-import { font, color, space, gap } from '@/lib/tokens';
-import { heading as headingStyle } from '@/lib/styles';
+import { font, color, gap } from '@/lib/tokens';
+import { heading as headingStyle, list } from '@/lib/styles';
 
 interface ReportItem {
   id: string;
@@ -102,19 +102,15 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
             </h3>
             <ul
               style={{
-                fontFamily: font.family.body,
-                fontSize: font.size.body.md,
-                lineHeight: font.lineHeight.relaxed,
-                color: color.text.secondary,
+                ...list.ul,
                 margin: 0,
-                paddingLeft: space.lg,
                 display: 'flex',
                 flexDirection: 'column',
                 gap: gap.sm,
               }}
             >
               {opportunityLines.map((line, i) => (
-                <li key={i}>{line}</li>
+                <li key={i} style={list.li}>{line}</li>
               ))}
             </ul>
           </Card>
