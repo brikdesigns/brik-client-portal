@@ -166,8 +166,8 @@ export default function NewInvoicePage() {
           )}
 
           <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
-            <Button type="submit" variant="primary" size="md" disabled={loading}>
-              {loading ? 'Creating...' : 'Create invoice'}
+            <Button type="submit" variant="primary" size="md" loading={loading}>
+              Create invoice
             </Button>
             <a href={`/admin/companies/${clientSlug}`}>
               <Button type="button" variant="outline" size="md">

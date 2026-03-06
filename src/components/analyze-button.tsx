@@ -45,9 +45,9 @@ export function AnalyzeButton({ reportId, reportType }: AnalyzeButtonProps) {
       variant="primary"
       size="sm"
       onClick={handleAnalyze}
-      disabled={loading}
+      loading={loading}
     >
-      {loading ? 'Analyzing...' : 'Re-analyze'}
+      Re-analyze
     </Button>
   );
 }

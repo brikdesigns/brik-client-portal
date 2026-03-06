@@ -266,8 +266,8 @@ export default function NewCompanyPage() {
                 Cancel
               </Button>
             </a>
-            <Button type="submit" variant="primary" size="md" disabled={loading}>
-              {loading ? 'Creating...' : type === 'lead' ? 'Add Lead' : 'Begin'}
+            <Button type="submit" variant="primary" size="md" loading={loading}>
+              {type === 'lead' ? 'Add Lead' : 'Begin'}
             </Button>
           </div>
         </form>

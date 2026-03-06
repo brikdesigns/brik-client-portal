@@ -823,8 +823,8 @@ export default function NewProposalPage() {
               <Button type="button" variant="outline" size="md" onClick={() => setStep(2)}>
                 <FontAwesomeIcon icon={faArrowLeft} style={iconSize} /> Back
               </Button>
-              <Button type="submit" variant="primary" size="md" disabled={loading}>
-                {loading ? 'Creating...' : 'Create Draft'}
+              <Button type="submit" variant="primary" size="md" loading={loading}>
+                Create Draft
               </Button>
             </div>
           </Card>

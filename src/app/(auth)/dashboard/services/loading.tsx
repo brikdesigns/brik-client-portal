@@ -1,4 +1,4 @@
-import { Skeleton } from '@/components/skeleton';
+import { Skeleton } from '@bds/components/ui/Skeleton/Skeleton';
 import { space, gap } from '@/lib/tokens';
 
 export default function ServicesLoading() {

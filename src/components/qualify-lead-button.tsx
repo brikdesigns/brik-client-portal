@@ -32,8 +32,8 @@ export function QualifyLeadButton({ companyId }: QualifyLeadButtonProps) {
   }
 
   return (
-    <Button variant="primary" size="sm" onClick={handleQualify} disabled={loading}>
-      {loading ? 'Qualifying...' : 'Qualify Lead'}
+    <Button variant="primary" size="sm" onClick={handleQualify} loading={loading}>
+      Qualify Lead
     </Button>
   );
 }

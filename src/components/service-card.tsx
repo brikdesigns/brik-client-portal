@@ -54,7 +54,7 @@ export function ServiceCard({
               fontFamily: font.family.body,
               fontSize: font.size.body.sm,
               color: color.text.secondary,
-              margin: '2px 0 0',
+              margin: `${gap.tiny} 0 0`,
               overflow: 'hidden',
               textOverflow: 'ellipsis',
               whiteSpace: 'nowrap',
@@ -86,7 +86,7 @@ export function ServiceCard({
               fontFamily: font.family.label,
               fontSize: font.size.body.xs,
               fontWeight: font.weight.medium,
-              padding: '2px 8px',
+              padding: `${gap.tiny} ${gap.md}`,
               borderRadius: border.radius.sm,
               backgroundColor: status === 'paused'
                 ? 'var(--services--yellow-light)'

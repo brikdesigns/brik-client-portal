@@ -130,8 +130,8 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           />
         )}
 
-        <Button type="submit" variant="primary" size="md" disabled={loading}>
-          {loading ? 'Sending...' : 'Send invite'}
+        <Button type="submit" variant="primary" size="md" loading={loading}>
+          Send invite
         </Button>
       </div>
 

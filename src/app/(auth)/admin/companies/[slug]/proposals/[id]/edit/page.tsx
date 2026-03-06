@@ -584,8 +584,8 @@ export default function EditProposalPage() {
             >
               Cancel
             </Button>
-            <Button type="submit" variant="primary" size="md" disabled={loading}>
-              {loading ? 'Saving...' : 'Save Changes'}
+            <Button type="submit" variant="primary" size="md" loading={loading}>
+              Save Changes
             </Button>
           </div>
         </Card>

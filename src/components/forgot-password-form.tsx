@@ -80,8 +80,8 @@ export function ForgotPasswordForm() {
         />
       </div>
 
-      <Button type="submit" variant="primary" size="md" fullWidth disabled={loading}>
-        {loading ? 'Sending...' : 'Send reset link'}
+      <Button type="submit" variant="primary" size="md" fullWidth loading={loading}>
+        Send reset link
       </Button>
 
       <div style={{ textAlign: 'center', marginTop: space.md }}>

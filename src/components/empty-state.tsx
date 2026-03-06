@@ -1,19 +1,19 @@
 import type { ReactNode } from 'react';
-import { font, color, space } from '@/lib/tokens';
+import { EmptyState as BdsEmptyState } from '@bds/components/ui/EmptyState/EmptyState';
 
+/**
+ * Portal EmptyState wrapper — renders BDS EmptyState with
+ * transparent background for use inside existing Card containers.
+ */
 export function EmptyState({ children }: { children: ReactNode }) {
   return (
-    <p
+    <BdsEmptyState
+      title={typeof children === 'string' ? children : ''}
       style={{
-        color: color.text.muted,
-        fontFamily: font.family.body,
-        fontSize: font.size.body.sm,
-        textAlign: 'center',
-        padding: `${space.lg} 0`,
-        margin: 0,
+        backgroundColor: 'transparent',
+        border: 'none',
+        minHeight: 'auto',
       }}
-    >
-      {children}
-    </p>
+    />
   );
 }

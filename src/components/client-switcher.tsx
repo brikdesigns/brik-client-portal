@@ -88,7 +88,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
         <div
           style={{
             position: 'absolute',
-            bottom: 'calc(100% + 4px)',
+            bottom: `calc(100% + ${gap.xs})`,
             left: 0,
             minWidth: '200px',
             maxHeight: '300px',
@@ -97,7 +97,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
             border: `${border.width.sm} solid ${color.border.secondary}`,
             borderRadius: border.radius.md,
             boxShadow: shadow.md,
-            padding: '4px 0',
+            padding: `${gap.xs} 0`,
             zIndex: 1000,
           }}
         >
@@ -143,7 +143,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
                 style={{
                   height: '1px',
                   backgroundColor: color.border.secondary,
-                  margin: '4px 0',
+                  margin: `${gap.xs} 0`,
                 }}
               />
             </>

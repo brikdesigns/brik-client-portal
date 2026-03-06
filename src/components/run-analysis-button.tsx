@@ -46,9 +46,9 @@ export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
       variant="primary"
       size="sm"
       onClick={handleClick}
-      disabled={loading}
+      loading={loading}
     >
-      {loading ? 'Analyzing...' : 'Start'}
+      Start
     </Button>
   );
 }

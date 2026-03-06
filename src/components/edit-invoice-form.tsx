@@ -199,8 +199,8 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
         )}
 
         <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
-          <Button type="submit" variant="primary" size="md" disabled={loading}>
-            {loading ? 'Saving...' : 'Save changes'}
+          <Button type="submit" variant="primary" size="md" loading={loading}>
+            Save changes
           </Button>
           <a href="/admin/invoices">
             <Button type="button" variant="outline" size="md">

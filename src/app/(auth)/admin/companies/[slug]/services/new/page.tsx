@@ -217,8 +217,8 @@ export default function AssignServicePage() {
           )}
 
           <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
-            <Button type="submit" variant="primary" size="md" disabled={loading || !serviceId || !clientId}>
-              {loading ? 'Assigning...' : 'Assign service'}
+            <Button type="submit" variant="primary" size="md" disabled={!serviceId || !clientId} loading={loading}>
+              Assign service
             </Button>
             <a href={`/admin/companies/${clientSlug}`}>
               <Button type="button" variant="outline" size="md">

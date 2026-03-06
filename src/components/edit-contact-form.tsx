@@ -226,8 +226,8 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
               Cancel
             </Button>
           </a>
-          <Button type="submit" variant="primary" size="md" disabled={loading}>
-            {loading ? 'Saving...' : 'Save changes'}
+          <Button type="submit" variant="primary" size="md" loading={loading}>
+            Save changes
           </Button>
         </div>
       </form>

@@ -7,6 +7,7 @@ import { ReportDetailTable } from '@/components/report-detail-table';
 import { EditableReportTable } from '@/components/editable-report-table';
 import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
+import { ProgressBar } from '@bds/components/ui/ProgressBar/ProgressBar';
 import { font, color, gap, border } from '@/lib/tokens';
 import { heading as headingStyle, list } from '@/lib/styles';
 
@@ -85,35 +86,17 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
                 {tierLabel}
               </span>
             </div>
-            <div
-              role="meter"
-              aria-valuenow={score}
-              aria-valuemin={0}
-              aria-valuemax={maxScore}
-              aria-label={`Score: ${score} of ${maxScore}`}
+            <ProgressBar
+              value={progressPercent}
+              label={`Score: ${score} of ${maxScore}`}
+              fillColor={tierColor}
               style={{
-                position: 'relative',
-                width: '100%',
                 height: '40px',
                 backgroundColor: color.background.secondary,
                 border: `${border.width.sm} solid ${color.border.primary}`,
                 borderRadius: border.radius.sm,
-                overflow: 'hidden',
               }}
-            >
-              <div
-                style={{
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  bottom: 0,
-                  width: `${progressPercent}%`,
-                  backgroundColor: tierColor,
-                  borderRadius: border.radius.sm,
-                  transition: 'width 0.3s ease',
-                }}
-              />
-            </div>
+            />
           </div>
         </Card>
 

@@ -242,8 +242,8 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
         )}
 
         <div style={{ display: 'flex', gap: gap.md, marginTop: space.lg }}>
-          <Button type="submit" variant="primary" size="md" disabled={loading}>
-            {loading ? 'Saving...' : 'Save changes'}
+          <Button type="submit" variant="primary" size="md" loading={loading}>
+            Save changes
           </Button>
           <a href={`/admin/services/${service.slug}`}>
             <Button type="button" variant="outline" size="md">

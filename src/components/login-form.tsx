@@ -121,9 +121,9 @@ export function LoginForm() {
         variant="primary"
         size="md"
         fullWidth
-        disabled={loading}
+        loading={loading}
       >
-        {loading ? 'Signing in...' : 'Sign in'}
+        Sign in
       </Button>
 
       <div style={{ textAlign: 'center', marginTop: space.md }}>

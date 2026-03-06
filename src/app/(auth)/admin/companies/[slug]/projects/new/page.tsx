@@ -156,8 +156,8 @@ export default function NewProjectPage() {
           )}
 
           <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
-            <Button type="submit" variant="primary" size="md" disabled={loading}>
-              {loading ? 'Creating...' : 'Create project'}
+            <Button type="submit" variant="primary" size="md" loading={loading}>
+              Create project
             </Button>
             <a href={`/admin/companies/${clientSlug}`}>
               <Button type="button" variant="outline" size="md">

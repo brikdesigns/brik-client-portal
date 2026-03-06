@@ -219,8 +219,8 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
               Cancel
             </Button>
           </a>
-          <Button type="submit" variant="primary" size="md" disabled={loading || !companyId}>
-            {loading ? 'Creating...' : 'Add Contact'}
+          <Button type="submit" variant="primary" size="md" disabled={!companyId} loading={loading}>
+            Add Contact
           </Button>
         </div>
       </form>

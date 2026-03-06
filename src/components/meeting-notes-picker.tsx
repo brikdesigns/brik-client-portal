@@ -147,7 +147,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
                   <p style={{
                     fontSize: font.size.body.xs,
                     color: color.text.muted,
-                    margin: '2px 0 0',
+                    margin: `${gap.tiny} 0 0`,
                   }}>
                     Last edited: {new Date(meeting.lastEdited).toLocaleDateString()}
                   </p>

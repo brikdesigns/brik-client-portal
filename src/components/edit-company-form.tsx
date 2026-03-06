@@ -243,8 +243,8 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
               Cancel
             </Button>
           </a>
-          <Button type="submit" variant="primary" size="md" disabled={loading}>
-            {loading ? 'Saving...' : 'Save changes'}
+          <Button type="submit" variant="primary" size="md" loading={loading}>
+            Save changes
           </Button>
         </div>
       </form>
