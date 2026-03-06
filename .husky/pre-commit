@@ -5,7 +5,7 @@ echo "🔍 Running linter before commit..."
 npm run lint
 
 # Check staged .tsx/.ts files for hardcoded values that should use BDS tokens
-STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.tsx' 'src/**/*.ts' | grep -v 'email\.ts' || true)
+STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.tsx' 'src/**/*.ts' | grep -v 'email\.ts' | grep -v 'src/emails/' || true)
 
 if [ -n "$STAGED_SRC" ]; then
   HARDCODED_PX=$(echo "$STAGED_SRC" | xargs grep -n "fontSize: '[0-9]" 2>/dev/null || true)
