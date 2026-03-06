@@ -139,7 +139,7 @@ export function ServicesFilterTable({
               header: '',
               accessor: (s) =>
                 s.category ? <ServiceBadge category={s.category.slug} size={16} /> : null,
-              style: { width: '32px', padding: '10px 4px 10px 12px' },
+              style: { width: '32px', padding: `${space.xs} ${gap.xs} ${space.xs} ${space.sm}` },
             },
             {
               header: 'Service',

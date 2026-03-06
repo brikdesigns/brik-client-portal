@@ -172,7 +172,7 @@ export default function AssignServicePage() {
                 style={{
                   padding: `${gap.sm} ${space.md}`,
                   backgroundColor: color.surface.secondary,
-                  borderRadius: '6px',
+                  borderRadius: border.radius.sm,
                 }}
               >
                 <p

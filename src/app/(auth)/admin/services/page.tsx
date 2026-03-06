@@ -3,6 +3,7 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { ServicesFilterTable } from '@/components/services-filter-table';
+import { gap, space } from '@/lib/tokens';
 
 export default async function AdminServicesPage() {
   const supabase = createClient();
@@ -107,8 +108,8 @@ export default async function AdminServicesPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: gap.lg,
+          marginBottom: space.xl,
         }}
       >
         {grouped.map((cat) => (

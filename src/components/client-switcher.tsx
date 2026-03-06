@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faCheck, faBuilding } from '@fortawesome/free-solid-svg-icons';
-import { font, color, border } from '@/lib/tokens';
+import { font, color, border, gap, space, shadow } from '@/lib/tokens';
 
 interface ClientSwitcherProps {
   clients: Array<{ id: string; name: string }>;
@@ -53,8 +53,8 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          padding: '6px 12px',
+          gap: gap.md,
+          padding: `${space.sm} ${space.sm}`,
           backgroundColor: color.surface.secondary,
           border: `${border.width.sm} solid ${color.border.secondary}`,
           borderRadius: border.radius.sm,
@@ -96,7 +96,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
             backgroundColor: color.surface.primary,
             border: `${border.width.sm} solid ${color.border.secondary}`,
             borderRadius: border.radius.md,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            boxShadow: shadow.md,
             padding: '4px 0',
             zIndex: 1000,
           }}
@@ -111,8 +111,8 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '8px',
-                  padding: '8px 12px',
+                  gap: gap.md,
+                  padding: `${space.tiny} ${space.sm}`,
                   backgroundColor: currentClientId === null ? color.page.secondary : 'transparent',
                   border: 'none',
                   fontFamily: font.family.body,
@@ -161,8 +161,8 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  gap: '8px',
-                  padding: '8px 12px',
+                  gap: gap.md,
+                  padding: `${space.tiny} ${space.sm}`,
                   backgroundColor: isCurrent ? color.page.secondary : 'transparent',
                   border: 'none',
                   fontFamily: font.family.body,

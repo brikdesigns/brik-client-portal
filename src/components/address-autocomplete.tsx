@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
-import { font, color, space, border } from '@/lib/tokens';
+import { font, color, space, border, shadow } from '@/lib/tokens';
 
 /**
  * Geoapify autocomplete result
@@ -71,7 +71,7 @@ const dropdownStyles = {
     backgroundColor: color.background.input,
     border: `${border.width.sm} solid ${color.border.input}`,
     borderRadius: border.radius.input,
-    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+    boxShadow: shadow.md,
     maxHeight: '200px',
     overflowY: 'auto' as const,
   },

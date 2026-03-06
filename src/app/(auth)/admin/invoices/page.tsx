@@ -90,7 +90,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         <>
           {/* Open invoices */}
           {openInvoices.length > 0 && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: space.lg }}>
               <h2 style={sectionHeadingStyle}>Open invoices</h2>
               <DataTable<InvoiceRow>
                 data={openInvoices}
@@ -151,7 +151,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
           )}
 
           {/* All invoices */}
-          <div style={{ marginBottom: '24px' }}>
+          <div style={{ marginBottom: space.lg }}>
             <h2 style={sectionHeadingStyle}>All invoices</h2>
             <DataTable<InvoiceRow>
               data={allInvoices}
@@ -223,7 +223,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         <>
           {/* Pending agreements */}
           {pendingAgreements.length > 0 && (
-            <div style={{ marginBottom: '24px' }}>
+            <div style={{ marginBottom: space.lg }}>
               <h2 style={sectionHeadingStyle}>Pending signature</h2>
               <DataTable<AgreementRow>
                 data={pendingAgreements}

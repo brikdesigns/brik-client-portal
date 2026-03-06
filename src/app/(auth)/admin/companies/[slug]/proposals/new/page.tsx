@@ -463,7 +463,7 @@ export default function NewProposalPage() {
                       {categoryName}
                     </span>
                   </div>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
                     {categoryServices.map((svc) => {
                       const isSelected = selectedServiceIds.has(svc.id);
                       return (
@@ -472,8 +472,8 @@ export default function NewProposalPage() {
                           style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '10px',
-                            padding: '8px 12px',
+                            gap: space.xs,
+                            padding: `${space.tiny} ${space.sm}`,
                             borderRadius: border.radius.sm,
                             cursor: 'pointer',
                             backgroundColor: isSelected ? color.surface.secondary : 'transparent',
@@ -505,7 +505,7 @@ export default function NewProposalPage() {
                                   fontFamily: font.family.body,
                                   fontSize: font.size.body.xs,
                                   color: color.text.muted,
-                                  marginLeft: '8px',
+                                  marginLeft: space.tiny,
                                 }}
                               >
                                 {formatCurrency(svc.base_price_cents)}
@@ -754,7 +754,7 @@ export default function NewProposalPage() {
                           border: 'none',
                           cursor: 'pointer',
                           color: color.text.muted,
-                          padding: '4px',
+                          padding: gap.xs,
                           marginTop: space.lg,
                         }}
                         aria-label="Remove item"

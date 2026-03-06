@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
-import { font, color } from '@/lib/tokens';
+import { font, color, gap, space } from '@/lib/tokens';
 
 export default async function ProposalsPage() {
   const supabase = createClient();
@@ -41,8 +41,8 @@ export default async function ProposalsPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
+          gap: gap.lg,
+          marginBottom: space.lg,
         }}
       >
         <CardSummary label="Draft" value={draft} />

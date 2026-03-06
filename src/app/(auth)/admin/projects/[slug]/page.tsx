@@ -4,7 +4,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProjectStatusBadge } from '@/components/status-badges';
-import { font, color, space } from '@/lib/tokens';
+import { font, color, space, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -86,7 +86,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               fontSize: font.size.heading.small,
               fontWeight: font.weight.semibold,
               color: color.text.primary,
-              margin: '0 0 12px',
+              margin: `0 0 ${space.sm}`,
             }}
           >
             Notion
@@ -116,7 +116,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               fontSize: font.size.heading.small,
               fontWeight: font.weight.semibold,
               color: color.text.primary,
-              margin: '0 0 12px',
+              margin: `0 0 ${space.sm}`,
             }}
           >
             ClickUp
@@ -145,7 +145,7 @@ export default async function ProjectDetailPage({ params }: Props) {
             fontSize: font.size.heading.small,
             fontWeight: font.weight.semibold,
             color: color.text.primary,
-            margin: '0 0 16px',
+            margin: `0 0 ${space.md}`,
           }}
         >
           Details
@@ -159,7 +159,7 @@ export default async function ProjectDetailPage({ params }: Props) {
               color: color.text.secondary,
               textTransform: 'uppercase' as const,
               letterSpacing: '0.5px',
-              margin: '0 0 4px',
+              margin: `0 0 ${gap.xs}`,
             }}>Created</p>
             <p style={{
               fontFamily: font.family.body,
@@ -179,7 +179,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                 color: color.text.secondary,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.5px',
-                margin: '0 0 4px',
+                margin: `0 0 ${gap.xs}`,
               }}>Description</p>
               <p style={{
                 fontFamily: font.family.body,

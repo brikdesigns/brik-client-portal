@@ -1,7 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PortalSidebar } from '@/components/portal-sidebar';
-import { color } from '@/lib/tokens';
+import { color, space } from '@/lib/tokens';
 
 export default async function AdminLayout({
   children,
@@ -38,7 +38,7 @@ export default async function AdminLayout({
         style={{
           flex: 1,
           backgroundColor: color.page.primary,
-          padding: '32px',
+          padding: space.xl,
           marginLeft: '260px',
           minHeight: '100vh',
         }}

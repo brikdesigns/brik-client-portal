@@ -9,7 +9,7 @@ import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { ItemStatusBadge } from '@/components/report-badges';
-import { font, color, gap, space } from '@/lib/tokens';
+import { font, color, gap, space, border } from '@/lib/tokens';
 import { type ColumnConfig, getColumnConfig, getRubric, type ReportType } from '@/lib/analysis/report-config';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 
@@ -203,7 +203,7 @@ export function EditableReportTable({
     padding: `${space.sm} ${space.sm}`,
     fontSize: font.size.body.sm,
     color: color.text.primary,
-    borderBottom: `1px solid ${color.border.primary}`,
+    borderBottom: `${border.width.lg} solid ${color.border.primary}`,
     fontFamily: font.family.body,
     verticalAlign: 'top',
   };
@@ -282,7 +282,7 @@ export function EditableReportTable({
                         colSpan={columns.length + 1}
                         style={{
                           padding: `${space.xs} ${space.sm} ${space.md}`,
-                          borderBottom: `1px solid ${color.border.primary}`,
+                          borderBottom: `${border.width.lg} solid ${color.border.primary}`,
                           background: color.background.secondary,
                         }}
                       >

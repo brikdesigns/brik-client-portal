@@ -100,7 +100,7 @@ export default function NewProjectPage() {
                   fontSize: font.size.label.sm,
                   fontWeight: font.weight.semibold,
                   color: color.text.secondary,
-                  marginBottom: '6px',
+                  marginBottom: gap.sm,
                 }}
               >
                 Description

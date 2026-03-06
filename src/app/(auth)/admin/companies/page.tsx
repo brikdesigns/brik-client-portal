@@ -3,6 +3,7 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { CompaniesFilterTable, type CompanyRow } from '@/components/companies-filter-table';
+import { gap, space } from '@/lib/tokens';
 
 export default async function AdminCompaniesPage() {
   const supabase = createClient();
@@ -52,8 +53,8 @@ export default async function AdminCompaniesPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '24px',
+          gap: gap.lg,
+          marginBottom: space.lg,
         }}
       >
         <CardSummary label="Total Companies" value={companies.length} />

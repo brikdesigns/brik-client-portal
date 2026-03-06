@@ -1,13 +1,14 @@
 import { Skeleton } from '@/components/skeleton';
+import { space } from '@/lib/tokens';
 
 export default function UsersLoading() {
   return (
     <div>
       {/* Header */}
-      <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+      <div style={{ marginBottom: space.xl, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div>
           <Skeleton variant="text" width={100} height={28} />
-          <div style={{ marginTop: '8px' }}>
+          <div style={{ marginTop: space.tiny }}>
             <Skeleton variant="text" width={260} height={16} />
           </div>
         </div>

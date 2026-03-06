@@ -26,7 +26,7 @@ import { RunAnalysisButton } from '@/components/run-analysis-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
-import { font, color, gap, space } from '@/lib/tokens';
+import { font, color, gap, space, border } from '@/lib/tokens';
 import { heading } from '@/lib/styles';
 
 interface Props {
@@ -249,8 +249,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: '16px',
-            marginBottom: '24px',
+            gap: gap.lg,
+            marginBottom: space.lg,
           }}
         >
           <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
@@ -264,9 +264,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       <div
         style={{
           display: 'flex',
-          gap: '24px',
-          borderBottom: `1px solid ${color.border.primary}`,
-          marginBottom: '24px',
+          gap: gap.xl,
+          borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+          marginBottom: space.lg,
         }}
       >
         {tabs.map((t) => (
@@ -278,7 +278,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
       {/* ── Overview Tab ───────────────────────────────────────── */}
       {activeTab === 'overview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Overview</h2>
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
@@ -288,7 +288,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
           {/* Location */}
           <p style={sectionLabelStyle}>Location</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Business Name</p>
               <p style={fieldValueStyle}>{client.name || '—'}</p>
@@ -302,7 +302,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{displayCountry}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Address</p>
               <p style={fieldValueStyle}>{client.address || '—'}</p>
@@ -319,7 +319,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
           {/* Contact */}
           <p style={sectionLabelStyle}>Contact</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Website</p>
               <p style={fieldValueStyle}>
@@ -339,7 +339,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).domain_hosted || '—'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Referred By</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).referred_by || '—'}</p>
@@ -353,7 +353,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
           {/* Opportunities */}
           <p style={sectionLabelStyle}>Opportunities</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Pipeline</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).pipeline || '—'}</p>
@@ -367,7 +367,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).opportunity_owner || '—'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '24px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Followers</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).followers || '—'}</p>
@@ -475,7 +475,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 : 'Auto-generates from Notion meeting notes — AI recommends services and writes all sections.'
             }
             action={
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
                 {latestProposal && <ProposalStatusBadge status={latestProposal.status} />}
                 {latestProposal ? (
                   <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
@@ -497,7 +497,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               title="Business Associate Agreement"
               description={`BAA — ${latestBaa.status === 'signed' ? 'Signed' : latestBaa.status === 'sent' || latestBaa.status === 'viewed' ? 'Awaiting signature' : 'Draft'}`}
               action={
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
                   <AgreementStatusBadge status={latestBaa.status} />
                   <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
                     View
@@ -517,7 +517,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Services Tab ───────────────────────────────────────── */}
       {activeTab === 'services' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
             <a href={`/admin/companies/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
           </div>
@@ -532,7 +532,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   const catSlug = cs.services?.service_categories?.slug;
                   return catSlug ? <ServiceBadge category={catSlug} size={16} /> : null;
                 },
-                style: { width: '32px', padding: '10px 4px 10px 12px' },
+                style: { width: '32px', padding: `${space.xs} ${gap.xs} ${space.xs} ${space.sm}` },
               },
               {
                 header: 'Service',
@@ -572,7 +572,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Projects Tab ──────────────────────────────────────── */}
       {activeTab === 'projects' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
             <a href={`/admin/companies/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
           </div>
@@ -608,7 +608,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Invoices Tab ──────────────────────────────────────── */}
       {activeTab === 'invoices' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
             <a href={`/admin/companies/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
           </div>
@@ -655,7 +655,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Contacts Tab ──────────────────────────────────────── */}
       {activeTab === 'contacts' && (
         <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Contacts</h2>
             <Button variant="primary" size="sm" asLink href={`/admin/contacts/new?company_id=${client.id}`}>
               Add New
@@ -669,7 +669,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Name',
                 accessor: (c) => (
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontWeight: font.weight.medium, color: color.text.primary }}>
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.md, fontWeight: font.weight.medium, color: color.text.primary }}>
                     {c.full_name}
                     {c.is_primary && (
                       <Tag size="sm" style={{ color: color.text.muted }}>Primary</Tag>

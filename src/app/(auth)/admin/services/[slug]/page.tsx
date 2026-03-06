@@ -9,7 +9,7 @@ import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { heading } from '@/lib/styles';
-import { font, color, space } from '@/lib/tokens';
+import { font, color, space, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -81,7 +81,7 @@ export default async function ServiceDetailPage({ params }: Props) {
           {
             label: 'Category',
             value: category ? (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.sm }}>
                 <ServiceBadge category={category.slug} size={14} />
                 {category.name}
               </span>
@@ -124,7 +124,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                 color: color.text.secondary,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.5px',
-                margin: '0 0 4px',
+                margin: `0 0 ${gap.xs}`,
               }}>Product</p>
               <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
                 {service.stripe_product_id ? (
@@ -147,7 +147,7 @@ export default async function ServiceDetailPage({ params }: Props) {
                 color: color.text.secondary,
                 textTransform: 'uppercase' as const,
                 letterSpacing: '0.5px',
-                margin: '0 0 4px',
+                margin: `0 0 ${gap.xs}`,
               }}>Price</p>
               <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
                 {service.stripe_price_id ? (

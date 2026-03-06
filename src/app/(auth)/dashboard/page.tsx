@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/empty-state';
 import { formatCurrency } from '@/lib/format';
 import { getCurrentClientId } from '@/lib/current-client';
 import { heading } from '@/lib/styles';
-import { gap } from '@/lib/tokens';
+import { gap, space } from '@/lib/tokens';
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -73,8 +73,8 @@ export default async function DashboardPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: gap.lg,
+          marginBottom: space.xl,
         }}
       >
         <CardSummary label="Amount due" value={formatCurrency(totalDue)} />

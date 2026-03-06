@@ -78,7 +78,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
 
   return (
     <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: gap.xs }}>
         <h2 style={sectionStyle}>Meeting Notes</h2>
         {!searching && (
           <Button type="button" variant="ghost" size="sm" onClick={searchMeetings}>
@@ -92,7 +92,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
 
       {searching && (
         <div style={{ textAlign: 'center', padding: `${space.lg} 0`, color: color.text.muted }}>
-          <FontAwesomeIcon icon={faSpinner} spin style={{ width: 16, height: 16, marginBottom: 8 }} />
+          <FontAwesomeIcon icon={faSpinner} spin style={{ width: 16, height: 16, marginBottom: space.tiny }} />
           <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, margin: 0 }}>
             Searching Notion for &quot;{companyName}&quot;...
           </p>

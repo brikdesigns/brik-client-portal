@@ -517,7 +517,7 @@ export default function EditProposalPage() {
                         border: 'none',
                         cursor: 'pointer',
                         color: color.text.muted,
-                        padding: '4px',
+                        padding: gap.xs,
                         marginTop: space.lg,
                       }}
                       aria-label="Remove item"

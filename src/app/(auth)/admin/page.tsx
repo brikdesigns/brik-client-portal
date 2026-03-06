@@ -5,7 +5,7 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { heading } from '@/lib/styles';
-import { color } from '@/lib/tokens';
+import { color, gap, space } from '@/lib/tokens';
 
 export default async function AdminOverviewPage() {
   const supabase = createClient();
@@ -38,8 +38,8 @@ export default async function AdminOverviewPage() {
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-          gap: '16px',
-          marginBottom: '32px',
+          gap: gap.lg,
+          marginBottom: space.xl,
         }}
       >
         {stats.map((stat) => (

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Button } from '@bds/components/ui/Button/Button';
+import { space } from '@/lib/tokens';
 
 export function ResetPasswordForm() {
   const [password, setPassword] = useState('');
@@ -51,7 +52,7 @@ export function ResetPasswordForm() {
 
   return (
     <form onSubmit={handleSubmit}>
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: space.md }}>
         <TextInput
           label="New password"
           type="password"
@@ -62,7 +63,7 @@ export function ResetPasswordForm() {
           fullWidth
         />
       </div>
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: space.lg }}>
         <TextInput
           label="Confirm password"
           type="password"

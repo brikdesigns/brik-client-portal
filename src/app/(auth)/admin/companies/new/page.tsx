@@ -12,7 +12,7 @@ import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
 import { heading } from '@/lib/styles';
-import { font, color, space, gap } from '@/lib/tokens';
+import { font, color, space, gap, border } from '@/lib/tokens';
 
 const iconSize = { width: 14, height: 14 };
 
@@ -101,9 +101,9 @@ export default function NewCompanyPage() {
 
   const toggleStyle = (active: boolean) => ({
     flex: 1,
-    padding: '10px 16px',
+    padding: `${space.xs} ${space.md}`,
     border: `2px solid ${active ? color.brand.primary : color.border.secondary}`,
-    borderRadius: '8px',
+    borderRadius: border.radius.lg,
     background: active ? color.background.elevated : 'transparent',
     color: active ? color.text.primary : color.text.secondary,
     fontFamily: font.family.body,

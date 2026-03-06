@@ -1,5 +1,5 @@
 import { ServiceBadge } from '@/components/service-badge';
-import { font, color, gap, border } from '@/lib/tokens';
+import { font, color, gap, border, space } from '@/lib/tokens';
 
 interface ServiceCardProps {
   name: string;
@@ -26,7 +26,7 @@ export function ServiceCard({
         display: 'flex',
         alignItems: 'center',
         gap: gap.md,
-        padding: '16px 20px',
+        padding: `${space.md} ${space.lg}`,
         backgroundColor: color.surface.secondary,
         borderRadius: border.radius.md,
       }}
@@ -65,7 +65,7 @@ export function ServiceCard({
         )}
       </div>
 
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: space.xs, flexShrink: 0 }}>
         {isRecurring && (
           <span
             style={{

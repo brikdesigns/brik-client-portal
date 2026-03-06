@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { color } from '@/lib/tokens';
+import { color, border } from '@/lib/tokens';
 
 /**
  * Theme toggle — switches between light and dark mode.
@@ -49,7 +49,7 @@ export function ThemeToggle() {
         width: '32px',
         height: '32px',
         borderRadius: '6px',
-        border: `1px solid ${color.border.secondary}`,
+        border: `${border.width.lg} solid ${color.border.secondary}`,
         backgroundColor: 'transparent',
         cursor: 'pointer',
         color: color.text.secondary,

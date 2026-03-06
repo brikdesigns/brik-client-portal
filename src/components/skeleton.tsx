@@ -30,7 +30,7 @@ const baseStyles: CSSProperties = {
 };
 
 const variantDefaults: Record<SkeletonVariant, { width: string; height: string; borderRadius: string }> = {
-  text: { width: '100%', height: '1em', borderRadius: '4px' },
+  text: { width: '100%', height: '1em', borderRadius: border.radius.md },
   circular: { width: '40px', height: '40px', borderRadius: '50%' },
   rectangular: { width: '100%', height: '140px', borderRadius: border.radius.md },
 };
