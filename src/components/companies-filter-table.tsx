@@ -16,6 +16,7 @@ export interface CompanyRow {
   status: string;
   contact_email: string | null;
   contact_name: string | null;
+  industry: string | null;
   created_at: string;
 }
 
@@ -77,6 +78,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             placeholder="All types"
             options={typeOptions}
             size="sm"
+            fullWidth={false}
           />
           <Select
             value={statusFilter}
@@ -84,6 +86,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             placeholder="All statuses"
             options={statusOptions}
             size="sm"
+            fullWidth={false}
           />
           {hasFilters && (
             <Button
@@ -118,6 +121,11 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             {
               header: 'Contact',
               accessor: (c) => c.contact_email || '—',
+              style: { color: color.text.secondary },
+            },
+            {
+              header: 'Industry',
+              accessor: (c) => c.industry || '—',
               style: { color: color.text.secondary },
             },
             {

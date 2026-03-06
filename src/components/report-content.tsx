@@ -44,7 +44,7 @@ const TIER_LABELS: Record<ScoreTier, string> = {
 
 const TIER_COLORS: Record<ScoreTier, string> = {
   pass: color.system.green,
-  fair: color.system.orange,
+  fair: color.system.yellow,
   fail: color.system.red,
 };
 
@@ -86,7 +86,11 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
                 {tierLabel}
               </span>
             </div>
-            <ProgressBar value={progressPercent} label={`Score: ${score} of ${maxScore}`} />
+            <ProgressBar
+              value={progressPercent}
+              label={`Score: ${score} of ${maxScore}`}
+              style={{ '--background-brand-primary': tierColor } as React.CSSProperties}
+            />
           </div>
         </Card>
 

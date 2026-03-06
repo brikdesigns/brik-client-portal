@@ -18,6 +18,7 @@ export default async function AdminCompaniesPage() {
       status,
       contact_email,
       contact_name,
+      industry,
       created_at
     `)
     .order('name');
@@ -30,6 +31,7 @@ export default async function AdminCompaniesPage() {
     status: c.status,
     contact_email: c.contact_email,
     contact_name: c.contact_name,
+    industry: c.industry,
     created_at: c.created_at,
   }));
 

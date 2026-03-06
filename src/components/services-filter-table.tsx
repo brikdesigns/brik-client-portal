@@ -95,6 +95,7 @@ export function ServicesFilterTable({
             placeholder="All services"
             options={categoryOptions}
             size="sm"
+            fullWidth={false}
           />
           <Select
             value={clientFilter}
@@ -102,6 +103,7 @@ export function ServicesFilterTable({
             placeholder="All clients"
             options={clientOptions}
             size="sm"
+            fullWidth={false}
           />
           <Select
             value={statusFilter}
@@ -112,6 +114,7 @@ export function ServicesFilterTable({
               { label: 'Inactive', value: 'inactive' },
             ]}
             size="sm"
+            fullWidth={false}
           />
           {hasFilters && (
             <Button
