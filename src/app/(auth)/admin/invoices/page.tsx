@@ -1,16 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
-import { Button } from '@bds/components/ui/Button/Button';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
-import { Tag } from '@bds/components/ui/Tag/Tag';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
-import { InvoiceStatusBadge, AgreementStatusBadge } from '@/components/status-badges';
 import { BillingTabs } from '@/components/billing-tabs';
+import { InvoicesFilterTable, type InvoiceRow } from '@/components/invoices-filter-table';
+import { AgreementsFilterTable, type AgreementRow } from '@/components/agreements-filter-table';
 import { formatCurrency } from '@/lib/format';
-import { heading } from '@/lib/styles';
-import { font, color, gap, space } from '@/lib/tokens';
+import { space } from '@/lib/tokens';
 
 interface Props {
   searchParams: Promise<{ tab?: string }>;
@@ -20,7 +16,6 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
   const { tab: tabFilter } = await searchParams;
   const supabase = createClient();
 
-  // Always fetch both for accurate stats
   const { data: invoices } = await supabase
     .from('invoices')
     .select(`
@@ -54,13 +49,28 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
   const showInvoices = !tabFilter || tabFilter === 'invoices';
   const showAgreements = !tabFilter || tabFilter === 'agreements';
 
-  type InvoiceRow = (typeof allInvoices)[number];
-  type AgreementRow = (typeof allAgreements)[number];
+  // Transform for client components
+  const invoiceRows: InvoiceRow[] = allInvoices.map((inv) => ({
+    ...inv,
+    company: inv.companies as unknown as { id: string; name: string; slug: string } | null,
+  }));
 
-  const typeLabel = (type: string) =>
-    type === 'baa' ? 'BAA' : 'Marketing';
+  const agreementRows: AgreementRow[] = allAgreements.map((a) => ({
+    ...a,
+    company: a.companies as unknown as { id: string; name: string; slug: string } | null,
+  }));
 
-  const sectionHeadingStyle = heading.section;
+  // Build client filter options from both invoices and agreements
+  const clientMap = new Map<string, string>();
+  invoiceRows.forEach((inv) => {
+    if (inv.company) clientMap.set(inv.company.id, inv.company.name);
+  });
+  agreementRows.forEach((a) => {
+    if (a.company) clientMap.set(a.company.id, a.company.name);
+  });
+  const clientOptions = Array.from(clientMap.entries())
+    .map(([id, name]) => ({ label: name, value: id }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <div>
@@ -70,7 +80,7 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         tabs={<BillingTabs />}
       />
 
-      {/* Stats — always visible */}
+      {/* Stats */}
       <div
         style={{
           display: 'grid',
@@ -85,257 +95,12 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
         <CardSummary label="Signed" value={signedAgreements.length} />
       </div>
 
-      {/* Invoices section */}
       {showInvoices && (
-        <>
-          {/* Open invoices */}
-          {openInvoices.length > 0 && (
-            <div style={{ marginBottom: space.lg }}>
-              <h2 style={sectionHeadingStyle}>Open invoices</h2>
-              <DataTable<InvoiceRow>
-                data={openInvoices}
-                rowKey={(inv) => inv.id}
-                emptyMessage=""
-                columns={[
-                  {
-                    header: 'Client',
-                    accessor: (inv) => {
-                      const client = inv.companies as unknown as { id: string; name: string; slug: string } | null;
-                      return client ? (
-                        <TextLink href={`/admin/companies/${client.slug}`} size="small">
-                          {client.name}
-                        </TextLink>
-                      ) : '—';
-                    },
-                    style: { fontWeight: font.weight.medium },
-                  },
-                  {
-                    header: 'Description',
-                    accessor: (inv) => inv.description || 'Invoice',
-                    style: { color: color.text.primary },
-                  },
-                  {
-                    header: 'Amount',
-                    accessor: (inv) => formatCurrency(inv.amount_cents),
-                    style: { fontWeight: font.weight.semibold },
-                  },
-                  {
-                    header: 'Due',
-                    accessor: (inv) =>
-                      inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                    style: { color: color.text.secondary },
-                  },
-                  {
-                    header: 'Status',
-                    accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
-                  },
-                  {
-                    header: '',
-                    accessor: (inv) => (
-                      <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
-                        <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
-                          Edit
-                        </Button>
-                        {inv.invoice_url && (
-                          <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                            <Button variant="secondary" size="sm">View Details</Button>
-                          </a>
-                        )}
-                      </div>
-                    ),
-                    style: { textAlign: 'right' },
-                  },
-                ]}
-              />
-            </div>
-          )}
-
-          {/* All invoices */}
-          <div style={{ marginBottom: space.lg }}>
-            <h2 style={sectionHeadingStyle}>All invoices</h2>
-            <DataTable<InvoiceRow>
-              data={allInvoices}
-              rowKey={(inv) => inv.id}
-              emptyMessage="No invoices yet."
-              columns={[
-                {
-                  header: 'Client',
-                  accessor: (inv) => {
-                    const client = inv.companies as unknown as { id: string; name: string; slug: string } | null;
-                    return client ? (
-                      <TextLink href={`/admin/companies/${client.slug}`} size="small">
-                        {client.name}
-                      </TextLink>
-                    ) : '—';
-                  },
-                  style: { fontWeight: font.weight.medium },
-                },
-                {
-                  header: 'Description',
-                  accessor: (inv) => inv.description || 'Invoice',
-                  style: { color: color.text.primary },
-                },
-                {
-                  header: 'Amount',
-                  accessor: (inv) => formatCurrency(inv.amount_cents),
-                  style: { fontWeight: font.weight.semibold },
-                },
-                {
-                  header: 'Date',
-                  accessor: (inv) =>
-                    inv.invoice_date ? new Date(inv.invoice_date).toLocaleDateString() : '—',
-                  style: { color: color.text.secondary },
-                },
-                {
-                  header: 'Due',
-                  accessor: (inv) =>
-                    inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                  style: { color: color.text.secondary },
-                },
-                {
-                  header: 'Status',
-                  accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
-                },
-                {
-                  header: '',
-                  accessor: (inv) => (
-                    <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
-                      <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
-                        Edit
-                      </Button>
-                      {inv.invoice_url && (
-                        <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                          <Button variant="primary" size="sm">View Details</Button>
-                        </a>
-                      )}
-                    </div>
-                  ),
-                  style: { textAlign: 'right' },
-                },
-              ]}
-            />
-          </div>
-        </>
+        <InvoicesFilterTable invoices={invoiceRows} clientOptions={clientOptions} />
       )}
 
-      {/* Agreements section */}
       {showAgreements && (
-        <>
-          {/* Pending agreements */}
-          {pendingAgreements.length > 0 && (
-            <div style={{ marginBottom: space.lg }}>
-              <h2 style={sectionHeadingStyle}>Pending signature</h2>
-              <DataTable<AgreementRow>
-                data={pendingAgreements}
-                rowKey={(a) => a.id}
-                emptyMessage=""
-                columns={[
-                  {
-                    header: 'Client',
-                    accessor: (a) => {
-                      const client = a.companies as unknown as { id: string; name: string; slug: string } | null;
-                      return client ? (
-                        <TextLink href={`/admin/companies/${client.slug}`} size="small">
-                          {client.name}
-                        </TextLink>
-                      ) : '—';
-                    },
-                    style: { fontWeight: font.weight.medium },
-                  },
-                  {
-                    header: 'Title',
-                    accessor: (a) => a.title,
-                    style: { color: color.text.primary },
-                  },
-                  {
-                    header: 'Type',
-                    accessor: (a) => <Tag>{typeLabel(a.type)}</Tag>,
-                  },
-                  {
-                    header: 'Status',
-                    accessor: (a) => <AgreementStatusBadge status={a.status} />,
-                  },
-                  {
-                    header: 'Created',
-                    accessor: (a) => new Date(a.created_at).toLocaleDateString(),
-                    style: { color: color.text.secondary },
-                  },
-                  {
-                    header: '',
-                    accessor: (a) => {
-                      const client = a.companies as unknown as { slug: string } | null;
-                      return client ? (
-                        <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${a.id}`}>
-                          View
-                        </Button>
-                      ) : null;
-                    },
-                    style: { textAlign: 'right' },
-                  },
-                ]}
-              />
-            </div>
-          )}
-
-          {/* All agreements */}
-          <div>
-            <h2 style={sectionHeadingStyle}>All agreements</h2>
-            <DataTable<AgreementRow>
-              data={allAgreements}
-              rowKey={(a) => a.id}
-              emptyMessage="No agreements yet."
-              columns={[
-                {
-                  header: 'Client',
-                  accessor: (a) => {
-                    const client = a.companies as unknown as { id: string; name: string; slug: string } | null;
-                    return client ? (
-                      <TextLink href={`/admin/companies/${client.slug}`} size="small">
-                        {client.name}
-                      </TextLink>
-                    ) : '—';
-                  },
-                  style: { fontWeight: font.weight.medium },
-                },
-                {
-                  header: 'Title',
-                  accessor: (a) => a.title,
-                  style: { color: color.text.primary },
-                },
-                {
-                  header: 'Type',
-                  accessor: (a) => <Tag>{typeLabel(a.type)}</Tag>,
-                },
-                {
-                  header: 'Status',
-                  accessor: (a) => <AgreementStatusBadge status={a.status} />,
-                },
-                {
-                  header: 'Created',
-                  accessor: (a) => new Date(a.created_at).toLocaleDateString(),
-                  style: { color: color.text.secondary },
-                },
-                {
-                  header: 'Signed by',
-                  accessor: (a) => a.signed_by_name || '—',
-                  style: { color: color.text.secondary },
-                },
-                {
-                  header: '',
-                  accessor: (a) => {
-                    const client = a.companies as unknown as { slug: string } | null;
-                    return client ? (
-                      <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${a.id}`}>
-                        View
-                      </Button>
-                    ) : null;
-                  },
-                  style: { textAlign: 'right' },
-                },
-              ]}
-            />
-          </div>
-        </>
+        <AgreementsFilterTable agreements={agreementRows} clientOptions={clientOptions} />
       )}
     </div>
   );

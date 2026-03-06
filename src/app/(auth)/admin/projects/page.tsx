@@ -3,9 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
-import { ProjectStatusBadge } from '@/components/status-badges';
-import { font, color, space } from '@/lib/tokens';
+import { ProjectsFilterTable, type ProjectRow } from '@/components/projects-filter-table';
+import { space } from '@/lib/tokens';
 
 export default async function AdminProjectsPage() {
   const supabase = createClient();
@@ -15,7 +14,10 @@ export default async function AdminProjectsPage() {
     .select(`
       id, name, slug, status, description,
       start_date, end_date,
-      companies(id, name, slug)
+      companies(id, name, slug),
+      project_services(
+        services(id, name, service_categories(slug))
+      )
     `)
     .order('created_at', { ascending: false });
 
@@ -23,6 +25,47 @@ export default async function AdminProjectsPage() {
   const inProgress = all.filter((p) => p.status === 'active').length;
   const completed = all.filter((p) => p.status === 'completed').length;
   const notStarted = all.filter((p) => p.status === 'not_started').length;
+
+  // Transform for client component
+  const projectRows: ProjectRow[] = all.map((p) => {
+    const company = p.companies as unknown as { id: string; name: string; slug: string } | null;
+    const ps = p.project_services as unknown as {
+      services: {
+        id: string;
+        name: string;
+        service_categories: { slug: string } | null;
+      } | null;
+    }[];
+
+    const services = (ps ?? [])
+      .filter((r) => r.services !== null)
+      .map((r) => ({
+        id: r.services!.id,
+        name: r.services!.name,
+        category_slug: r.services!.service_categories?.slug ?? 'service',
+      }));
+
+    return {
+      id: p.id,
+      name: p.name,
+      slug: p.slug,
+      status: p.status,
+      description: p.description,
+      start_date: p.start_date,
+      end_date: p.end_date,
+      company,
+      services,
+    };
+  });
+
+  // Build client filter options
+  const clientMap = new Map<string, string>();
+  projectRows.forEach((p) => {
+    if (p.company) clientMap.set(p.company.id, p.company.name);
+  });
+  const clientOptions = Array.from(clientMap.entries())
+    .map(([id, name]) => ({ label: name, value: id }))
+    .sort((a, b) => a.label.localeCompare(b.label));
 
   return (
     <div>
@@ -49,61 +92,7 @@ export default async function AdminProjectsPage() {
         <CardSummary label="Not started" value={notStarted} />
       </div>
 
-      <DataTable
-          data={all}
-          rowKey={(p) => p.id}
-          emptyMessage="No projects yet. Add one to get started."
-          columns={[
-            {
-              header: 'Project',
-              accessor: (p) => (
-                <a
-                  href={`/admin/projects/${p.slug}`}
-                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
-                >
-                  {p.name}
-                </a>
-              ),
-            },
-            {
-              header: 'Client',
-              accessor: (p) => {
-                const client = p.companies as unknown as { id: string; name: string; slug: string } | null;
-                return client ? (
-                  <a
-                    href={`/admin/companies/${client.slug}`}
-                    style={{ color: color.system.link, textDecoration: 'none' }}
-                  >
-                    {client.name}
-                  </a>
-                ) : '—';
-              },
-            },
-            {
-              header: 'Status',
-              accessor: (p) => <ProjectStatusBadge status={p.status} />,
-            },
-            {
-              header: 'Start',
-              accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-              style: { color: color.text.secondary },
-            },
-            {
-              header: 'End',
-              accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-              style: { color: color.text.secondary },
-            },
-            {
-              header: '',
-              accessor: (p) => (
-                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
-                  View Details
-                </Button>
-              ),
-              style: { textAlign: 'right' },
-            },
-          ]}
-        />
+      <ProjectsFilterTable projects={projectRows} clientOptions={clientOptions} />
     </div>
   );
 }
