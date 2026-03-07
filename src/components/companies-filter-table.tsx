@@ -79,18 +79,21 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <FilterButton
+            size="sm"
             label="Type"
             value={typeFilter}
             onChange={setTypeFilter}
             options={typeOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
           <FilterButton
+            size="sm"
             label="Status"
             value={statusFilter}
             onChange={setStatusFilter}
             options={statusOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
           <FilterButton
+            size="sm"
             label="Industry"
             value={industryFilter}
             onChange={setIndustryFilter}

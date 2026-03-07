@@ -82,18 +82,21 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <FilterButton
+            size="sm"
             label="Client"
             value={clientFilter}
             onChange={setClientFilter}
             options={clientOptions}
           />
           <FilterButton
+            size="sm"
             label="Industry"
             value={industryFilter}
             onChange={setIndustryFilter}
             options={industryOptions}
           />
           <FilterButton
+            size="sm"
             label="Type"
             value={typeFilter}
             onChange={setTypeFilter}
