@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { generateAgreementsForProposal } from '@/lib/agreements/generate';
+import { sendProposalAcceptedEmail, logEmail } from '@/lib/email';
+
+const ADMIN_EMAIL = 'nick@brikdesigns.com';
 
 function getServiceClient() {
   return createServiceClient(
@@ -82,6 +85,36 @@ export async function POST(
   } catch (err) {
     // Log but don't fail — proposal acceptance is the critical path
     console.error('Failed to auto-generate agreements:', err);
+  }
+
+  // Notify admin that proposal was accepted (non-blocking)
+  try {
+    const { data: company } = await supabase
+      .from('companies')
+      .select('name, slug')
+      .eq('id', proposal.company_id)
+      .single();
+
+    if (company) {
+      const acceptedAt = new Date().toISOString();
+      const result = await sendProposalAcceptedEmail({
+        to: ADMIN_EMAIL,
+        companyName: company.name,
+        acceptedByEmail: email,
+        acceptedAt,
+        companySlug: company.slug,
+      });
+
+      await logEmail(supabase, {
+        to: ADMIN_EMAIL,
+        subject: `Proposal accepted: ${company.name}`,
+        template: 'proposal_accepted',
+        resendId: result?.id,
+        companyId: proposal.company_id,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send proposal accepted notification:', err);
   }
 
   return NextResponse.json({ success: true });

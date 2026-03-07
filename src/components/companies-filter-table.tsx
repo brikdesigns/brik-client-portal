@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
+import { formatIndustry } from '@/lib/format';
 import { DataTable } from './data-table';
 import { CompanyStatusBadge, CompanyTypeTag } from './status-badges';
 
@@ -41,7 +42,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
   const industryOptions = useMemo(() => {
     const unique = Array.from(new Set(companies.map((c) => c.industry).filter(Boolean) as string[]));
     unique.sort((a, b) => a.localeCompare(b));
-    return unique.map((i) => ({ label: i, value: i }));
+    return unique.map((i) => ({ label: formatIndustry(i), value: i }));
   }, [companies]);
 
   const filtered = useMemo(() => {
@@ -120,7 +121,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             },
             {
               header: 'Industry',
-              accessor: (c) => c.industry || '—',
+              accessor: (c) => formatIndustry(c.industry),
               style: { color: color.text.secondary },
             },
             {

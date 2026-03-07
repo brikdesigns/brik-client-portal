@@ -96,7 +96,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
 
   const linkStyle = {
     fontFamily: font.family.body,
-    fontSize: font.size.body.xs,
+    fontSize: font.size.body.sm,
     color: color.system.link,
     textDecoration: 'none' as const,
   };
@@ -207,7 +207,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
                     href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: font.size.body.xs }}
+                    style={{ ...linkStyle, fontFamily: 'monospace' }}
                   >
                     {service.stripe_product_id} &#x2197;
                   </a>
@@ -222,7 +222,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
                     href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ ...linkStyle, fontFamily: 'monospace', fontSize: font.size.body.xs }}
+                    style={{ ...linkStyle, fontFamily: 'monospace' }}
                   >
                     {service.stripe_price_id} &#x2197;
                   </a>

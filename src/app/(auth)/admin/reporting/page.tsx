@@ -1,10 +1,8 @@
 import { createClient } from '@/lib/supabase/server';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
-import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
-import { ReportSetStatusBadge, ScoreTierBadge } from '@/components/report-badges';
-import { font, color, space } from '@/lib/tokens';
+import { ReportingFilterTable, type ReportSetRow } from '@/components/reporting-filter-table';
+import { space } from '@/lib/tokens';
 
 export default async function AdminReportingPage() {
   const supabase = createClient();
@@ -12,13 +10,13 @@ export default async function AdminReportingPage() {
   const { data: reportSets } = await supabase
     .from('report_sets')
     .select(`
-      id, status, overall_score, overall_max_score, overall_tier, created_at,
+      id, type, status, overall_score, overall_max_score, overall_tier, created_at,
       companies(id, name, slug, industry),
       reports(status)
     `)
     .order('created_at', { ascending: false });
 
-  const all = reportSets ?? [];
+  const all = (reportSets ?? []) as unknown as ReportSetRow[];
   const completed = all.filter((rs) => rs.status === 'completed').length;
   const needsReview = all.filter((rs) => rs.status === 'needs_review').length;
 
@@ -42,75 +40,7 @@ export default async function AdminReportingPage() {
         <CardSummary label="Needs review" value={needsReview} />
       </div>
 
-      <DataTable
-        data={all}
-        rowKey={(rs) => rs.id}
-        emptyMessage="No analyses yet. Start one from a prospect client page."
-        columns={[
-            {
-              header: 'Client',
-              accessor: (rs) => {
-                const client = rs.companies as unknown as { id: string; name: string; slug: string; industry: string | null } | null;
-                return client ? (
-                  <a
-                    href={`/admin/companies/${client.slug}`}
-                    style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
-                  >
-                    {client.name}
-                  </a>
-                ) : '—';
-              },
-            },
-            {
-              header: 'Status',
-              accessor: (rs) => <ReportSetStatusBadge status={rs.status} />,
-            },
-            {
-              header: 'Industry',
-              accessor: (rs) => {
-                const client = rs.companies as unknown as { industry: string | null } | null;
-                return client?.industry
-                  ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
-                  : '—';
-              },
-              style: { color: color.text.secondary },
-            },
-            {
-              header: 'Progress',
-              accessor: (rs) => {
-                const reports = rs.reports as unknown as Array<{ status: string }> | null;
-                if (!reports || reports.length === 0) return '—';
-                const done = reports.filter((r) => r.status === 'completed').length;
-                return `${done} / ${reports.length} complete`;
-              },
-              style: { color: color.text.secondary },
-            },
-            {
-              header: 'Tier',
-              accessor: (rs) =>
-                rs.status === 'completed' && rs.overall_tier
-                  ? <ScoreTierBadge tier={rs.overall_tier} />
-                  : '—',
-            },
-            {
-              header: 'Created',
-              accessor: (rs) => new Date(rs.created_at).toLocaleDateString(),
-              style: { color: color.text.secondary },
-            },
-            {
-              header: '',
-              accessor: (rs) => {
-                const client = rs.companies as unknown as { slug: string } | null;
-                return client ? (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
-                    View
-                  </Button>
-                ) : null;
-              },
-              style: { textAlign: 'right' },
-            },
-          ]}
-      />
+      <ReportingFilterTable reportSets={all} />
     </div>
   );
 }

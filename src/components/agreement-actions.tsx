@@ -17,24 +17,43 @@ export function AgreementActions({ agreementId, status, shareableLink, clientSlu
   const [copied, setCopied] = useState(false);
   const router = useRouter();
 
+  const [sending, setSending] = useState(false);
+
   async function handleSend() {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from('agreements')
-      .update({
-        status: 'sent',
-        sent_at: new Date().toISOString(),
-      })
-      .eq('id', agreementId);
+    setSending(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase
+        .from('agreements')
+        .update({
+          status: 'sent',
+          sent_at: new Date().toISOString(),
+        })
+        .eq('id', agreementId);
 
-    if (error) {
-      alert(`Failed to send: ${error.message}`);
-      return;
+      if (error) {
+        alert(`Failed to send: ${error.message}`);
+        return;
+      }
+
+      // Send email to primary contact
+      try {
+        await fetch('/api/admin/email/agreement-sent', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ agreement_id: agreementId }),
+        });
+      } catch {
+        // Email is non-blocking — agreement is already marked as sent
+        console.error('Email send failed (non-critical)');
+      }
+
+      // Copy link to clipboard
+      await navigator.clipboard.writeText(shareableLink);
+      router.refresh();
+    } finally {
+      setSending(false);
     }
-
-    // Copy link to clipboard
-    await navigator.clipboard.writeText(shareableLink);
-    router.refresh();
   }
 
   async function handleCopyLink() {
@@ -66,8 +85,8 @@ export function AgreementActions({ agreementId, status, shareableLink, clientSlu
           <Button variant="secondary" size="sm" onClick={handleDelete}>
             Delete
           </Button>
-          <Button variant="primary" size="sm" onClick={handleSend}>
-            Send &amp; Copy Link
+          <Button variant="primary" size="sm" onClick={handleSend} disabled={sending}>
+            {sending ? 'Sending...' : 'Send & Copy Link'}
           </Button>
         </>
       )}

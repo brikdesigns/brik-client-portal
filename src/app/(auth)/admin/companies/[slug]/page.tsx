@@ -1,5 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { formatIndustry } from '@/lib/format';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
@@ -241,7 +242,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         metadata={[
           { label: 'Status', value: <CompanyStatusBadge status={client.status} /> },
           { label: 'Type', value: <CompanyTypeTag type={companyType} muted={client.status === 'not_active'} /> },
-          ...(client.industry ? [{ label: 'Industry', value: client.industry }] : []),
+          ...(client.industry ? [{ label: 'Industry', value: formatIndustry(client.industry) }] : []),
         ]}
       />
 
@@ -537,8 +538,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   </Button>
                 ) : (
                   <>
-                    <GenerateProposalButton companyId={client.id} slug={client.slug} />
-                    <Button variant="outline" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
+                    <GenerateProposalButton companyId={client.id} slug={client.slug} hideIcon />
+                    <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
                       Manual
                     </Button>
                   </>

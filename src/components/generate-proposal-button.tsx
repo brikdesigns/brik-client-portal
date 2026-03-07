@@ -10,9 +10,10 @@ import { faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
 interface GenerateProposalButtonProps {
   companyId: string;
   slug: string;
+  hideIcon?: boolean;
 }
 
-export function GenerateProposalButton({ companyId, slug }: GenerateProposalButtonProps) {
+export function GenerateProposalButton({ companyId, slug, hideIcon }: GenerateProposalButtonProps) {
   const router = useRouter();
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
@@ -68,7 +69,7 @@ export function GenerateProposalButton({ companyId, slug }: GenerateProposalButt
           'Generating...'
         ) : (
           <>
-            <FontAwesomeIcon icon={faWandMagicSparkles} style={{ width: 12, height: 12 }} /> Generate Proposal
+            {!hideIcon && <FontAwesomeIcon icon={faWandMagicSparkles} style={{ width: 12, height: 12 }} />} Generate
           </>
         )}
       </Button>

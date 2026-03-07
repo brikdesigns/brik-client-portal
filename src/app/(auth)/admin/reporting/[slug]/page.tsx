@@ -6,6 +6,7 @@ import { DataTable } from '@/components/data-table';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { font, color } from '@/lib/tokens';
+import { formatIndustry } from '@/lib/format';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -63,9 +64,7 @@ export default async function ClientReportListPage({ params }: Props) {
         metadata={[
           {
             label: 'Industry',
-            value: client.industry
-              ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
-              : 'General',
+            value: client.industry ? formatIndustry(client.industry) : 'General',
           },
           {
             label: 'Progress',
