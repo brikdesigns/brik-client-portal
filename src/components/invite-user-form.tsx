@@ -109,6 +109,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
             setRole(e.target.value as 'client' | 'admin' | 'manager');
             if (e.target.value !== 'client') setClientId('');
           }}
+          placeholder="Select role"
           options={[
             { label: 'Client', value: 'client' },
             { label: 'Manager', value: 'manager' },

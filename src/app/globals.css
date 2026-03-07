@@ -81,16 +81,21 @@
   --text-on-color-dark: var(--grayscale--white);
   --text-on-color-light: var(--grayscale--black);
   --text-brand-primary: var(--brand--primary);
+  --text-negative: #eb5757;
 
   /* Surface */
   --surface-primary: var(--grayscale--white);
   --surface-secondary: var(--grayscale--lightest);
+  --surface-tertiary: var(--grayscale--lighter);
+  --surface-negative: #fdeaea;
   --surface-brand-primary: var(--brand--primary);
+  --surface-brand-secondary: var(--grayscale--white);
 
   /* Background */
   --background-brand-primary: var(--brand--primary);
   --background-primary: var(--grayscale--white);
   --background-secondary: var(--grayscale--lightest);
+  --background-elevated: var(--grayscale--white);
   --background-inverse: var(--grayscale--darkest);
   --background-input: var(--grayscale--white);
 
@@ -99,11 +104,18 @@
   --border-secondary: var(--grayscale--lighter);
   --border-muted: var(--grayscale--lighter);
   --border-brand-primary: var(--brand--primary);
+  --border-negative: #eb5757;
   --border-input: var(--grayscale--light);
   --border-inverse: var(--grayscale--white);
 
   /* System */
   --color-system-link: #0034ea;
+  --color-system-red: #eb5757;
+  --color-system-green: #27ae60;
+  --color-system-yellow: #f2c94c;
+  --color-system-blue: #2f80ed;
+  --color-system-orange: #f2994a;
+  --system--red: #eb5757;
 
   /* ---- BDS component CSS aliases ---- */
   /* BDS component .css files reference full-namespaced tokens (--_color---...).
@@ -125,6 +137,9 @@
   --font-family-label: Poppins, sans-serif;
   --font-family-heading: Poppins, sans-serif;
   --font-family-display: Poppins, sans-serif;
+
+  /* Brand override: labels use medium (500) instead of BDS default semi-bold (600) */
+  --font-weight-semi-bold: 500;
 
   /*
    * Component-level spacing — overrides BDS .body spacious mode.
@@ -212,11 +227,15 @@
   --text-muted: var(--grayscale--dark);
   --text-brand-primary: var(--brand--primary);
   --text-inverse: var(--grayscale--darkest);
+  --text-negative: #ff6b6b;
 
   /* Surface */
   --surface-primary: var(--grayscale--black);
   --surface-secondary: var(--grayscale--darkest);
+  --surface-tertiary: var(--grayscale--darker);
+  --surface-negative: #3d1a1a;
   --surface-brand-primary: var(--brand--primary);
+  --surface-brand-secondary: var(--grayscale--darkest);
 
   /* Page */
   --page-primary: var(--grayscale--black);
@@ -227,6 +246,7 @@
   --background-brand-primary: var(--brand--primary);
   --background-primary: var(--grayscale--darker);
   --background-secondary: var(--grayscale--darkest);
+  --background-elevated: var(--grayscale--darker);
   --background-inverse: var(--brand--primary);
   --background-input: var(--grayscale--black);
 
@@ -235,6 +255,7 @@
   --border-secondary: var(--grayscale--darker);
   --border-muted: var(--grayscale--darker);
   --border-brand-primary: var(--brand--primary);
+  --border-negative: #ff6b6b;
   --border-input: var(--grayscale--dark);
   --border-inverse: var(--grayscale--black);
 
@@ -298,6 +319,14 @@ h4 {
 blockquote {
   color: var(--text-primary);
   font-family: var(--font-family-body);
+}
+
+/*
+ * Portal dropdown density — BDS defaults to padding-xl (24px) inside
+ * dropdown panels. Override to padding-md (16px) for a tighter feel.
+ */
+.bds-filter-button-dropdown {
+  --padding-xl: var(--padding-md);
 }
 
 /* Dark mode logo inversion — filter to white */

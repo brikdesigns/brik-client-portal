@@ -32,7 +32,7 @@ export default async function ClientProfilePage() {
   const fieldLabelStyle = {
     fontFamily: font.family.label,
     fontSize: font.size.body.sm,
-    fontWeight: font.weight.semibold,
+    fontWeight: font.weight.medium,
     color: color.text.muted,
     margin: 0,
   };

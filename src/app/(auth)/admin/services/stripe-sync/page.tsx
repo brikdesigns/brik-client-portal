@@ -229,7 +229,7 @@ export default function StripeSyncPage() {
                   Apply sync ({result.summary.matched} services)
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="secondary"
                   size="md"
                   onClick={() => { setState('idle'); setResult(null); }}
                 >

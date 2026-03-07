@@ -578,7 +578,7 @@ export default function EditProposalPage() {
           }}>
             <Button
               type="button"
-              variant="outline"
+              variant="secondary"
               size="md"
               onClick={() => router.push(`/admin/companies/${slug}/proposals/${proposalId}`)}
             >

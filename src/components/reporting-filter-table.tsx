@@ -6,7 +6,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
 import { formatIndustry, formatReportSetType } from '@/lib/format';
 import { DataTable } from './data-table';
-import { ReportSetStatusBadge, ScoreTierBadge } from './report-badges';
+import { ScoreTierBadge } from './report-badges';
 
 export interface ReportSetRow {
   id: string;
@@ -17,7 +17,7 @@ export interface ReportSetRow {
   overall_tier: string | null;
   created_at: string;
   companies: { id: string; name: string; slug: string; industry: string | null } | null;
-  reports: Array<{ status: string }> | null;
+  reports: Array<{ score: number | null }> | null;
 }
 
 const typeOptions = [
@@ -132,7 +132,10 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
           },
           {
             header: 'Status',
-            accessor: (rs) => <ReportSetStatusBadge status={rs.status} />,
+            accessor: (rs) =>
+              rs.overall_tier
+                ? <ScoreTierBadge tier={rs.overall_tier} />
+                : '—',
           },
           {
             header: 'Industry',
@@ -140,21 +143,12 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
             style: { color: color.text.secondary },
           },
           {
-            header: 'Progress',
-            accessor: (rs) => {
-              const reports = rs.reports;
-              if (!reports || reports.length === 0) return '—';
-              const done = reports.filter((r) => r.status === 'completed').length;
-              return `${done} / ${reports.length} complete`;
-            },
-            style: { color: color.text.secondary },
-          },
-          {
-            header: 'Tier',
+            header: 'Score',
             accessor: (rs) =>
-              rs.status === 'completed' && rs.overall_tier
-                ? <ScoreTierBadge tier={rs.overall_tier} />
+              rs.overall_score !== null && rs.overall_max_score !== null
+                ? `${rs.overall_score} / ${rs.overall_max_score}`
                 : '—',
+            style: { color: color.text.secondary },
           },
           {
             header: 'Created',

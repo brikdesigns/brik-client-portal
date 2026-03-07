@@ -1,9 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { type Industry } from '@/lib/analysis/report-config';
-import { seedReports, type ClientData } from '@/lib/analysis/seed-reports';
-import { recalculateReportSetScore } from '@/lib/analysis/scoring';
+import { type Industry, getReportConfigs } from '@/lib/analysis/report-config';
 
+/**
+ * POST /api/admin/reporting
+ *
+ * Creates a report set with empty template items for each report type.
+ * Analysis is run separately per-report via /api/admin/reporting/analyze
+ * to avoid timeout issues (each analyzer can take 10-30s).
+ */
 export async function POST(request: Request) {
   const supabase = createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -66,47 +71,66 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: rsError?.message || 'Failed to create report set' }, { status: 500 });
   }
 
-  // Seed reports + items
+  // Create empty template reports + items (no analysis — instant)
   const industry = (client.industry as Industry) || null;
-  const clientData: ClientData = {
-    name: client.name,
-    address: client.address,
-    websiteUrl: client.website_url,
-    phone: client.phone,
-    industry,
-  };
+  const configs = getReportConfigs(industry);
+  let totalItems = 0;
 
-  const result = await seedReports(
-    reportSet.id,
-    clientData,
-    async (report) => {
-      const { data, error } = await supabase
-        .from('reports')
-        .insert(report)
-        .select('id')
-        .single();
-      if (error) throw new Error(error.message);
-      return data.id;
-    },
-  );
+  for (const config of configs) {
+    const maxScore = config.categories.reduce((sum, c) => sum + c.maxScore, 0);
 
-  // Insert all items in batch
-  if (result.items.length > 0) {
+    // Insert report row
+    const { data: report, error: reportError } = await supabase
+      .from('reports')
+      .insert({
+        report_set_id: reportSet.id,
+        report_type: config.type,
+        status: 'draft',
+        score: null,
+        max_score: maxScore,
+        tier: null,
+        opportunities_text: null,
+      })
+      .select('id')
+      .single();
+
+    if (reportError || !report) {
+      console.error(`Failed to insert report ${config.type}:`, reportError);
+      continue;
+    }
+
+    // Insert empty template items for this report
+    const items = config.categories.map((cat, index) => ({
+      report_id: report.id,
+      category: cat.category,
+      status: 'neutral',
+      score: null,
+      rating: null,
+      total_reviews: null,
+      feedback_summary: null,
+      notes: null,
+      metadata: {
+        maxScore: cat.maxScore,
+        ...(cat.defaultMetadata ?? {}),
+      },
+      sort_order: index,
+    }));
+
     const { error: itemsError } = await supabase
       .from('report_items')
-      .insert(result.items);
+      .insert(items);
+
     if (itemsError) {
-      console.error('Failed to insert report items:', itemsError);
+      console.error(`Failed to insert items for ${config.type}:`, itemsError);
+    } else {
+      totalItems += items.length;
     }
   }
-
-  // Recalculate overall score from all reports
-  await recalculateReportSetScore(supabase, reportSet.id);
 
   return NextResponse.json({
     report_set_id: reportSet.id,
     slug: client.slug,
-    reports_created: result.reports.length,
-    items_created: result.items.length,
+    reports_created: configs.length,
+    items_created: totalItems,
   });
 }

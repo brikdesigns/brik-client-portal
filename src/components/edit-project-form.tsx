@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
@@ -27,7 +26,7 @@ const textareaLabelStyle = {
   display: 'block' as const,
   marginBottom: space.sm,
   fontFamily: font.family.label,
-  fontWeight: font.weight.semibold,
+  fontWeight: font.weight.medium,
   fontSize: font.size.label.md,
   color: color.text.primary,
 };
@@ -95,7 +94,7 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
   }
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
+    <div style={{ maxWidth: '600px' }}>
       <div
         style={{
           fontFamily: font.family.body,
@@ -130,6 +129,7 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
             label="Status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
+            placeholder="Select status"
             options={[
               { label: 'Not Started', value: 'not_started' },
               { label: 'In Progress', value: 'active' },
@@ -175,12 +175,12 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
             Save changes
           </Button>
           <a href={`/admin/projects/${project.slug}`}>
-            <Button type="button" variant="outline" size="md">
+            <Button type="button" variant="secondary" size="md">
               Cancel
             </Button>
           </a>
         </div>
       </form>
-    </Card>
+    </div>
   );
 }

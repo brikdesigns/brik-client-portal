@@ -1,6 +1,6 @@
 import { PageHeader as BDSPageHeader, type PageHeaderProps, type MetadataItem } from '@bds/components/ui/PageHeader/PageHeader';
 import { Breadcrumb, type BreadcrumbItem } from '@bds/components/ui/Breadcrumb/Breadcrumb';
-import { space } from '@/lib/tokens';
+import { font, space } from '@/lib/tokens';
 
 // Re-export types for convenience
 export type { PageHeaderProps, MetadataItem, BreadcrumbItem };
@@ -11,26 +11,23 @@ export { Breadcrumb };
 /**
  * Portal-specific PageHeader wrapper
  *
- * Wraps the BDS PageHeader component and removes the default 80px horizontal padding.
- * The portal layouts (admin + dashboard) already provide 32px padding on the main element,
- * so we strip the BDS horizontal padding to prevent double-padding (32px + 80px = 112px).
- *
- * Adds vertical padding (padding-lg) for consistent spacing.
- *
- * This wrapper allows all consuming pages to continue importing from '@/components/page-header'
- * without needing to change import paths.
+ * Wraps the BDS PageHeader component:
+ * - Removes default 80px horizontal padding (portal layouts provide their own)
+ * - Reduces title from heading-lg (32px) to heading-md (~25px) for portal scale
  */
 export function PageHeader(props: PageHeaderProps) {
   return (
-    <BDSPageHeader
-      {...props}
-      style={{
-        ...props.style,
-        paddingLeft: 0,
-        paddingRight: 0,
-        paddingTop: space.xl,
-        paddingBottom: space.xl,
-      }}
-    />
+    <div style={{ '--heading-lg': font.size.heading.medium } as React.CSSProperties}>
+      <BDSPageHeader
+        {...props}
+        style={{
+          ...props.style,
+          paddingLeft: 0,
+          paddingRight: 0,
+          paddingTop: space.xl,
+          paddingBottom: space.xl,
+        }}
+      />
+    </div>
   );
 }

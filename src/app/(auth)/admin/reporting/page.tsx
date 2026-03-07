@@ -12,13 +12,13 @@ export default async function AdminReportingPage() {
     .select(`
       id, status, overall_score, overall_max_score, overall_tier, created_at,
       companies(id, name, slug, industry),
-      reports(status)
+      reports(score)
     `)
     .order('created_at', { ascending: false });
 
   const all = (reportSets ?? []) as unknown as ReportSetRow[];
-  const completed = all.filter((rs) => rs.status === 'completed').length;
-  const needsReview = all.filter((rs) => rs.status === 'needs_review').length;
+  const passing = all.filter((rs) => rs.overall_tier === 'pass').length;
+  const needsAttention = all.filter((rs) => rs.overall_tier === 'fair' || rs.overall_tier === 'fail').length;
 
   return (
     <div>
@@ -36,8 +36,8 @@ export default async function AdminReportingPage() {
         }}
       >
         <CardSummary label="Total analyses" value={all.length} />
-        <CardSummary label="Completed" value={completed} />
-        <CardSummary label="Needs review" value={needsReview} />
+        <CardSummary label="Passing" value={passing} />
+        <CardSummary label="Needs attention" value={needsAttention} />
       </div>
 
       <ReportingFilterTable reportSets={all} />

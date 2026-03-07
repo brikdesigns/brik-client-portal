@@ -1,9 +1,14 @@
 /**
  * Automated online reviews/listings analysis.
  *
- * Checks listing platforms for the client's business. Uses Google Places API
- * and Yelp Fusion API when keys are available; generates search URLs for
- * platforms without API access.
+ * Checks listing platforms for the client's business:
+ * - Google: Google Places API (text search)
+ * - Yelp: Yelp Fusion API (business search)
+ * - Healthgrades, WebMD, Vitals, Facebook: Google Custom Search API
+ *   (searches site:platform.com for the business name — bypasses bot
+ *   protection and JS rendering that break direct scraping)
+ * - Apple Maps: Google Places as proxy (if on Google, almost certainly
+ *   on Apple Maps too) with a direct Apple Maps link
  *
  * Matches the Notion "Online Listings & Reviews" database schema:
  * - Score: 1 (listed) or 0 (not listed)
@@ -37,25 +42,14 @@ export async function analyzeReviews(
         case 'Healthgrades':
         case 'WebMD':
         case 'Vitals':
-          result = await scrapeDirectoryListing(
-            platform,
-            buildGenericSearchUrl(platform, clientName, address),
-            clientName,
-          );
-          break;
         case 'Facebook':
-          result = await scrapeFacebook(clientName, address);
+          result = await analyzeViaSiteSearch(platform, clientName, address);
           break;
         case 'Apple Maps':
-          result = generatePlatformFallback(
-            'Apple Maps',
-            clientName,
-            address,
-            'Apple Maps has no public search API.',
-          );
+          result = await analyzeAppleMaps(clientName, address);
           break;
         default:
-          result = generateSearchUrl(platform, clientName, address);
+          result = await analyzeViaSiteSearch(platform, clientName, address);
           break;
       }
     } catch {
@@ -65,7 +59,7 @@ export async function analyzeReviews(
         score: null,
         feedback_summary: `Analysis failed for ${platform}.`,
         notes: null,
-        metadata: { searchUrl: buildGenericSearchUrl(platform, clientName, address) },
+        metadata: { searchUrl: buildPlatformSearchUrl(platform, clientName, address) },
       };
     }
 
@@ -131,7 +125,7 @@ async function analyzeGoogle(
       notes: null,
       metadata: {
         name_on_listing: place.name ?? '',
-        phone_listed: '', // Not in Text Search — would need Place Details
+        phone_listed: '',
         address_listed: place.formatted_address ?? '',
         rating: place.rating ?? null,
         total_reviews: place.user_ratings_total ?? null,
@@ -237,44 +231,100 @@ async function analyzeYelp(
   };
 }
 
-// ── Directory scraping (Healthgrades, WebMD, Vitals) ─────────────────
-
-const SCRAPE_HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  Accept: 'text/html,application/xhtml+xml',
-  'Accept-Language': 'en-US,en;q=0.9',
-};
+// ── Google Custom Search (Healthgrades, Vitals, WebMD, Facebook, etc.) ──
 
 /**
- * Attempt to fetch a directory search page and determine if the business
- * is listed by looking for the full business name (or significant phrases)
- * in the returned HTML. Falls back gracefully if the request fails or the
- * site blocks automated access.
+ * Use Google Custom Search API to check if a business is listed on a platform.
+ * Searches for: "business name" site:platform.com
+ *
+ * This is far more reliable than scraping because:
+ * 1. No bot protection issues (it's Google's own API)
+ * 2. Works for JS-rendered SPAs (Google has already indexed the content)
+ * 3. Consistent, structured results
+ *
+ * Falls back to a neutral "not verified" if Custom Search is not configured.
  */
-async function scrapeDirectoryListing(
+async function analyzeViaSiteSearch(
   platform: string,
-  searchUrl: string,
   clientName: string,
+  address: string | null,
 ): Promise<WebsiteCheckResult> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const searchEngineId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
+
+  const platformDomains: Record<string, string> = {
+    'Healthgrades': 'healthgrades.com',
+    'WebMD': 'doctor.webmd.com',
+    'Vitals': 'vitals.com',
+    'Facebook': 'facebook.com',
+    'Zillow': 'zillow.com',
+    'Realtor.com': 'realtor.com',
+    'TripAdvisor': 'tripadvisor.com',
+    'Airbnb': 'airbnb.com',
+    'Vrbo': 'vrbo.com',
+    'Booking.com': 'booking.com',
+  };
+
+  const domain = platformDomains[platform];
+  const searchUrl = buildPlatformSearchUrl(platform, clientName, address);
+
+  // Use Google Custom Search if configured (most reliable)
+  if (apiKey && searchEngineId && domain) {
+    return analyzeWithCustomSearch(platform, clientName, domain, apiKey, searchEngineId, searchUrl);
+  }
+
+  // No Custom Search configured — return neutral with manual link
+  return {
+    category: platform,
+    status: 'neutral',
+    score: null,
+    feedback_summary: `Add GOOGLE_CUSTOM_SEARCH_ENGINE_ID to env for automated ${platform} verification.`,
+    notes: `Search manually: ${searchUrl}`,
+    metadata: { searchUrl, apiKeyMissing: true },
+  };
+}
+
+async function analyzeWithCustomSearch(
+  platform: string,
+  clientName: string,
+  domain: string,
+  apiKey: string,
+  searchEngineId: string,
+  fallbackUrl: string,
+): Promise<WebsiteCheckResult> {
+  const query = `"${clientName}" site:${domain}`;
+  const params = new URLSearchParams({
+    key: apiKey,
+    cx: searchEngineId,
+    q: query,
+    num: '3',
+  });
+
   try {
-    const res = await fetch(searchUrl, {
-      headers: SCRAPE_HEADERS,
-      signal: AbortSignal.timeout(10000),
-      redirect: 'follow',
-    });
+    const res = await fetch(
+      `https://www.googleapis.com/customsearch/v1?${params}`,
+      { signal: AbortSignal.timeout(10000) },
+    );
 
     if (!res.ok) {
-      return generatePlatformFallback(platform, clientName, null, `HTTP ${res.status}`);
+      return {
+        category: platform,
+        status: 'neutral',
+        score: null,
+        feedback_summary: `Google Custom Search API error (HTTP ${res.status}).`,
+        notes: `Search manually: ${fallbackUrl}`,
+        metadata: { searchUrl: fallbackUrl },
+      };
     }
 
-    const html = await res.text();
-    const found = businessNameInHtml(clientName, html);
+    const data = await res.json();
+    const totalResults = parseInt(data.searchInformation?.totalResults ?? '0', 10);
 
-    if (found) {
-      // Try to extract rating/review count from the raw HTML
-      const rating = extractRating(html);
-      const reviewCount = extractReviewCount(html);
+    if (totalResults > 0 && data.items && data.items.length > 0) {
+      const topResult = data.items[0];
+      const snippet = topResult.snippet ?? '';
+      const rating = extractRatingFromSnippet(snippet);
+      const reviewCount = extractReviewCountFromSnippet(snippet);
 
       return {
         category: platform,
@@ -283,13 +333,14 @@ async function scrapeDirectoryListing(
         feedback_summary: `Found on ${platform}.${rating ? ` Rating: ${rating}.` : ''}${reviewCount ? ` Reviews: ${reviewCount}.` : ''}`,
         notes: null,
         metadata: {
-          searchUrl,
-          automated: true,
-          name_on_listing: clientName,
+          searchUrl: topResult.link ?? fallbackUrl,
+          name_on_listing: topResult.title ?? clientName,
           phone_listed: '',
           address_listed: '',
           ...(rating ? { rating } : {}),
           ...(reviewCount ? { total_reviews: reviewCount } : {}),
+          method: 'google_custom_search',
+          totalResults,
         },
       };
     }
@@ -300,40 +351,93 @@ async function scrapeDirectoryListing(
       score: 0,
       feedback_summary: `Not found on ${platform}.`,
       notes: null,
-      metadata: { searchUrl, automated: true },
+      metadata: { searchUrl: fallbackUrl, method: 'google_custom_search', totalResults: 0 },
     };
   } catch {
-    return generatePlatformFallback(platform, clientName, null, 'Request timed out or was blocked');
+    return {
+      category: platform,
+      status: 'neutral',
+      score: null,
+      feedback_summary: `Search timed out for ${platform}.`,
+      notes: `Search manually: ${fallbackUrl}`,
+      metadata: { searchUrl: fallbackUrl },
+    };
   }
 }
+
+// ── Apple Maps ─────────────────────────────────────────────────────────
 
 /**
- * Check if the business name (or a significant multi-word phrase) appears
- * in the HTML. Requires at least a 2-word consecutive match to avoid
- * false positives (e.g. "dental" appearing on a healthcare directory).
+ * Apple Maps has no public search API. We use Google Places as a proxy:
+ * if the business is on Google Maps, it's almost certainly on Apple Maps.
  */
-function businessNameInHtml(clientName: string, html: string): boolean {
-  const htmlLower = html.toLowerCase();
-  const nameLower = clientName.toLowerCase();
+async function analyzeAppleMaps(
+  clientName: string,
+  address: string | null,
+): Promise<WebsiteCheckResult> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const query = encodeURIComponent(clientName + (address ? ' ' + address : ''));
+  const appleMapsUrl = `https://maps.apple.com/?q=${query}`;
 
-  // Full name match — best signal
-  if (htmlLower.includes(nameLower)) return true;
-
-  // Try 2-word consecutive phrases from the name
-  const words = nameLower.split(/\s+/).filter((w) => w.length > 2);
-  if (words.length >= 2) {
-    for (let i = 0; i < words.length - 1; i++) {
-      const phrase = `${words[i]} ${words[i + 1]}`;
-      if (htmlLower.includes(phrase)) return true;
-    }
+  if (!apiKey) {
+    return {
+      category: 'Apple Maps',
+      status: 'neutral',
+      score: null,
+      feedback_summary: null,
+      notes: 'Apple Maps has no public API. Add GOOGLE_PLACES_API_KEY to infer listing.',
+      metadata: { searchUrl: appleMapsUrl, apiKeyMissing: true },
+    };
   }
 
-  return false;
+  const params = new URLSearchParams({
+    query: address ? `${clientName} ${address}` : clientName,
+    key: apiKey,
+  });
+
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`,
+      { signal: AbortSignal.timeout(10000) },
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        return {
+          category: 'Apple Maps',
+          status: 'pass',
+          score: 1,
+          feedback_summary: 'Business confirmed on Google Maps — Apple Maps listing inferred.',
+          notes: null,
+          metadata: {
+            searchUrl: appleMapsUrl,
+            method: 'google_places_proxy',
+            name_on_listing: data.results[0].name ?? '',
+            phone_listed: '',
+            address_listed: data.results[0].formatted_address ?? '',
+          },
+        };
+      }
+    }
+  } catch {
+    // Fall through to neutral
+  }
+
+  return {
+    category: 'Apple Maps',
+    status: 'neutral',
+    score: null,
+    feedback_summary: 'Could not verify Apple Maps listing.',
+    notes: `Open in Apple Maps: ${appleMapsUrl}`,
+    metadata: { searchUrl: appleMapsUrl },
+  };
 }
 
-function extractRating(html: string): number | null {
-  // Common patterns: "4.8 out of 5", "rating: 4.8", data-rating="4.8"
-  const match = html.match(
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+function extractRatingFromSnippet(snippet: string): number | null {
+  const match = snippet.match(
     /(?:rating|score|stars?)["\s:=]*(\d+\.?\d*)(?:\s*(?:out of|\/)\s*5)?/i,
   );
   if (match) {
@@ -343,8 +447,8 @@ function extractRating(html: string): number | null {
   return null;
 }
 
-function extractReviewCount(html: string): number | null {
-  const match = html.match(/(\d[\d,]*)\s*(?:reviews?|ratings?|patient\s*reviews?)/i);
+function extractReviewCountFromSnippet(snippet: string): number | null {
+  const match = snippet.match(/(\d[\d,]*)\s*(?:reviews?|ratings?|patient\s*reviews?)/i);
   if (match) {
     const val = parseInt(match[1].replace(/,/g, ''), 10);
     if (val > 0 && val < 1_000_000) return val;
@@ -352,90 +456,7 @@ function extractReviewCount(html: string): number | null {
   return null;
 }
 
-// ── Facebook ─────────────────────────────────────────────────────────
-
-async function scrapeFacebook(
-  clientName: string,
-  address: string | null,
-): Promise<WebsiteCheckResult> {
-  // Facebook blocks unauthenticated search requests, but we can try
-  // fetching a likely page URL slug (e.g. /MemphisDentalStudio)
-  const slug = clientName.replace(/[^a-zA-Z0-9]/g, '');
-  const profileUrl = `https://www.facebook.com/${slug}`;
-
-  try {
-    const res = await fetch(profileUrl, {
-      headers: SCRAPE_HEADERS,
-      signal: AbortSignal.timeout(8000),
-      redirect: 'follow',
-    });
-
-    if (res.ok) {
-      const html = await res.text();
-      // Facebook returns a page even for 404s — check for the business name
-      if (businessNameInHtml(clientName, html) && !html.includes('page_not_found')) {
-        return {
-          category: 'Facebook',
-          status: 'pass',
-          score: 1,
-          feedback_summary: 'Found on Facebook.',
-          notes: null,
-          metadata: {
-            searchUrl: profileUrl,
-            automated: true,
-            name_on_listing: clientName,
-            phone_listed: '',
-            address_listed: '',
-          },
-        };
-      }
-    }
-  } catch {
-    // Expected — Facebook often blocks server-side requests
-  }
-
-  return generatePlatformFallback('Facebook', clientName, address, 'Facebook requires authentication for search.');
-}
-
-// ── Fallback helpers ─────────────────────────────────────────────────
-
-/**
- * Produce a clear fallback result when automated analysis isn't possible.
- * Unlike the old "manual verification required" message, this includes
- * the reason and a direct search link.
- */
-function generatePlatformFallback(
-  platform: string,
-  clientName: string,
-  address: string | null,
-  reason: string,
-): WebsiteCheckResult {
-  const searchUrl = buildGenericSearchUrl(platform, clientName, address);
-  return {
-    category: platform,
-    status: 'neutral',
-    score: null,
-    feedback_summary: `Could not auto-verify ${platform} listing. ${reason}`,
-    notes: `Search manually: ${searchUrl}`,
-    metadata: {
-      searchUrl,
-      manualCheck: true,
-      name_on_listing: '',
-      phone_listed: '',
-      address_listed: '',
-    },
-  };
-}
-
-function generateSearchUrl(
-  platform: string,
-  clientName: string,
-  address: string | null,
-): WebsiteCheckResult {
-  return generatePlatformFallback(platform, clientName, address, 'No automated check available for this platform.');
-}
-
-function buildGenericSearchUrl(platform: string, name: string, address: string | null): string {
+function buildPlatformSearchUrl(platform: string, name: string, address: string | null): string {
   const query = encodeURIComponent(name + (address ? ' ' + address : ''));
 
   const urls: Record<string, string> = {

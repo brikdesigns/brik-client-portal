@@ -171,8 +171,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const tabStyle = (active: boolean) => ({
     fontFamily: font.family.label,
     fontSize: font.size.body.md,
-    fontWeight: font.weight.semibold,
-    color: active ? color.text.brand : color.text.secondary,
+    fontWeight: font.weight.medium,
+    color: active ? color.text.brand : color.text.muted,
     textDecoration: 'none' as const,
     padding: `${gap.sm} 0`,
     borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
@@ -184,7 +184,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const sectionLabelStyle = {
     fontFamily: font.family.label,
     fontSize: font.size.body.lg,
-    fontWeight: font.weight.semibold,
+    fontWeight: font.weight.medium,
     color: color.text.muted,
     margin: 0,
     paddingTop: space.xl,
@@ -193,7 +193,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const fieldLabelStyle = {
     fontFamily: font.family.label,
     fontSize: font.size.body.sm,
-    fontWeight: font.weight.semibold,
+    fontWeight: font.weight.medium,
     color: color.text.muted,
     margin: 0,
   };
@@ -268,7 +268,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         style={{
           display: 'flex',
           gap: gap.xl,
-          borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+          borderBottom: `${border.width.lg} solid ${color.border.muted}`,
           marginBottom: space.lg,
         }}
       >

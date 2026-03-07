@@ -385,7 +385,7 @@ export default function NewProposalPage() {
                   justifyContent: 'center',
                   fontFamily: font.family.label,
                   fontSize: font.size.body.xs,
-                  fontWeight: font.weight.semibold,
+                  fontWeight: font.weight.medium,
                   backgroundColor: s <= step ? color.brand.primary : color.surface.tertiary,
                   color: s <= step ? '#fff' : color.text.muted,
                 }}
@@ -396,7 +396,7 @@ export default function NewProposalPage() {
                 style={{
                   fontFamily: font.family.label,
                   fontSize: font.size.body.xs,
-                  fontWeight: s === step ? font.weight.semibold : font.weight.regular,
+                  fontWeight: s === step ? font.weight.medium : font.weight.regular,
                   color: s === step ? color.text.primary : color.text.muted,
                   whiteSpace: 'nowrap',
                 }}
@@ -454,7 +454,7 @@ export default function NewProposalPage() {
                       style={{
                         fontFamily: font.family.label,
                         fontSize: font.size.body.xs,
-                        fontWeight: font.weight.semibold,
+                        fontWeight: font.weight.medium,
                         color: color.text.secondary,
                         textTransform: 'uppercase' as const,
                         letterSpacing: '0.05em',
@@ -552,7 +552,7 @@ export default function NewProposalPage() {
           {/* Step 1 Actions */}
           <div style={{ display: 'flex', gap: gap.sm, maxWidth: '720px', justifyContent: 'flex-end' }}>
             <a href={`/admin/companies/${slug}`}>
-              <Button type="button" variant="outline" size="md">
+              <Button type="button" variant="secondary" size="md">
                 Cancel
               </Button>
             </a>

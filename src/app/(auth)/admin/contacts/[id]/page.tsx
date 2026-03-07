@@ -42,7 +42,7 @@ export default async function ContactDetailPage({ params }: Props) {
   const fieldLabelStyle = {
     fontFamily: font.family.label,
     fontSize: font.size.body.sm,
-    fontWeight: font.weight.semibold,
+    fontWeight: font.weight.medium,
     color: color.text.muted,
     margin: 0,
   };
@@ -74,14 +74,6 @@ export default async function ContactDetailPage({ params }: Props) {
           </div>
         }
         metadata={[
-          {
-            label: 'Role',
-            value: (
-              <Tag size="sm" style={{ color: color.text.muted }}>
-                {contact.role.charAt(0).toUpperCase() + contact.role.slice(1)}
-              </Tag>
-            ),
-          },
           ...(contact.is_primary ? [{
             label: '',
             value: (
@@ -92,6 +84,28 @@ export default async function ContactDetailPage({ params }: Props) {
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+        {/* Role + dates row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div>
+            <p style={fieldLabelStyle}>Role</p>
+            <p style={fieldValueStyle}>
+              {contact.role.charAt(0).toUpperCase() + contact.role.slice(1)}
+            </p>
+          </div>
+          <div>
+            <p style={fieldLabelStyle}>Date added</p>
+            <p style={fieldValueStyle}>
+              {new Date(contact.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div>
+            <p style={fieldLabelStyle}>Last updated</p>
+            <p style={fieldValueStyle}>
+              {new Date(contact.updated_at).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
         {/* Company */}
         <div>
           <p style={fieldLabelStyle}>Company</p>
@@ -121,20 +135,9 @@ export default async function ContactDetailPage({ params }: Props) {
             <p style={fieldValueStyle}>{contact.phone || '—'}</p>
           </div>
           <div>
-            <p style={fieldLabelStyle}>Job Title</p>
+            <p style={fieldLabelStyle}>Job title</p>
             <p style={fieldValueStyle}>{contact.title || '—'}</p>
           </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
-          <div>
-            <p style={fieldLabelStyle}>Added</p>
-            <p style={fieldValueStyle}>
-              {new Date(contact.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div />
-          <div />
         </div>
 
         {/* Notes */}

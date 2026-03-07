@@ -136,7 +136,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
               <div style={{ flex: 1 }}>
                 <p style={{
                   fontFamily: font.family.label,
-                  fontWeight: font.weight.semibold,
+                  fontWeight: font.weight.medium,
                   fontSize: font.size.body.sm,
                   color: color.text.primary,
                   margin: 0,

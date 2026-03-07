@@ -96,7 +96,7 @@ export const label = {
   subtitle: {
     fontFamily: font.family.label,
     fontSize: font.size.label.sm,
-    fontWeight: font.weight.semibold,
+    fontWeight: font.weight.medium,
     color: color.text.secondary,
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
@@ -106,7 +106,7 @@ export const label = {
   sm: {
     fontFamily: font.family.label,
     fontSize: font.size.label.sm,
-    fontWeight: font.weight.semibold,
+    fontWeight: font.weight.medium,
     color: color.text.primary,
   } satisfies CSSProperties,
 

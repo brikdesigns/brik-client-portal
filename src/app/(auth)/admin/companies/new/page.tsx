@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
@@ -29,8 +28,8 @@ function formatPhone(digits: string): string {
   const d = digits.replace(/\D/g, '').slice(0, 10);
   if (d.length === 0) return '';
   if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
-  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
+  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
+  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
 export default function NewCompanyPage() {
@@ -134,8 +133,7 @@ export default function NewCompanyPage() {
         </p>
       </div>
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
           <div
             style={{
               display: 'flex',
@@ -202,7 +200,7 @@ export default function NewCompanyPage() {
                 label="Phone"
                 type="tel"
                 inputMode="numeric"
-                placeholder="(555)-555-5555"
+                placeholder="(555) 555-5555"
                 value={phone}
                 onChange={handlePhoneChange}
                 iconBefore={<FontAwesomeIcon icon={faPhone} style={iconSize} />}
@@ -262,7 +260,7 @@ export default function NewCompanyPage() {
             }}
           >
             <a href="/admin/companies">
-              <Button type="button" variant="outline" size="md">
+              <Button type="button" variant="secondary" size="md">
                 Cancel
               </Button>
             </a>
@@ -270,8 +268,7 @@ export default function NewCompanyPage() {
               {type === 'lead' ? 'Add Lead' : 'Begin'}
             </Button>
           </div>
-        </form>
-      </Card>
+      </form>
     </div>
   );
 }

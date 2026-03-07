@@ -1,12 +1,11 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
-import { ReportStatusBadge } from '@/components/report-badges';
+import { ScoreTierBadge } from '@/components/report-badges';
 import { AnalyzeButton } from '@/components/analyze-button';
 import { ReportContent } from '@/components/report-content';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatIndustry } from '@/lib/format';
-import { font, color, space, border } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string; reportType: string }>;
@@ -40,7 +39,7 @@ export default async function ReportDetailPage({ params }: Props) {
   // Fetch the specific report
   const { data: report, error: reportError } = await supabase
     .from('reports')
-    .select('id, report_type, status, score, max_score, tier, opportunities_text, created_at')
+    .select('id, report_type, score, max_score, tier, opportunities_text, created_at')
     .eq('report_set_id', reportSet.id)
     .eq('report_type', reportType)
     .single();
@@ -94,7 +93,7 @@ export default async function ReportDetailPage({ params }: Props) {
           },
           {
             label: 'Status',
-            value: <ReportStatusBadge status={report.status} />,
+            value: report.tier ? <ScoreTierBadge tier={report.tier} /> : 'Not scored',
           },
           {
             label: 'Progress',
@@ -108,14 +107,6 @@ export default async function ReportDetailPage({ params }: Props) {
           />
         }
       />
-
-      {/* DEBUG: remove after diagnosing empty items */}
-      {itemsError && (
-        <pre style={{ color: color.system.red, fontSize: font.size.body.xs, padding: space.sm, background: color.background.secondary, borderRadius: border.radius.sm, marginBottom: space.md }}>
-          Items query error: {JSON.stringify(itemsError, null, 2)}
-          {'\n'}Report ID: {report.id}
-        </pre>
-      )}
 
       <ReportContent
         report={{

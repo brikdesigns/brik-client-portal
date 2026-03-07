@@ -194,7 +194,7 @@ export function EditableReportTable({
     fontWeight: font.weight.semibold,
     color: color.text.secondary,
     textAlign: 'left',
-    borderBottom: `2px solid ${color.border.primary}`,
+    borderBottom: `2px solid ${color.border.muted}`,
     fontFamily: font.family.body,
     whiteSpace: 'nowrap',
   };
@@ -203,7 +203,7 @@ export function EditableReportTable({
     padding: `${space.sm} ${space.sm}`,
     fontSize: font.size.body.sm,
     color: color.text.primary,
-    borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+    borderBottom: `${border.width.lg} solid ${color.border.muted}`,
     fontFamily: font.family.body,
     verticalAlign: 'top',
   };
@@ -256,7 +256,7 @@ export function EditableReportTable({
                             {saving ? 'Saving...' : 'Save'}
                           </Button>
                           <Button
-                            variant="outline"
+                            variant="secondary"
                             size="sm"
                             onClick={cancelEdit}
                             disabled={saving}
@@ -282,7 +282,7 @@ export function EditableReportTable({
                         colSpan={columns.length + 1}
                         style={{
                           padding: `${space.xs} ${space.sm} ${space.md}`,
-                          borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+                          borderBottom: `${border.width.lg} solid ${color.border.muted}`,
                           background: color.background.secondary,
                         }}
                       >

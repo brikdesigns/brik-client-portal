@@ -216,35 +216,55 @@ function createItemsFromAnalysis(
 /**
  * Build a plain-text opportunities summary from analysis results.
  * Exported so the analyze route can regenerate it after re-analysis.
+ *
+ * Handles both binary scoring (online_reviews: 0/1) and scaled scoring
+ * (website, brand: 1-5) by using the status field as the primary signal.
  */
 export function generateOpportunities(results: WebsiteCheckResult[]): string {
   const lines: string[] = [];
 
-  // Platforms/categories with low scores
-  const issues = results.filter((r) => r.score !== null && r.score <= 2);
+  // Failed / needs attention — use status as primary signal
+  const issues = results.filter(
+    (r) => r.score !== null && (r.status === 'fail' || r.status === 'warning'),
+  );
   for (const issue of issues) {
     if (issue.feedback_summary) {
       lines.push(`${issue.category} — ${issue.feedback_summary}`);
     }
   }
 
-  // Platforms that passed
-  const passed = results.filter((r) => r.status === 'pass' && r.score !== null && r.score > 2);
+  // Low scores on scaled reports (score 1-2 out of 5) that aren't already caught by status
+  const lowScored = results.filter(
+    (r) =>
+      r.score !== null &&
+      r.score <= 2 &&
+      r.status !== 'fail' &&
+      r.status !== 'warning' &&
+      r.status !== 'pass',
+  );
+  for (const item of lowScored) {
+    if (item.feedback_summary) {
+      lines.push(`${item.category} — ${item.feedback_summary}`);
+    }
+  }
+
+  // Platforms/categories that passed
+  const passed = results.filter((r) => r.status === 'pass' && r.score !== null);
   for (const item of passed) {
     if (item.feedback_summary) {
       lines.push(`${item.category} — ${item.feedback_summary}`);
     }
   }
 
-  // Platforms that still need manual review
-  const manualCategories = results.filter((r) => r.score === null);
-  if (manualCategories.length > 0) {
-    const names = manualCategories.map((r) => r.category).join(', ');
-    lines.push(`Needs manual review — ${names}`);
+  // Categories not yet scored (awaiting analysis or manual entry)
+  const unscoredCategories = results.filter((r) => r.score === null);
+  if (unscoredCategories.length > 0) {
+    const names = unscoredCategories.map((r) => r.category).join(', ');
+    lines.push(`Not yet scored — ${names}`);
   }
 
   if (lines.length === 0) {
-    return 'All analyzed categories look strong. Complete any remaining manual reviews to finalize the report.';
+    return 'All analyzed categories look strong.';
   }
 
   return lines.join('\n');

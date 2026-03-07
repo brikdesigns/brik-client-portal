@@ -82,7 +82,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
               <span style={{ fontFamily: font.family.heading, fontSize: font.size.heading.medium, fontWeight: font.weight.bold, color: tierColor }}>
                 {score} / {maxScore}
               </span>
-              <span style={{ fontFamily: font.family.label, fontSize: font.size.body.sm, fontWeight: font.weight.semibold, color: tierColor }}>
+              <span style={{ fontFamily: font.family.label, fontSize: font.size.body.sm, fontWeight: font.weight.medium, color: tierColor }}>
                 {tierLabel}
               </span>
             </div>

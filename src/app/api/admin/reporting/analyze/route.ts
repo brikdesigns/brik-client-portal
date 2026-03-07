@@ -136,13 +136,14 @@ export async function POST(request: Request) {
 
   // Update each item with analysis results
   let updatedCount = 0;
+  const updateErrors: string[] = [];
   for (const item of existingItems) {
     const result = results.find((r) => r.category === item.category);
     if (result && result.score !== null) {
       const catConfig = reportConfig?.categories.find((c) => c.category === item.category);
       const maxScore = catConfig?.maxScore ?? (item.metadata as Record<string, unknown>)?.maxScore ?? 5;
 
-      await supabase
+      const { error: updateError } = await supabase
         .from('report_items')
         .update({
           status: result.status,
@@ -158,7 +159,12 @@ export async function POST(request: Request) {
         })
         .eq('id', item.id);
 
-      updatedCount++;
+      if (updateError) {
+        console.error(`Failed to update item ${item.category}:`, updateError.message);
+        updateErrors.push(`${item.category}: ${updateError.message}`);
+      } else {
+        updatedCount++;
+      }
     }
   }
 
@@ -176,5 +182,6 @@ export async function POST(request: Request) {
   return NextResponse.json({
     updated: updatedCount,
     total: existingItems.length,
+    ...(updateErrors.length > 0 ? { errors: updateErrors } : {}),
   });
 }

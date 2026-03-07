@@ -40,6 +40,7 @@ jobs:
             00007 00008 00009 00010 00011
             00012 00013 00014 00015
             00018 00020 00021 00022
+            00023 00024
           )
           for v in "${APPLIED_MIGRATIONS[@]}"; do
             supabase migration repair --status applied "$v" 2>/dev/null || true

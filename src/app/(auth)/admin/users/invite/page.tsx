@@ -1,5 +1,4 @@
 import { createClient } from '@/lib/supabase/server';
-import { Card } from '@bds/components/ui/Card/Card';
 import { InviteUserForm } from '@/components/invite-user-form';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 
@@ -27,9 +26,7 @@ export default async function InviteUserPage() {
         }
       />
 
-      <Card variant="elevated" padding="lg">
-        <InviteUserForm clients={clients ?? []} />
-      </Card>
+      <InviteUserForm clients={clients ?? []} />
     </div>
   );
 }
