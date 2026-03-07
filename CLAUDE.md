@@ -68,6 +68,22 @@ Browser → Next.js (Netlify) → Supabase Auth + PostgreSQL
 
 Git submodule at `./brik-bds/`. Uses **Brik Designs company brand** — NOT any of the 8 BDS web template themes.
 
+### BDS Workflow (CRITICAL)
+
+**NEVER edit files inside `brik-client-portal/brik-bds/`.** That directory is a read-only submodule. All BDS development happens in the standalone repo at `~/Documents/GitHub/brik/brik-bds/`.
+
+**Workflow:**
+1. Make BDS changes in `~/Documents/GitHub/brik/brik-bds/` → commit → push
+2. Pull into portal: `./scripts/bds-sync.sh` (fetches latest, builds, commits submodule ref)
+3. Push portal when ready
+
+**Available commands:**
+| Command | What it does |
+|---------|-------------|
+| `./scripts/bds-sync.sh` | Pull latest BDS + build + commit |
+| `./scripts/bds-sync.sh --dry-run` | Pull + build, no commit |
+| `./scripts/bds-sync.sh --check` | Show current vs latest (read-only) |
+
 ### Brand vs Templates (critical distinction)
 
 | | Brik Designs Brand | BDS Web Templates |
@@ -273,19 +289,42 @@ npm run db:seed    # Reset local DB with seeds (destructive!)
 
 Supabase CLI manages database schema via SQL migration files in `supabase/migrations/`.
 
-**Local development:**
+### Creating migrations
 
-1. Make schema changes → write SQL in `supabase/migrations/00003_*.sql`
-2. `npm run db:push` to apply to live Supabase (requires `supabase link` first)
-3. Commit and push — GitHub Action auto-applies on merge to main
+1. Write SQL in `supabase/migrations/NNNNN_description.sql` (increment the number)
+2. Commit and push to `staging` or `main`
+3. GitHub Action auto-applies pending migrations
 
-**GitHub Action (`.github/workflows/migrate.yml`):**
+### Applying migrations
 
-- Triggers on push to `main` when `supabase/migrations/**` changes
-- Runs `supabase db push` against live project
-- Requires GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
+**Automatic (CI):** GitHub Action triggers on push to `main` or `staging` when `supabase/migrations/**` changes.
 
-**First-time setup:**
+**Manual (local):** Use the helper script:
+
+```bash
+./scripts/db-migrate.sh              # Show status + apply pending
+./scripts/db-migrate.sh --status     # Status only
+./scripts/db-migrate.sh --dry-run    # Preview without applying
+```
+
+**Manual (Dashboard):** After applying via SQL Editor, add the version number to the `APPLIED_MIGRATIONS` list in both:
+- `.github/workflows/migrate.yml`
+- `scripts/db-migrate.sh`
+
+This tells the CLI those migrations are already applied and shouldn't be re-run.
+
+### GitHub Action (`.github/workflows/migrate.yml`)
+
+- Triggers on push to `main` or `staging` when `supabase/migrations/**` changes
+- Supports manual dispatch with dry-run option
+- Repairs manually-applied migrations before pushing
+- Requires GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (set)
+
+### Currently pending migrations
+
+Migrations 00006, 00016, 00017, 00019, 00023 are NOT yet applied to live Supabase. Push to `staging` will trigger the GitHub Action to apply them.
+
+### First-time setup
 
 1. `supabase login` (opens browser for Supabase dashboard OAuth)
 2. `supabase link --project-ref rnspxmrkpoukccahggli`

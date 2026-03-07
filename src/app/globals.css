@@ -105,6 +105,21 @@
   /* System */
   --color-system-link: #0034ea;
 
+  /* ---- BDS component CSS aliases ---- */
+  /* BDS component .css files reference full-namespaced tokens (--_color---...).
+     Map them to the portal's shorthand tokens so ::placeholder, focus, disabled
+     styles work correctly. */
+  --_color---text--muted: var(--text-muted);
+  --_color---text--inverse: var(--text-inverse);
+  --_color---text--primary: var(--text-primary);
+  --_color---text--secondary: var(--text-secondary);
+  --_color---border--brand-primary: var(--border-brand-primary);
+  --_color---border--brand: var(--border-brand-primary);
+  --_color---border--primary: var(--border-primary);
+  --_color---surface--secondary: var(--surface-secondary);
+  --_color---background--brand-primary: var(--background-brand-primary);
+  --_color---background--input: var(--background-input);
+
   /* ---- Typography (Poppins — Brik brand font) ---- */
   --font-family-body: Poppins, sans-serif;
   --font-family-label: Poppins, sans-serif;
@@ -225,6 +240,18 @@
 
   /* System */
   --color-system-link: #6b8aff;
+
+  /* BDS component CSS aliases (dark mode) */
+  --_color---text--muted: var(--text-muted);
+  --_color---text--inverse: var(--text-inverse);
+  --_color---text--primary: var(--text-primary);
+  --_color---text--secondary: var(--text-secondary);
+  --_color---border--brand-primary: var(--border-brand-primary);
+  --_color---border--brand: var(--border-brand-primary);
+  --_color---border--primary: var(--border-primary);
+  --_color---surface--secondary: var(--surface-secondary);
+  --_color---background--brand-primary: var(--background-brand-primary);
+  --_color---background--input: var(--background-input);
 
   /* Service category colors (dark mode — slightly muted for dark backgrounds) */
   --services--yellow: #d4b54a;

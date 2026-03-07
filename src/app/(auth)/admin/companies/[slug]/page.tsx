@@ -574,7 +574,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
-            <a href={`/admin/companies/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/services/new`}>Assign service</Button>
           </div>
           <DataTable
             data={clientServices}
@@ -629,7 +629,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
-            <a href={`/admin/companies/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/projects/new`}>Add project</Button>
           </div>
           <DataTable
             data={projects}
@@ -665,7 +665,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
-            <a href={`/admin/companies/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
           </div>
           <DataTable
             data={invoices}

@@ -2,11 +2,16 @@ name: Supabase Migrations
 
 on:
   push:
-    branches: [main]
+    branches: [main, staging]
     paths:
       - 'supabase/migrations/**'
       - '.github/workflows/migrate.yml'
   workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Preview only (do not apply)'
+        type: boolean
+        default: false
 
 jobs:
   migrate:
@@ -26,9 +31,30 @@ jobs:
 
       - name: Repair manually-applied migrations
         run: |
-          supabase migration repair --status applied 00001
-          supabase migration repair --status applied 00002
-          supabase migration repair --status applied 00003
+          # Migrations applied via Dashboard SQL Editor aren't tracked by CLI.
+          # Mark all known-applied migrations so db push only runs truly new ones.
+          # This list is maintained manually — add the version number when you
+          # apply a migration via Dashboard.
+          APPLIED_MIGRATIONS=(
+            00001 00002 00003 00004 00005
+            00007 00008 00009 00010 00011
+            00012 00013 00014 00015
+            00018 00020 00021 00022
+          )
+          for v in "${APPLIED_MIGRATIONS[@]}"; do
+            supabase migration repair --status applied "$v" 2>/dev/null || true
+          done
+          echo "Repaired ${#APPLIED_MIGRATIONS[@]} manually-applied migrations"
 
-      - name: Push pending migrations
+      - name: Show migration status
+        run: supabase migration list
+
+      - name: Preview pending migrations (dry run)
+        if: inputs.dry_run == true
+        run: |
+          echo "=== Dry run — showing what would be applied ==="
+          supabase db push --dry-run
+
+      - name: Apply pending migrations
+        if: inputs.dry_run != true
         run: supabase db push
