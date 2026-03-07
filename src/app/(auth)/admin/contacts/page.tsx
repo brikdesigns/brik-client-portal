@@ -32,7 +32,7 @@ export default async function AdminContactsPage() {
         subtitle="People at your companies — clients, managers, and admins."
         actions={
           <Button variant="primary" size="sm" asLink href="/admin/contacts/new">
-            Add New
+            Add Contact
           </Button>
         }
       />

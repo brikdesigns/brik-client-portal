@@ -46,7 +46,7 @@ export default async function AdminCompaniesPage() {
         subtitle="Manage leads and client accounts."
         actions={
           <Button variant="primary" size="md" asLink href="/admin/companies/new">
-            Add New
+            Add Company
           </Button>
         }
       />

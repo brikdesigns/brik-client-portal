@@ -84,8 +84,8 @@ export default async function ProjectDetailPage({ params }: Props) {
         }
         subtitle={project.description || undefined}
         actions={
-          <Button variant="primary" size="sm" asLink href={`/admin/projects/${project.slug}/edit`}>
-            Edit project
+          <Button variant="secondary" size="sm" asLink href={`/admin/projects/${project.slug}/edit`}>
+            Edit
           </Button>
         }
         metadata={metadataItems}
