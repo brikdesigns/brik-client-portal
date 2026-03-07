@@ -10,7 +10,7 @@ export default async function AdminReportingPage() {
   const { data: reportSets } = await supabase
     .from('report_sets')
     .select(`
-      id, type, status, overall_score, overall_max_score, overall_tier, created_at,
+      id, status, overall_score, overall_max_score, overall_tier, created_at,
       companies(id, name, slug, industry),
       reports(status)
     `)

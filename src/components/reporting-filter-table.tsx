@@ -10,7 +10,7 @@ import { ReportSetStatusBadge, ScoreTierBadge } from './report-badges';
 
 export interface ReportSetRow {
   id: string;
-  type: string;
+  type?: string;
   status: string;
   overall_score: number | null;
   overall_max_score: number | null;
@@ -124,7 +124,7 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
           },
           {
             header: 'Type',
-            accessor: (rs) => formatReportSetType(rs.type),
+            accessor: (rs) => formatReportSetType(rs.type ?? 'marketing_analysis'),
             style: { color: color.text.secondary },
           },
           {
