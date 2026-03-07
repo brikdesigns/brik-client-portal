@@ -116,7 +116,7 @@ export default async function ClientReportListPage({ params }: Props) {
             header: '',
             accessor: (r) => (
               <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${slug}/${r.report_type}`}>
-                View Details
+                View
               </Button>
             ),
             style: { textAlign: 'right' },

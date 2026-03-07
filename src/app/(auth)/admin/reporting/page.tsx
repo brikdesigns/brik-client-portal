@@ -103,7 +103,7 @@ export default async function AdminReportingPage() {
                 const client = rs.companies as unknown as { slug: string } | null;
                 return client ? (
                   <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
-                    View Details
+                    View
                   </Button>
                 ) : null;
               },

@@ -77,8 +77,8 @@ export default async function AdminOverviewPage() {
           {
             header: '',
             accessor: (p) => (
-              <Button variant="primary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
-                View Details
+              <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                View
               </Button>
             ),
             style: { textAlign: 'right' },

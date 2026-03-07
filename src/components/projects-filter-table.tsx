@@ -161,7 +161,7 @@ export function ProjectsFilterTable({
             header: '',
             accessor: (p) => (
               <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
-                View Details
+                View
               </Button>
             ),
             style: { textAlign: 'right' },

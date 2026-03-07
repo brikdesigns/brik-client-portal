@@ -142,7 +142,7 @@ export function InvoicesFilterTable({
                 </Button>
                 {inv.invoice_url && (
                   <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                    <Button variant="primary" size="sm">View Details</Button>
+                    <Button variant="primary" size="sm">View</Button>
                   </a>
                 )}
               </div>

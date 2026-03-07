@@ -22,6 +22,7 @@ import { DeleteCompanyButton } from '@/components/delete-company-button';
 import { QualifyLeadButton } from '@/components/qualify-lead-button';
 import { GenerateProposalButton } from '@/components/generate-proposal-button';
 import { RunAnalysisButton } from '@/components/run-analysis-button';
+import { GHLSyncButton } from '@/components/ghl-sync-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
@@ -46,6 +47,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       city, state, postal_code, country,
       domain_hosted, referred_by, other_marketing_company,
       pipeline, pipeline_stage, opportunity_owner, followers, introduction_date, ghl_contact_id,
+      ghl_tags, ghl_source, ghl_opportunity_value_cents, ghl_last_synced,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
       company_services(
@@ -222,8 +224,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           />
         }
         actions={
-          <div style={{ display: 'flex', gap: gap.md }}>
+          <div style={{ display: 'flex', gap: gap.md, alignItems: 'center' }}>
             <DeleteCompanyButton companyId={client.id} companyName={client.name} />
+            <GHLSyncButton companyId={client.id} hasGhlId={!!(client as unknown as Record<string, string>).ghl_contact_id} />
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
               Edit
             </Button>
@@ -380,10 +383,62 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               </p>
             </div>
             <div>
-              <p style={fieldLabelStyle}>GoHighLevel ID</p>
-              <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).ghl_contact_id || '—'}</p>
+              <p style={fieldLabelStyle}>GoHighLevel</p>
+              <p style={fieldValueStyle}>
+                {(client as unknown as Record<string, string>).ghl_contact_id ? (
+                  <a
+                    href={`https://app.gohighlevel.com/v2/location/IZPqVFfrhjIQrXkmHChN/contacts/detail/${(client as unknown as Record<string, string>).ghl_contact_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={linkStyle}
+                  >
+                    View in GoHighLevel &#x2197;
+                  </a>
+                ) : '—'}
+              </p>
             </div>
           </div>
+
+          {/* GoHighLevel */}
+          {(client as unknown as Record<string, string>).ghl_contact_id && (
+            <>
+              <p style={sectionLabelStyle}>GoHighLevel</p>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+                <div>
+                  <p style={fieldLabelStyle}>Source</p>
+                  <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).ghl_source || '—'}</p>
+                </div>
+                <div>
+                  <p style={fieldLabelStyle}>Opportunity Value</p>
+                  <p style={fieldValueStyle}>
+                    {(client as unknown as Record<string, number>).ghl_opportunity_value_cents
+                      ? formatCurrency((client as unknown as Record<string, number>).ghl_opportunity_value_cents)
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p style={fieldLabelStyle}>Last Synced</p>
+                  <p style={fieldValueStyle}>
+                    {(client as unknown as Record<string, string>).ghl_last_synced
+                      ? new Date((client as unknown as Record<string, string>).ghl_last_synced).toLocaleString()
+                      : 'Never'}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <p style={fieldLabelStyle}>Tags</p>
+                  <div style={{ display: 'flex', gap: gap.sm, flexWrap: 'wrap', marginTop: gap.xs }}>
+                    {(client as unknown as Record<string, string[]>).ghl_tags?.length
+                      ? (client as unknown as Record<string, string[]>).ghl_tags.map((tag) => (
+                          <Tag key={tag} size="sm">{tag}</Tag>
+                        ))
+                      : <p style={fieldValueStyle}>—</p>}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Notes */}
           {client.notes && (
@@ -452,7 +507,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   header: '',
                   accessor: (r) => (
                     <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}/${r.report_type}`}>
-                      View Details
+                      View
                     </Button>
                   ),
                   style: { textAlign: 'right' },
@@ -640,7 +695,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   inv.invoice_url ? (
                     <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                       <Button variant="secondary" size="sm">
-                        View Details
+                        View
                       </Button>
                     </a>
                   ) : null,

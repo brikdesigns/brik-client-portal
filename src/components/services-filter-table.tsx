@@ -181,7 +181,7 @@ export function ServicesFilterTable({
                   asLink
                   href={`/admin/services/${s.slug}`}
                 >
-                  View Details
+                  View
                 </Button>
               ),
               style: { textAlign: 'right' },

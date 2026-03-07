@@ -89,7 +89,7 @@ export default async function AdminContactsPage() {
                   <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
                     View
                   </Button>
-                  <Button variant="ghost" size="sm" asLink href={`/admin/contacts/${c.id}/edit`}>
+                  <Button variant="primary" size="sm" asLink href={`/admin/contacts/${c.id}/edit`}>
                     Edit
                   </Button>
                 </div>
