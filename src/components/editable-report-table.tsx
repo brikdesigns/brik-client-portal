@@ -256,7 +256,7 @@ export function EditableReportTable({
                             {saving ? 'Saving...' : 'Save'}
                           </Button>
                           <Button
-                            variant="secondary"
+                            variant="outline"
                             size="sm"
                             onClick={cancelEdit}
                             disabled={saving}

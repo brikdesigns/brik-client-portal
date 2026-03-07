@@ -140,7 +140,8 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
           <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
             <Button
               type="button"
-              variant="secondary"
+              variant="outline"
+              size="md"
               onClick={() => router.push(`/admin/users/${user.id}`)}
               disabled={isLoading}
             >
