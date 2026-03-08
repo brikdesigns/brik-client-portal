@@ -10,6 +10,17 @@ Brik Designs client portal — secure web app where agency clients track project
 
 **Always use Opus for this project.** This overrides the global Sonnet default.
 
+## Session Startup
+
+**Run the health check at the start of every work session:**
+
+```bash
+./scripts/health-check.sh --quick    # Fast check (skip build + Netlify)
+./scripts/health-check.sh            # Full check (includes build + Netlify API)
+```
+
+This catches stale secrets, broken connections, and migration drift before you waste time debugging. A weekly GitHub Action also runs automatically (Mondays 9am CT).
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -329,6 +340,17 @@ npm run db:push    # Apply pending migrations to live Supabase
 npm run db:diff    # Generate migration from schema diff
 npm run db:status  # List migration status (applied/pending)
 npm run db:seed    # Reset local DB with seeds (destructive!)
+```
+
+### Infrastructure scripts
+
+```bash
+./scripts/health-check.sh            # Full infra health check
+./scripts/health-check.sh --quick    # Fast check (skip build + Netlify)
+./scripts/health-check.sh --ci       # CI mode (exit code = failure count)
+./scripts/db-migrate.sh              # Apply migrations to staging (default)
+./scripts/db-migrate.sh --prod       # Apply migrations to production
+./scripts/bds-sync.sh               # Pull latest BDS submodule
 ```
 
 ## Migration Workflow

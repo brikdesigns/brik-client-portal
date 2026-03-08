@@ -1,0 +1,89 @@
+name: Infrastructure Health Check
+
+on:
+  schedule:
+    # Every Monday at 9am CT (14:00 UTC)
+    - cron: '0 14 * * 1'
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Check Supabase Production
+        run: |
+          echo "=== Production Database ==="
+          SUPABASE_DB_PASSWORD="${{ secrets.SUPABASE_DB_PASSWORD }}" \
+            supabase link --project-ref rnspxmrkpoukccahggli
+
+          if supabase migration list 2>&1 | head -5; then
+            echo "::notice::Production DB connection OK"
+          else
+            echo "::error::Cannot connect to Production DB — check SUPABASE_DB_PASSWORD secret"
+            exit 1
+          fi
+
+      - name: Check Supabase Staging
+        run: |
+          echo "=== Staging Database ==="
+          SUPABASE_DB_PASSWORD="${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}" \
+            supabase link --project-ref "${{ secrets.SUPABASE_STAGING_PROJECT_REF }}"
+
+          if supabase migration list 2>&1 | head -5; then
+            echo "::notice::Staging DB connection OK"
+          else
+            echo "::error::Cannot connect to Staging DB — check SUPABASE_STAGING_DB_PASSWORD secret"
+            exit 1
+          fi
+
+      - name: Check migration parity
+        run: |
+          # Both environments should have the same number of applied migrations
+          PROD_COUNT=$(SUPABASE_DB_PASSWORD="${{ secrets.SUPABASE_DB_PASSWORD }}" \
+            supabase link --project-ref rnspxmrkpoukccahggli 2>/dev/null && \
+            supabase migration list 2>/dev/null | grep -c "applied" || echo "0")
+
+          STG_COUNT=$(SUPABASE_DB_PASSWORD="${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}" \
+            supabase link --project-ref "${{ secrets.SUPABASE_STAGING_PROJECT_REF }}" 2>/dev/null && \
+            supabase migration list 2>/dev/null | grep -c "applied" || echo "0")
+
+          LOCAL_COUNT=$(ls -1 supabase/migrations/*.sql 2>/dev/null | wc -l | tr -d ' ')
+
+          echo "Local migrations:  $LOCAL_COUNT"
+          echo "Production applied: $PROD_COUNT"
+          echo "Staging applied:    $STG_COUNT"
+
+          if [ "$PROD_COUNT" != "$STG_COUNT" ]; then
+            echo "::warning::Migration drift — prod has $PROD_COUNT, staging has $STG_COUNT"
+          fi
+
+      - name: Verify GitHub secrets exist
+        run: |
+          MISSING=0
+          for secret_name in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_STAGING_PROJECT_REF SUPABASE_STAGING_DB_PASSWORD; do
+            # We can't read secret values, but we can check if the env var is non-empty
+            # (GitHub injects secrets as env vars in the job)
+            case "$secret_name" in
+              SUPABASE_ACCESS_TOKEN)       VAL="${{ secrets.SUPABASE_ACCESS_TOKEN }}" ;;
+              SUPABASE_DB_PASSWORD)        VAL="${{ secrets.SUPABASE_DB_PASSWORD }}" ;;
+              SUPABASE_STAGING_PROJECT_REF) VAL="${{ secrets.SUPABASE_STAGING_PROJECT_REF }}" ;;
+              SUPABASE_STAGING_DB_PASSWORD) VAL="${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}" ;;
+            esac
+            if [ -z "$VAL" ]; then
+              echo "::error::Secret $secret_name is empty or missing"
+              MISSING=$((MISSING + 1))
+            else
+              echo "::notice::$secret_name is set"
+            fi
+          done
+          if [ "$MISSING" -gt 0 ]; then
+            exit 1
+          fi
