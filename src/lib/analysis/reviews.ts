@@ -265,7 +265,7 @@ async function analyzeViaSiteSearch(
 
   const serperKey = process.env.SERPER_API_KEY;
   if (serperKey && domain) {
-    return analyzeWithSerper(platform, clientName, domain, serperKey, searchUrl);
+    return analyzeWithSerper(platform, clientName, address, domain, serperKey, searchUrl);
   }
 
   return {
@@ -281,11 +281,17 @@ async function analyzeViaSiteSearch(
 async function analyzeWithSerper(
   platform: string,
   clientName: string,
+  address: string | null,
   domain: string,
   apiKey: string,
   fallbackUrl: string,
 ): Promise<WebsiteCheckResult> {
-  const query = `"${clientName}" site:${domain}`;
+  // Extract city/state from address to scope results geographically
+  // Prevents matching same-name businesses in wrong locations
+  const locationHint = extractCityState(address);
+  const query = locationHint
+    ? `"${clientName}" ${locationHint} site:${domain}`
+    : `"${clientName}" site:${domain}`;
 
   try {
     const res = await fetch('https://google.serper.dev/search', {
@@ -427,6 +433,44 @@ async function analyzeAppleMaps(
 }
 
 // ── Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Extract city and state from a US address string.
+ *
+ * Designed for addresses stored in our companies table, which follow
+ * standard US formats:
+ *   "1835 Madison St, Ste A, Clarksville, TN 37043"
+ *   "123 Main St, Nashville, TN 37201"
+ *   "Nashville, TN"
+ *
+ * Strategy: scan right-to-left for "City, ST ZIP" or "City, ST" pattern.
+ * The state+zip segment is always the LAST comma-separated part,
+ * and the city is always the part immediately before it.
+ */
+function extractCityState(address: string | null): string | null {
+  if (!address) return null;
+
+  const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  // Last part should contain state abbreviation (and optional zip)
+  const lastPart = parts[parts.length - 1];
+  const stateMatch = lastPart.match(/^([A-Z]{2})\b/);
+  if (!stateMatch) return null;
+
+  const state = stateMatch[1];
+
+  // Second-to-last part is the city — validate it looks like a city name
+  // (letters, spaces, hyphens, periods — NOT numbers which indicate a street)
+  const cityCandidate = parts[parts.length - 2];
+  if (!cityCandidate || /^\d/.test(cityCandidate)) return null;
+
+  // Additional guard: city should be mostly alphabetical (reject "Ste A", "Suite 200")
+  const alphaRatio = cityCandidate.replace(/[^a-zA-Z]/g, '').length / cityCandidate.length;
+  if (alphaRatio < 0.7) return null;
+
+  return `${cityCandidate} ${state}`;
+}
 
 function extractRatingFromSnippet(snippet: string): number | null {
   const match = snippet.match(
