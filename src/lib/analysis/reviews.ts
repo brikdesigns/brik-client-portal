@@ -4,11 +4,11 @@
  * Checks listing platforms for the client's business:
  * - Google: Google Places API (text search)
  * - Yelp: Yelp Fusion API (business search)
- * - Healthgrades, WebMD, Vitals, Facebook: Google Custom Search API
- *   (searches site:platform.com for the business name — bypasses bot
- *   protection and JS rendering that break direct scraping)
  * - Apple Maps: Google Places as proxy (if on Google, almost certainly
  *   on Apple Maps too) with a direct Apple Maps link
+ * - Healthgrades, WebMD, Vitals, Facebook: Serper.dev (Google Search API)
+ *   for site-scoped searches. 2,500 free queries, no credit card.
+ *   Falls back to manual verification links when not configured.
  *
  * Matches the Notion "Online Listings & Reviews" database schema:
  * - Score: 1 (listed) or 0 (not listed)
@@ -231,98 +231,89 @@ async function analyzeYelp(
   };
 }
 
-// ── Google Custom Search (Healthgrades, Vitals, WebMD, Facebook, etc.) ──
+// ── Serper.dev (Google Search API) for platforms without native APIs ─────
+
+const PLATFORM_DOMAINS: Record<string, string> = {
+  'Healthgrades': 'healthgrades.com',
+  'WebMD': 'doctor.webmd.com',
+  'Vitals': 'vitals.com',
+  'Facebook': 'facebook.com',
+  'Zillow': 'zillow.com',
+  'Realtor.com': 'realtor.com',
+  'TripAdvisor': 'tripadvisor.com',
+  'Airbnb': 'airbnb.com',
+  'Vrbo': 'vrbo.com',
+  'Booking.com': 'booking.com',
+};
 
 /**
- * Use Google Custom Search API to check if a business is listed on a platform.
- * Searches for: "business name" site:platform.com
+ * Check if a business is listed on a platform using Google search via Serper.dev.
  *
- * This is far more reliable than scraping because:
- * 1. No bot protection issues (it's Google's own API)
- * 2. Works for JS-rendered SPAs (Google has already indexed the content)
- * 3. Consistent, structured results
+ * Serper.dev provides Google Search results as JSON. Free tier: 2,500 queries
+ * (no credit card, no subscription). Supports site: operator for domain-scoped
+ * searches. Falls back to manual verification links when not configured.
  *
- * Falls back to a neutral "not verified" if Custom Search is not configured.
+ * https://serper.dev
  */
 async function analyzeViaSiteSearch(
   platform: string,
   clientName: string,
   address: string | null,
 ): Promise<WebsiteCheckResult> {
-  // Custom Search API needs its own key — falls back to Places key if not set
-  const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY || process.env.GOOGLE_PLACES_API_KEY;
-  const searchEngineId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
-
-  const platformDomains: Record<string, string> = {
-    'Healthgrades': 'healthgrades.com',
-    'WebMD': 'doctor.webmd.com',
-    'Vitals': 'vitals.com',
-    'Facebook': 'facebook.com',
-    'Zillow': 'zillow.com',
-    'Realtor.com': 'realtor.com',
-    'TripAdvisor': 'tripadvisor.com',
-    'Airbnb': 'airbnb.com',
-    'Vrbo': 'vrbo.com',
-    'Booking.com': 'booking.com',
-  };
-
-  const domain = platformDomains[platform];
+  const domain = PLATFORM_DOMAINS[platform];
   const searchUrl = buildPlatformSearchUrl(platform, clientName, address);
 
-  // Use Google Custom Search if configured (most reliable)
-  if (apiKey && searchEngineId && domain) {
-    return analyzeWithCustomSearch(platform, clientName, domain, apiKey, searchEngineId, searchUrl);
+  const serperKey = process.env.SERPER_API_KEY;
+  if (serperKey && domain) {
+    return analyzeWithSerper(platform, clientName, domain, serperKey, searchUrl);
   }
 
-  // No Custom Search configured — return neutral with manual link
   return {
     category: platform,
     status: 'neutral',
     score: null,
-    feedback_summary: `Add GOOGLE_CUSTOM_SEARCH_ENGINE_ID to env for automated ${platform} verification.`,
-    notes: `Search manually: ${searchUrl}`,
-    metadata: { searchUrl, apiKeyMissing: true },
+    feedback_summary: `Could not auto-verify ${platform} listing.`,
+    notes: `Verify manually: ${searchUrl}`,
+    metadata: { searchUrl, needsManualVerification: true },
   };
 }
 
-async function analyzeWithCustomSearch(
+async function analyzeWithSerper(
   platform: string,
   clientName: string,
   domain: string,
   apiKey: string,
-  searchEngineId: string,
   fallbackUrl: string,
 ): Promise<WebsiteCheckResult> {
   const query = `"${clientName}" site:${domain}`;
-  const params = new URLSearchParams({
-    key: apiKey,
-    cx: searchEngineId,
-    q: query,
-    num: '3',
-  });
 
   try {
-    const res = await fetch(
-      `https://www.googleapis.com/customsearch/v1?${params}`,
-      { signal: AbortSignal.timeout(10000) },
-    );
+    const res = await fetch('https://google.serper.dev/search', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ q: query, num: 3 }),
+      signal: AbortSignal.timeout(10000),
+    });
 
     if (!res.ok) {
       return {
         category: platform,
         status: 'neutral',
         score: null,
-        feedback_summary: `Google Custom Search API error (HTTP ${res.status}).`,
-        notes: `Search manually: ${fallbackUrl}`,
+        feedback_summary: `Search API error (HTTP ${res.status}).`,
+        notes: `Verify manually: ${fallbackUrl}`,
         metadata: { searchUrl: fallbackUrl },
       };
     }
 
     const data = await res.json();
-    const totalResults = parseInt(data.searchInformation?.totalResults ?? '0', 10);
+    const results = data.organic ?? [];
 
-    if (totalResults > 0 && data.items && data.items.length > 0) {
-      const topResult = data.items[0];
+    if (results.length > 0) {
+      const topResult = results[0];
       const snippet = topResult.snippet ?? '';
       const rating = extractRatingFromSnippet(snippet);
       const reviewCount = extractReviewCountFromSnippet(snippet);
@@ -340,8 +331,8 @@ async function analyzeWithCustomSearch(
           address_listed: '',
           ...(rating ? { rating } : {}),
           ...(reviewCount ? { total_reviews: reviewCount } : {}),
-          method: 'google_custom_search',
-          totalResults,
+          method: 'serper',
+          totalResults: results.length,
         },
       };
     }
@@ -352,7 +343,7 @@ async function analyzeWithCustomSearch(
       score: 0,
       feedback_summary: `Not found on ${platform}.`,
       notes: null,
-      metadata: { searchUrl: fallbackUrl, method: 'google_custom_search', totalResults: 0 },
+      metadata: { searchUrl: fallbackUrl, method: 'serper', totalResults: 0 },
     };
   } catch {
     return {
@@ -360,7 +351,7 @@ async function analyzeWithCustomSearch(
       status: 'neutral',
       score: null,
       feedback_summary: `Search timed out for ${platform}.`,
-      notes: `Search manually: ${fallbackUrl}`,
+      notes: `Verify manually: ${fallbackUrl}`,
       metadata: { searchUrl: fallbackUrl },
     };
   }
