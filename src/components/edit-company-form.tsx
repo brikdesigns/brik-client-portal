@@ -8,9 +8,11 @@ import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { AddressAutocomplete } from '@/components/address-autocomplete';
+import { parseAddressString } from '@/lib/address';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
 import { font, color, space, gap } from '@/lib/tokens';
+import { useToast } from '@/components/toast-provider';
 
 const iconSize = { width: 14, height: 14 };
 
@@ -73,6 +75,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toastSuccess } = useToast();
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -87,6 +90,17 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
     try {
       const supabase = createClient();
       const newSlug = toSlug(name);
+      // If structured fields are empty, extract them from the address string
+      let finalCity = city;
+      let finalState = state;
+      let finalPostalCode = postalCode;
+      if (!city && !state && !postalCode && address) {
+        const parsed = parseAddressString(address);
+        finalCity = parsed.city ?? '';
+        finalState = parsed.state ?? '';
+        finalPostalCode = parsed.postalCode ?? '';
+      }
+
       const { error: updateError } = await supabase
         .from('companies')
         .update({
@@ -95,9 +109,9 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
           status,
           contact_id: contactId || null,
           address: address || null,
-          city: city || null,
-          state: state || null,
-          postal_code: postalCode || null,
+          city: finalCity || null,
+          state: finalState || null,
+          postal_code: finalPostalCode || null,
           country: country || null,
           phone: phone || null,
           industry: industry || null,
@@ -111,6 +125,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
         return;
       }
 
+      toastSuccess(`${name} saved successfully`);
       router.push(`/admin/companies/${newSlug}`);
       router.refresh();
     } catch {

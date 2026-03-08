@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { formatIndustry } from '@/lib/format';
+import { parseAddressString, extractStreet } from '@/lib/address';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
@@ -130,26 +131,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const companyType = (client as unknown as { type: string }).type;
 
-  // Parse formatted address string as fallback for companies without structured fields.
-  // Geoapify US format: "Street, City, ST 12345, Country"
-  function parseAddress(formatted: string): { city: string | null; state: string | null; postalCode: string | null } {
-    const parts = formatted.split(',').map((s) => s.trim());
-    if (parts.length < 3) return { city: null, state: null, postalCode: null };
-    const stateZip = parts[parts.length - 2];
-    const match = stateZip.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
-    if (!match) return { city: null, state: null, postalCode: null };
-    return {
-      city: parts[parts.length - 3] ?? null,
-      state: match[1],
-      postalCode: match[2],
-    };
-  }
-
   const rawCity = (client as unknown as Record<string, string>).city;
   const rawState = (client as unknown as Record<string, string>).state;
   const rawPostalCode = (client as unknown as Record<string, string>).postal_code;
   const rawCountry = (client as unknown as Record<string, string>).country;
-  const parsed = (!rawCity && client.address) ? parseAddress(client.address) : null;
+  // Fallback: parse structured fields from address string for legacy data
+  const parsed = (!rawCity && client.address) ? parseAddressString(client.address) : null;
   const displayCity = rawCity || parsed?.city || '—';
   const displayState = rawState || parsed?.state || '—';
   const displayPostalCode = rawPostalCode || parsed?.postalCode || '—';
@@ -308,7 +295,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
             <div>
               <p style={fieldLabelStyle}>Address</p>
-              <p style={fieldValueStyle}>{client.address || '—'}</p>
+              <p style={fieldValueStyle}>{client.address ? extractStreet(client.address) : '—'}</p>
             </div>
             <div>
               <p style={fieldLabelStyle}>State</p>

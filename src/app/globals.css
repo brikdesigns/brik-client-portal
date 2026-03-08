@@ -334,3 +334,15 @@ blockquote {
   filter: brightness(0) invert(1);
   transition: filter 0.3s ease;
 }
+
+/* Toast slide-up entrance animation */
+@keyframes toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

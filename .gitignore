@@ -51,3 +51,6 @@ updates/
 
 # Local credentials reference
 .credentials.md
+
+# Deno
+deno.lock

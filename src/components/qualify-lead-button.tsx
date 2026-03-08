@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Modal } from '@bds/components/ui/Modal/Modal';
+import { useToast } from '@/components/toast-provider';
 import { font, color } from '@/lib/tokens';
 
 interface QualifyLeadButtonProps {
@@ -15,6 +16,7 @@ export function QualifyLeadButton({ companyId }: QualifyLeadButtonProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toastSuccess, toastError } = useToast();
 
   async function handleDecision(qualified: boolean) {
     setLoading(true);
@@ -30,12 +32,17 @@ export function QualifyLeadButton({ companyId }: QualifyLeadButtonProps) {
       .eq('id', companyId);
 
     if (error) {
-      alert(`Failed to update: ${error.message}`);
+      toastError('Failed to update', error.message);
       setLoading(false);
       return;
     }
 
     setIsOpen(false);
+    if (qualified) {
+      toastSuccess('Lead qualified', 'Moved to prospect — ready for proposal.');
+    } else {
+      toastSuccess('Lead marked inactive');
+    }
     router.refresh();
   }
 

@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { SessionTimeoutProvider } from '@/components/session-timeout-provider';
+import { ToastProvider } from '@/components/toast-provider';
 
 export default async function AuthLayout({
   children,
@@ -14,5 +15,9 @@ export default async function AuthLayout({
     redirect('/login');
   }
 
-  return <SessionTimeoutProvider>{children}</SessionTimeoutProvider>;
+  return (
+    <SessionTimeoutProvider>
+      <ToastProvider>{children}</ToastProvider>
+    </SessionTimeoutProvider>
+  );
 }

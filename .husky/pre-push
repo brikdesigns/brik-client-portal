@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Fail if package.json or lock file have uncommitted changes
 DIRTY_PKG=$(git diff --name-only -- package.json package-lock.json)
 if [ -n "$DIRTY_PKG" ]; then
