@@ -1,7 +1,12 @@
 import type { Metadata } from 'next';
+import { config } from '@fortawesome/fontawesome-svg-core';
+import '@fortawesome/fontawesome-svg-core/styles.css';
 import { poppins } from '@/lib/fonts';
 import { BDSProvider } from '@/components/bds-provider';
 import './globals.css';
+
+// Prevent FA from injecting CSS at runtime — we import it above so it's SSR'd
+config.autoAddCss = false;
 
 export const metadata: Metadata = {
   title: 'Brik Client Portal',
