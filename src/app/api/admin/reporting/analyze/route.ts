@@ -134,37 +134,37 @@ export async function POST(request: Request) {
   const configs = getReportConfigs((client.industry as Industry) || null);
   const reportConfig = configs.find((c) => c.type === report_type as ReportType);
 
-  // Update each item with analysis results
+  // Update each item with analysis results (including neutral/error results)
   let updatedCount = 0;
   const updateErrors: string[] = [];
   for (const item of existingItems) {
     const result = results.find((r) => r.category === item.category);
-    if (result && result.score !== null) {
-      const catConfig = reportConfig?.categories.find((c) => c.category === item.category);
-      const maxScore = catConfig?.maxScore ?? (item.metadata as Record<string, unknown>)?.maxScore ?? 5;
+    if (!result) continue;
 
-      const { error: updateError } = await supabase
-        .from('report_items')
-        .update({
-          status: result.status,
-          score: result.score,
-          rating: (result.metadata?.rating as number) ?? null,
-          total_reviews: (result.metadata?.total_reviews as number) ?? null,
-          feedback_summary: result.feedback_summary,
-          notes: result.notes,
-          metadata: {
-            maxScore,
-            ...result.metadata,
-          },
-        })
-        .eq('id', item.id);
+    const catConfig = reportConfig?.categories.find((c) => c.category === item.category);
+    const maxScore = catConfig?.maxScore ?? (item.metadata as Record<string, unknown>)?.maxScore ?? 5;
 
-      if (updateError) {
-        console.error(`Failed to update item ${item.category}:`, updateError.message);
-        updateErrors.push(`${item.category}: ${updateError.message}`);
-      } else {
-        updatedCount++;
-      }
+    const { error: updateError } = await supabase
+      .from('report_items')
+      .update({
+        status: result.status,
+        score: result.score,
+        rating: (result.metadata?.rating as number) ?? null,
+        total_reviews: (result.metadata?.total_reviews as number) ?? null,
+        feedback_summary: result.feedback_summary,
+        notes: result.notes,
+        metadata: {
+          maxScore,
+          ...result.metadata,
+        },
+      })
+      .eq('id', item.id);
+
+    if (updateError) {
+      console.error(`Failed to update item ${item.category}:`, updateError.message);
+      updateErrors.push(`${item.category}: ${updateError.message}`);
+    } else {
+      updatedCount++;
     }
   }
 

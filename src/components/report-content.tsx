@@ -9,7 +9,7 @@ import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
 import { ProgressBar } from '@bds/components/ui/ProgressBar/ProgressBar';
 import { font, color, gap, border } from '@/lib/tokens';
-import { heading as headingStyle, list } from '@/lib/styles';
+import { heading as headingStyle } from '@/lib/styles';
 
 interface ReportItem {
   id: string;
@@ -58,12 +58,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
   const tierColor = tier ? TIER_COLORS[tier] : color.text.muted;
   const progressPercent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
 
-  const opportunityLines = report.opportunities_text
-    ? report.opportunities_text
-        .split(/\n+/)
-        .map((line) => line.replace(/\*\*([^*]+)\*\*/g, '$1').trim())
-        .filter(Boolean)
-    : [];
+  const opportunitiesText = report.opportunities_text?.trim() || '';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
@@ -101,42 +96,22 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
         </Card>
 
         {/* Opportunities card */}
-        {opportunityLines.length > 0 ? (
-          <Card variant="elevated" padding="lg">
-            <h3 style={headingStyle.section}>
-              Opportunities
-            </h3>
-            <ul
-              style={{
-                ...list.ul,
-                margin: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: gap.sm,
-              }}
-            >
-              {opportunityLines.map((line, i) => (
-                <li key={i} style={list.li}>{line}</li>
-              ))}
-            </ul>
-          </Card>
-        ) : (
-          <Card variant="elevated" padding="lg">
-            <h3 style={headingStyle.section}>
-              Opportunities
-            </h3>
-            <p
-              style={{
-                fontFamily: font.family.body,
-                fontSize: font.size.body.md,
-                color: color.text.muted,
-                margin: 0,
-              }}
-            >
-              Run analysis to generate opportunities.
-            </p>
-          </Card>
-        )}
+        <Card variant="elevated" padding="lg">
+          <h3 style={headingStyle.section}>
+            Opportunities
+          </h3>
+          <p
+            style={{
+              fontFamily: font.family.body,
+              fontSize: font.size.body.md,
+              lineHeight: font.lineHeight.relaxed,
+              color: opportunitiesText ? color.text.primary : color.text.muted,
+              margin: 0,
+            }}
+          >
+            {opportunitiesText || 'Run analysis to generate opportunities.'}
+          </p>
+        </Card>
       </div>
 
       {/* Audit details table */}

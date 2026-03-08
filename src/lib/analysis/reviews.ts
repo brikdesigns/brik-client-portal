@@ -249,7 +249,8 @@ async function analyzeViaSiteSearch(
   clientName: string,
   address: string | null,
 ): Promise<WebsiteCheckResult> {
-  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  // Custom Search API needs its own key — falls back to Places key if not set
+  const apiKey = process.env.GOOGLE_CUSTOM_SEARCH_API_KEY || process.env.GOOGLE_PLACES_API_KEY;
   const searchEngineId = process.env.GOOGLE_CUSTOM_SEARCH_ENGINE_ID;
 
   const platformDomains: Record<string, string> = {
