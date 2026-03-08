@@ -9,6 +9,7 @@ import NewsletterEmail from '@/emails/newsletter';
 import AgreementSentEmail from '@/emails/agreement-sent';
 import AgreementSignedEmail from '@/emails/agreement-signed';
 import ProposalAcceptedEmail from '@/emails/proposal-accepted';
+import AnalysisCompleteEmail from '@/emails/analysis-complete';
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -347,6 +348,39 @@ export async function sendProposalAcceptedEmail({
 
   if (error) {
     console.error('Failed to send proposal accepted email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Analysis complete (admin notification)
+// ---------------------------------------------------------------------------
+
+export async function sendAnalysisCompleteEmail({
+  to,
+  recipientName,
+  companyName,
+  companySlug,
+}: {
+  to: string;
+  recipientName?: string;
+  companyName: string;
+  companySlug: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Marketing analysis is ready for ${companyName}`,
+    react: AnalysisCompleteEmail({
+      recipientName,
+      companyName,
+      companySlug,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send analysis complete email:', error);
     throw error;
   }
   return data;

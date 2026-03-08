@@ -7,6 +7,7 @@ import { analyzeReviews } from '@/lib/analysis/reviews';
 import { analyzeCompetitors } from '@/lib/analysis/competitors';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
+import { sendAnalysisCompleteEmail, logEmail } from '@/lib/email';
 
 const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
 
@@ -62,7 +63,7 @@ export async function POST(request: Request) {
 
   const { data: client } = await supabase
     .from('companies')
-    .select('id, name, industry, website_url, address, phone')
+    .select('id, name, slug, industry, website_url, address, phone')
     .eq('id', reportSet.company_id)
     .single();
 
@@ -178,6 +179,33 @@ export async function POST(request: Request) {
   // Cascade recalculation
   await recalculateReportScore(supabase, report_id);
   await recalculateReportSetScore(supabase, report.report_set_id);
+
+  // Send notification email to the admin who triggered analysis
+  try {
+    const { data: adminProfile } = await supabase
+      .from('profiles')
+      .select('full_name')
+      .eq('id', user.id)
+      .single();
+
+    const emailData = await sendAnalysisCompleteEmail({
+      to: user.email!,
+      recipientName: adminProfile?.full_name ?? undefined,
+      companyName: client.name,
+      companySlug: client.slug,
+    });
+
+    await logEmail(supabase, {
+      to: user.email!,
+      subject: `Marketing analysis is ready for ${client.name}`,
+      template: 'analysis_complete',
+      resendId: emailData?.id,
+      companyId: client.id,
+    });
+  } catch (emailErr) {
+    // Don't fail the analysis response if email fails
+    console.error('Failed to send analysis complete email:', emailErr);
+  }
 
   return NextResponse.json({
     updated: updatedCount,

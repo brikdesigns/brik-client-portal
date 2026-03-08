@@ -3,7 +3,6 @@ import {
   Container,
   Font,
   Head,
-  Hr,
   Html,
   Img,
   Link,
@@ -97,8 +96,6 @@ export function BrikEmailLayout({ preview, children }: BrikEmailLayoutProps) {
                 Facebook
               </Link>
             </Text>
-
-            <Hr style={styles.footerDivider} />
 
             <Text style={styles.footerText}>
               We&apos;re located in Palm Beach, Florida
@@ -236,12 +233,6 @@ const styles = {
   socialLink: {
     color: BRAND.textMuted,
     textDecoration: 'none',
-  } as React.CSSProperties,
-
-  footerDivider: {
-    borderColor: '#e0e0e0',
-    borderTop: '1px solid #e0e0e0',
-    margin: '24px 0',
   } as React.CSSProperties,
 
   footerText: {
