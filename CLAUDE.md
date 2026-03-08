@@ -23,15 +23,61 @@ Brik Designs client portal — secure web app where agency clients track project
 | Design System | brik-bds git submodule |
 | Deployment | Netlify (Agent Runners enabled) |
 
-## Supabase
+## Environments
 
-- **Project Ref:** `rnspxmrkpoukccahggli`
-- **URL:** `https://rnspxmrkpoukccahggli.supabase.co`
-- **Admin User:** nick@brikdesigns.com
-- **Schema:** 8 tables — profiles, clients, projects, invoices, email_log, service_categories, services, client_services
+### Quick reference — where does my work go?
+
+| Branch | Supabase | Netlify URL | Purpose |
+|--------|----------|-------------|---------|
+| `staging` | Staging project | Branch deploy (auto) | Day-to-day development, test migrations |
+| `main` | Production project | `portal.brikdesigns.com` | Live client-facing app |
+
+### Rules for agents (CRITICAL — read this)
+
+1. **Staging is the default target.** All new migrations, features, and fixes go to `staging` first.
+2. **Never push directly to `main`** without user confirmation. Merge via PR or explicit request.
+3. **Migrations flow one way:** write → apply to staging (automatic on push) → test → merge to main → apply to prod (automatic on push).
+4. **Don't wait to merge.** Staging exists so you can move fast and break things. Push early, push often to `staging`. Only `main` needs to be careful.
+5. **If a migration fails on staging,** fix it and push again. Staging is disposable — it can be rebuilt from scratch by running all migrations.
+6. **Production repairs list** (`APPLIED_MIGRATIONS` in the workflow) only applies to prod. Staging gets all migrations via CLI from the start, so no repair step is needed.
+
+### Supabase projects
+
+| Environment | Project Ref | URL | Admin User |
+|-------------|-------------|-----|------------|
+| **Production** | `rnspxmrkpoukccahggli` | `https://rnspxmrkpoukccahggli.supabase.co` | nick@brikdesigns.com |
+| **Staging** | `lmhzpzobdkstzpvsqest` | `https://lmhzpzobdkstzpvsqest.supabase.co` | nick@brikdesigns.com |
+
 - **Auth Model:** Admin-invite-only, role-based (admin/client)
-- **RLS:** Admin bypass via `(select role from profiles where id = auth.uid()) = 'admin'`
+- **RLS:** Admin bypass via `get_user_role()` SECURITY DEFINER function
 - **Keys:** JWT format (`eyJ...`), stored in `.env.local`
+
+### GitHub secrets required
+
+| Secret | Scope | Status |
+|--------|-------|--------|
+| `SUPABASE_ACCESS_TOKEN` | Both envs (account-level) | Set |
+| `SUPABASE_DB_PASSWORD` | Production | Needs update (wrong password causing CI failures) |
+| `SUPABASE_STAGING_PROJECT_REF` | Staging | Needs adding (`lmhzpzobdkstzpvsqest`) |
+| `SUPABASE_STAGING_DB_PASSWORD` | Staging | Needs adding |
+
+### Netlify env vars (branch-scoped)
+
+Production env vars are already set. Staging needs branch-scoped overrides:
+
+| Variable | Production (main) | Staging (staging branch) |
+|----------|-------------------|--------------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | prod URL | staging URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | prod anon key | staging anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | prod service key | staging service key |
+| `NEXT_PUBLIC_SITE_URL` | `https://portal.brikdesigns.com` | Netlify branch deploy URL |
+
+### Future environments
+
+| Environment | When to add | Supabase project | Netlify |
+|-------------|-------------|-----------------|---------|
+| **Demo** | When colleague needs sales demos | New project, seeded with realistic fake data | `demo.brikdesigns.com` or branch deploy |
+| **New product** | When building a separate tool (analytics, ops dashboard, etc.) | Completely separate project(s) per env | Separate Netlify site |
 
 ## Netlify
 
@@ -289,46 +335,53 @@ npm run db:seed    # Reset local DB with seeds (destructive!)
 
 Supabase CLI manages database schema via SQL migration files in `supabase/migrations/`.
 
+### How migrations flow
+
+```
+Write SQL → push to staging → CI applies to staging DB → test → merge to main → CI applies to prod DB
+```
+
+Staging is the default target. You should never need to apply migrations to production manually.
+
 ### Creating migrations
 
 1. Write SQL in `supabase/migrations/NNNNN_description.sql` (increment the number)
-2. Commit and push to `staging` or `main`
-3. GitHub Action auto-applies pending migrations
+2. Commit and push to `staging` — CI auto-applies to staging Supabase
+3. Test on staging branch deploy
+4. Merge `staging` → `main` — CI auto-applies to production Supabase
 
-### Applying migrations
+### Applying migrations locally
 
-**Automatic (CI):** GitHub Action triggers on push to `main` or `staging` when `supabase/migrations/**` changes.
-
-**Manual (local):** Use the helper script:
+The helper script defaults to staging. Use `--prod` to target production (requires typing "production" to confirm).
 
 ```bash
-./scripts/db-migrate.sh              # Show status + apply pending
-./scripts/db-migrate.sh --status     # Status only
-./scripts/db-migrate.sh --dry-run    # Preview without applying
+./scripts/db-migrate.sh                    # Staging: show status + apply
+./scripts/db-migrate.sh --prod             # Production: show status + apply (requires confirmation)
+./scripts/db-migrate.sh --status           # Status only
+./scripts/db-migrate.sh --dry-run          # Preview what would be applied
+./scripts/db-migrate.sh --prod --dry-run   # Preview against production
 ```
 
-**Manual (Dashboard):** After applying via SQL Editor, add the version number to the `APPLIED_MIGRATIONS` list in both:
+Requires `SUPABASE_STAGING_PROJECT_REF` in `.env.local` or exported.
+
+### Manual Dashboard migrations (production only)
+
+If you apply SQL via Supabase Dashboard, add the version number to the `APPLIED_MIGRATIONS` list in:
 - `.github/workflows/migrate.yml`
 - `scripts/db-migrate.sh`
 
-This tells the CLI those migrations are already applied and shouldn't be re-run.
+This is only needed for production. Staging gets all migrations via CLI.
 
 ### GitHub Action (`.github/workflows/migrate.yml`)
 
 - Triggers on push to `main` or `staging` when `supabase/migrations/**` changes
-- Supports manual dispatch with dry-run option
-- Repairs manually-applied migrations before pushing
-- Requires GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD` (set)
+- Auto-detects environment from branch (`main` → prod, `staging` → staging)
+- Supports manual dispatch with environment override and dry-run option
+- Production repairs manually-applied migrations; staging skips this step
 
-### Currently pending migrations
+### Required GitHub secrets
 
-Migrations 00006, 00016, 00017, 00019, 00023 are NOT yet applied to live Supabase. Push to `staging` will trigger the GitHub Action to apply them.
-
-### First-time setup
-
-1. `supabase login` (opens browser for Supabase dashboard OAuth)
-2. `supabase link --project-ref rnspxmrkpoukccahggli`
-3. Add secrets to GitHub: Settings → Secrets → Actions
+See the Environments section above for the full secrets list.
 
 ## Key Integrations
 

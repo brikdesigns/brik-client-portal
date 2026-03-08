@@ -2,17 +2,18 @@
 set -euo pipefail
 
 # Brik Client Portal — Supabase Migration Helper
-# Checks and applies pending migrations to the live database.
+# Checks and applies pending migrations to the target environment.
 #
 # Usage:
-#   ./scripts/db-migrate.sh              # Show status + apply pending
-#   ./scripts/db-migrate.sh --status     # Show status only
-#   ./scripts/db-migrate.sh --dry-run    # Preview what would be applied
+#   ./scripts/db-migrate.sh                    # Staging: show status + apply pending
+#   ./scripts/db-migrate.sh --prod             # Production: show status + apply pending
+#   ./scripts/db-migrate.sh --status           # Show status only
+#   ./scripts/db-migrate.sh --dry-run          # Preview what would be applied
+#   ./scripts/db-migrate.sh --prod --dry-run   # Preview against production
 #
 # Prerequisites:
 #   - supabase CLI installed (brew install supabase/tap/supabase)
 #   - SUPABASE_ACCESS_TOKEN env var or `supabase login` session
-#   - Project linked: supabase link --project-ref rnspxmrkpoukccahggli
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -28,17 +29,27 @@ pass()  { echo -e "  ${GREEN}[OK]${NC}    $1"; }
 warn()  { echo -e "  ${YELLOW}[WARN]${NC}  $1"; }
 fail()  { echo -e "  ${RED}[FAIL]${NC}  $1"; }
 
+# ── Environment config ──
+# Staging is the default target. Use --prod to target production.
+PROD_REF="rnspxmrkpoukccahggli"
+STAGING_REF="${SUPABASE_STAGING_PROJECT_REF:-}"
+
 STATUS_ONLY=false
 DRY_RUN=false
+TARGET="staging"
 
 for arg in "$@"; do
   case "$arg" in
+    --prod|--production) TARGET="production" ;;
+    --staging) TARGET="staging" ;;
     --status)  STATUS_ONLY=true ;;
     --dry-run) DRY_RUN=true ;;
     --help|-h)
-      echo "Usage: ./scripts/db-migrate.sh [--status|--dry-run]"
+      echo "Usage: ./scripts/db-migrate.sh [--prod|--staging] [--status|--dry-run]"
       echo ""
-      echo "  (default)    Show status, then apply pending migrations"
+      echo "  (default)    Target staging, show status + apply pending"
+      echo "  --prod       Target production (requires confirmation)"
+      echo "  --staging    Target staging (default)"
       echo "  --status     Show migration status only"
       echo "  --dry-run    Preview what would be applied"
       exit 0
@@ -47,10 +58,25 @@ for arg in "$@"; do
   esac
 done
 
+# Resolve project ref
+if [ "$TARGET" = "production" ]; then
+  PROJECT_REF="$PROD_REF"
+  LABEL="PRODUCTION"
+else
+  if [ -z "$STAGING_REF" ]; then
+    fail "SUPABASE_STAGING_PROJECT_REF not set. Add it to .env.local or export it."
+    fail "To target production instead, use: ./scripts/db-migrate.sh --prod"
+    exit 1
+  fi
+  PROJECT_REF="$STAGING_REF"
+  LABEL="STAGING"
+fi
+
 echo ""
 echo "========================================="
 echo "  Supabase Migration Helper"
 echo "  $(date '+%Y-%m-%d %H:%M')"
+echo "  Target: $LABEL"
 echo "========================================="
 echo ""
 
@@ -62,30 +88,31 @@ if ! command -v supabase &> /dev/null; then
   exit 1
 fi
 
-if [ ! -f "supabase/.temp/project-ref" ] 2>/dev/null; then
-  info "Linking Supabase project..."
-  supabase link --project-ref rnspxmrkpoukccahggli 2>/dev/null || {
-    fail "Failed to link. Run: supabase login"
-    exit 1
-  }
+info "Linking to $LABEL ($PROJECT_REF)..."
+supabase link --project-ref "$PROJECT_REF" 2>/dev/null || {
+  fail "Failed to link. Run: supabase login"
+  exit 1
+}
+
+# ── Repair manually-applied migrations (production only) ──
+# Staging gets all migrations via CLI, so no repair needed.
+if [ "$TARGET" = "production" ]; then
+  # Keep this in sync with .github/workflows/migrate.yml
+  APPLIED_MIGRATIONS=(
+    00001 00002 00003 00004 00005
+    00006 00007 00008 00009 00010 00011
+    00012 00013 00014 00015
+    00016 00017 00018 00019 00020 00021 00022
+    00023 00024
+  )
+
+  info "Repairing ${#APPLIED_MIGRATIONS[@]} manually-applied migrations..."
+  for v in "${APPLIED_MIGRATIONS[@]}"; do
+    supabase migration repair --status applied "$v" 2>/dev/null || true
+  done
+  pass "Repair complete"
+  echo ""
 fi
-
-# ── Repair manually-applied migrations ──
-# Keep this in sync with .github/workflows/migrate.yml
-APPLIED_MIGRATIONS=(
-  00001 00002 00003 00004 00005
-  00007 00008 00009 00010 00011
-  00012 00013 00014 00015
-  00018 00020 00021 00022
-  00023 00024
-)
-
-info "Repairing ${#APPLIED_MIGRATIONS[@]} manually-applied migrations..."
-for v in "${APPLIED_MIGRATIONS[@]}"; do
-  supabase migration repair --status applied "$v" 2>/dev/null || true
-done
-pass "Repair complete"
-echo ""
 
 # ── Show status ──
 info "Migration status:"
@@ -111,19 +138,28 @@ fi
 
 # ── Apply ──
 echo ""
-read -rp "  Apply pending migrations to LIVE database? (y/N) " confirm
-if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
-  echo "  Aborted."
-  exit 0
+if [ "$TARGET" = "production" ]; then
+  echo -e "  ${RED}⚠  You are about to apply migrations to PRODUCTION${NC}"
+  read -rp "  Type 'production' to confirm: " confirm
+  if [ "$confirm" != "production" ]; then
+    echo "  Aborted."
+    exit 0
+  fi
+else
+  read -rp "  Apply pending migrations to $LABEL? (y/N) " confirm
+  if [[ ! "$confirm" =~ ^[Yy]$ ]]; then
+    echo "  Aborted."
+    exit 0
+  fi
 fi
 
 echo ""
-info "Applying migrations..."
+info "Applying migrations to $LABEL..."
 echo ""
 
 if supabase db push; then
   echo ""
-  pass "All migrations applied successfully"
+  pass "All migrations applied to $LABEL"
 else
   echo ""
   fail "Migration failed — check output above"
