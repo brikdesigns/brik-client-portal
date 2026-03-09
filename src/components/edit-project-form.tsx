@@ -4,35 +4,29 @@ import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
-import { font, color, space, gap, border } from '@/lib/tokens';
+import { ServiceBadge } from '@/components/service-badge';
+import { font, color, space, gap } from '@/lib/tokens';
 
-const textareaStyle = {
-  width: '100%',
-  fontFamily: font.family.body,
-  fontSize: font.size.body.sm,
-  lineHeight: font.lineHeight.normal,
-  padding: space.input,
-  borderRadius: border.radius.input,
-  border: `${border.width.sm} solid ${color.border.input}`,
-  backgroundColor: color.background.input,
-  color: color.text.primary,
-  resize: 'vertical' as const,
-  boxSizing: 'border-box' as const,
-};
-
-const textareaLabelStyle = {
-  display: 'block' as const,
-  marginBottom: space.sm,
+const sectionHeadingStyle = {
   fontFamily: font.family.label,
+  fontSize: font.size.body.lg,
   fontWeight: font.weight.medium,
-  fontSize: font.size.label.md,
-  color: color.text.primary,
+  color: color.text.muted,
+  margin: 0,
+  paddingTop: space.lg,
 };
 
 function toSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+}
+
+export interface ServiceOption {
+  id: string;
+  name: string;
+  category_slug: string;
 }
 
 interface EditProjectFormProps {
@@ -44,19 +38,40 @@ interface EditProjectFormProps {
     status: string;
     start_date: string | null;
     end_date: string | null;
+    clickup_task_id: string | null;
+    clickup_folder_id: string | null;
+    clickup_list_id: string | null;
+    clickup_assignee: string | null;
+    clickup_type: string | null;
+    clickup_status: string | null;
   };
   clientName: string;
+  availableServices: ServiceOption[];
+  assignedServiceIds: string[];
 }
 
-export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
+export function EditProjectForm({ project, clientName, availableServices, assignedServiceIds }: EditProjectFormProps) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description ?? '');
   const [status, setStatus] = useState(project.status);
   const [startDate, setStartDate] = useState(project.start_date ?? '');
   const [endDate, setEndDate] = useState(project.end_date ?? '');
+  const [clickupTaskId, setClickupTaskId] = useState(project.clickup_task_id ?? '');
+  const [clickupFolderId, setClickupFolderId] = useState(project.clickup_folder_id ?? '');
+  const [clickupListId, setClickupListId] = useState(project.clickup_list_id ?? '');
+  const [clickupAssignee, setClickupAssignee] = useState(project.clickup_assignee ?? '');
+  const [clickupType, setClickupType] = useState(project.clickup_type ?? '');
+  const [clickupStatus, setClickupStatus] = useState(project.clickup_status ?? '');
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(assignedServiceIds);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  function toggleService(serviceId: string) {
+    setSelectedServiceIds((prev) =>
+      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
+    );
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -76,12 +91,37 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
           status,
           start_date: startDate || null,
           end_date: endDate || null,
+          clickup_task_id: clickupTaskId || null,
+          clickup_folder_id: clickupFolderId || null,
+          clickup_list_id: clickupListId || null,
+          clickup_assignee: clickupAssignee || null,
+          clickup_type: clickupType || null,
+          clickup_status: clickupStatus || null,
         })
         .eq('id', project.id);
 
       if (updateError) {
         setError(updateError.message);
         return;
+      }
+
+      // Sync project_services: delete removed, insert added
+      const currentIds = new Set(assignedServiceIds);
+      const newIds = new Set(selectedServiceIds);
+      const toRemove = assignedServiceIds.filter((id) => !newIds.has(id));
+      const toAdd = selectedServiceIds.filter((id) => !currentIds.has(id));
+
+      if (toRemove.length > 0) {
+        await supabase
+          .from('project_services')
+          .delete()
+          .eq('project_id', project.id)
+          .in('service_id', toRemove);
+      }
+      if (toAdd.length > 0) {
+        await supabase
+          .from('project_services')
+          .insert(toAdd.map((sid) => ({ project_id: project.id, service_id: sid })));
       }
 
       router.push(`/admin/projects/${newSlug}`);
@@ -116,15 +156,13 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
             required
             fullWidth
           />
-          <div>
-            <label style={textareaLabelStyle}>Description</label>
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              rows={3}
-              style={textareaStyle}
-            />
-          </div>
+          <TextArea
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            rows={3}
+            fullWidth
+          />
           <Select
             label="Status"
             value={status}
@@ -152,6 +190,97 @@ export function EditProjectForm({ project, clientName }: EditProjectFormProps) {
               type="date"
               value={endDate}
               onChange={(e) => setEndDate(e.target.value)}
+              fullWidth
+            />
+          </div>
+
+          {/* Services */}
+          <p style={sectionHeadingStyle}>Services</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: gap.sm }}>
+            {availableServices.map((svc) => {
+              const selected = selectedServiceIds.includes(svc.id);
+              return (
+                <button
+                  key={svc.id}
+                  type="button"
+                  onClick={() => toggleService(svc.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: gap.xs,
+                    padding: `${gap.xs} ${gap.sm}`,
+                    borderRadius: space.sm,
+                    border: `1px solid ${selected ? color.brand.primary : color.border.secondary}`,
+                    backgroundColor: selected ? color.brand.primary + '10' : 'transparent',
+                    cursor: 'pointer',
+                    fontFamily: font.family.body,
+                    fontSize: font.size.body.sm,
+                    color: color.text.primary,
+                  }}
+                >
+                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={20} />
+                  {svc.name}
+                </button>
+              );
+            })}
+            {availableServices.length === 0 && (
+              <span style={{ color: color.text.muted, fontFamily: font.family.body, fontSize: font.size.body.sm }}>
+                No services available.
+              </span>
+            )}
+          </div>
+
+          {/* ClickUp */}
+          <p style={sectionHeadingStyle}>ClickUp</p>
+          <TextInput
+            label="Task ID"
+            type="text"
+            value={clickupTaskId}
+            onChange={(e) => setClickupTaskId(e.target.value)}
+            placeholder="e.g. 86abc123"
+            fullWidth
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.md }}>
+            <TextInput
+              label="Folder"
+              type="text"
+              value={clickupFolderId}
+              onChange={(e) => setClickupFolderId(e.target.value)}
+              placeholder="Folder name or ID"
+              fullWidth
+            />
+            <TextInput
+              label="List"
+              type="text"
+              value={clickupListId}
+              onChange={(e) => setClickupListId(e.target.value)}
+              placeholder="List name or ID"
+              fullWidth
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.md }}>
+            <TextInput
+              label="Assignee"
+              type="text"
+              value={clickupAssignee}
+              onChange={(e) => setClickupAssignee(e.target.value)}
+              placeholder="Name"
+              fullWidth
+            />
+            <TextInput
+              label="Type"
+              type="text"
+              value={clickupType}
+              onChange={(e) => setClickupType(e.target.value)}
+              placeholder="e.g. task"
+              fullWidth
+            />
+            <TextInput
+              label="Status"
+              type="text"
+              value={clickupStatus}
+              onChange={(e) => setClickupStatus(e.target.value)}
+              placeholder="e.g. in progress"
               fullWidth
             />
           </div>

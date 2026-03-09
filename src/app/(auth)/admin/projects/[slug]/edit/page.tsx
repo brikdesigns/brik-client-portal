@@ -16,6 +16,8 @@ export default async function EditProjectPage({ params }: Props) {
     .select(`
       id, name, slug, description, status,
       start_date, end_date,
+      clickup_task_id, clickup_folder_id, clickup_list_id,
+      clickup_assignee, clickup_type, clickup_status,
       companies(id, name, slug)
     `)
     .eq('slug', slug)
@@ -26,6 +28,27 @@ export default async function EditProjectPage({ params }: Props) {
   }
 
   const client = project.companies as unknown as { id: string; name: string; slug: string } | null;
+
+  // Fetch available services for the selector
+  const { data: services } = await supabase
+    .from('services')
+    .select('id, name, service_categories(slug)')
+    .eq('active', true)
+    .order('name');
+
+  const availableServices = (services ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    category_slug: (s.service_categories as unknown as { slug: string } | null)?.slug ?? 'service',
+  }));
+
+  // Fetch currently assigned services
+  const { data: projectServices } = await supabase
+    .from('project_services')
+    .select('service_id')
+    .eq('project_id', project.id);
+
+  const assignedServiceIds = (projectServices ?? []).map((ps) => ps.service_id);
 
   return (
     <div>
@@ -46,6 +69,8 @@ export default async function EditProjectPage({ params }: Props) {
       <EditProjectForm
         project={project}
         clientName={client?.name ?? 'Unknown'}
+        availableServices={availableServices}
+        assignedServiceIds={assignedServiceIds}
       />
     </div>
   );
