@@ -9,17 +9,10 @@ import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
 
 const iconSize = { width: 14, height: 14 };
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-}
 
 const roleOptions = [
   { label: 'Client', value: 'client' },
@@ -75,6 +68,24 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
       if (insertError) {
         setError(insertError.message);
         return;
+      }
+
+      // Send welcome email if contact has an email address
+      if (email) {
+        try {
+          const emailRes = await fetch('/api/admin/email/welcome', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ contact_id: data.id }),
+          });
+          if (!emailRes.ok) {
+            const body = await emailRes.json().catch(() => ({}));
+            console.error('Welcome email failed:', emailRes.status, body);
+          }
+        } catch (err) {
+          // Don't block navigation if email fails
+          console.error('Welcome email network error:', err);
+        }
       }
 
       router.push(`/admin/contacts/${data.id}`);
@@ -174,7 +185,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
               htmlFor="is-primary"
               style={{
                 fontFamily: font.family.body,
-                fontSize: font.size.body.sm,
+                fontSize: font.size.body.md,
                 color: color.text.primary,
               }}
             >
