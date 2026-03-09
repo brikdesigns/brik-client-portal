@@ -10,6 +10,7 @@ import AgreementSentEmail from '@/emails/agreement-sent';
 import AgreementSignedEmail from '@/emails/agreement-signed';
 import ProposalAcceptedEmail from '@/emails/proposal-accepted';
 import AnalysisCompleteEmail from '@/emails/analysis-complete';
+import WelcomeToBrikEmail from '@/emails/welcome-to-brik';
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -185,7 +186,7 @@ export async function sendProposalEmail({
   const { data, error } = await getResend().emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `${companyName} — Your proposal from Brik Designs is ready`,
+    subject: 'Brik Designs sent you a proposal',
     react: ProposalSentEmail({
       recipientName,
       companyName,
@@ -323,26 +324,26 @@ export async function sendAgreementSignedEmail({
 
 export async function sendProposalAcceptedEmail({
   to,
+  recipientName,
   companyName,
-  acceptedByEmail,
-  acceptedAt,
   companySlug,
+  proposalId,
 }: {
   to: string;
+  recipientName?: string;
   companyName: string;
-  acceptedByEmail: string;
-  acceptedAt: string;
   companySlug: string;
+  proposalId: string;
 }) {
   const { data, error } = await getResend().emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `Proposal accepted: ${companyName}`,
+    subject: `Proposal signed: ${companyName}`,
     react: ProposalAcceptedEmail({
+      recipientName,
       companyName,
-      acceptedByEmail,
-      acceptedAt,
       companySlug,
+      proposalId,
     }),
   });
 
@@ -381,6 +382,39 @@ export async function sendAnalysisCompleteEmail({
 
   if (error) {
     console.error('Failed to send analysis complete email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Welcome to Brik (sent to prospect on proposal acceptance)
+// ---------------------------------------------------------------------------
+
+export async function sendWelcomeToBrikEmail({
+  to,
+  recipientName,
+  companyName,
+  setupUrl,
+}: {
+  to: string;
+  recipientName?: string;
+  companyName: string;
+  setupUrl?: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: 'Welcome to Brik!',
+    react: WelcomeToBrikEmail({
+      recipientName,
+      companyName,
+      setupUrl,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send welcome email:', error);
     throw error;
   }
   return data;

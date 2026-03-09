@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendWelcomeToBrikEmail, logEmail } from '@/lib/email';
+import crypto from 'crypto';
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
@@ -34,11 +35,29 @@ export async function POST(request: Request) {
   const company = contact.companies as unknown as { id: string; name: string };
   const firstName = contact.full_name?.split(' ')[0] || undefined;
 
+  // Generate a setup token (expires in 7 days)
+  const setupToken = crypto.randomUUID();
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { error: tokenError } = await serviceClient
+    .from('contacts')
+    .update({ setup_token: setupToken, setup_token_expires_at: expiresAt })
+    .eq('id', contact_id);
+
+  if (tokenError) {
+    console.error('Failed to save setup token:', tokenError);
+    return NextResponse.json({ error: 'Failed to generate setup link' }, { status: 500 });
+  }
+
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+  const setupUrl = `${siteUrl}/welcome/${setupToken}`;
+
   try {
     const result = await sendWelcomeToBrikEmail({
       to: contact.email,
       recipientName: firstName,
       companyName: company.name,
+      setupUrl,
     });
 
     await logEmail(serviceClient, {
