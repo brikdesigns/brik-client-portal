@@ -43,7 +43,7 @@ export async function getCurrentClientId(userId: string): Promise<string | null>
     .eq('id', userId)
     .single();
 
-  if (profile?.role === 'admin') {
+  if (profile?.role === 'super_admin') {
     const brikDesigns = clients.find((c) => c.id === BRIK_DESIGNS_ID);
     if (brikDesigns) {
       return BRIK_DESIGNS_ID;

@@ -12,6 +12,7 @@ import { parseAddressString } from '@/lib/address';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
 import { heading } from '@/lib/styles';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap, border } from '@/lib/tokens';
 import { useToast } from '@/components/toast-provider';
 
@@ -24,14 +25,6 @@ function toSlug(text: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
-}
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
 export default function NewCompanyPage() {

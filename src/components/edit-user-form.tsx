@@ -89,8 +89,7 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
             placeholder="Select role"
             options={[
-              { label: 'Admin', value: 'admin' },
-              { label: 'Manager', value: 'manager' },
+              { label: 'Brik Admin', value: 'super_admin' },
               { label: 'Client', value: 'client' },
             ]}
             fullWidth

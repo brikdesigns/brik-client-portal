@@ -342,7 +342,7 @@ export default function EditProposalPage() {
 
       <form onSubmit={handleSubmit}>
         {/* Title + validity */}
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
             <TextInput
               label="Proposal Title"
@@ -364,7 +364,7 @@ export default function EditProposalPage() {
 
         {/* Sections */}
         <div style={{ marginBottom: space.lg }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', maxWidth: '720px', marginBottom: space.md }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Proposal Sections</h2>
             <Button
               type="button"
@@ -400,7 +400,7 @@ export default function EditProposalPage() {
               />
             ))
           ) : (
-            <Card variant="outlined" padding="lg" style={{ maxWidth: '720px', textAlign: 'center' }}>
+            <Card variant="outlined" padding="lg" style={{ textAlign: 'center' }}>
               <p style={{
                 fontFamily: font.family.body,
                 fontSize: font.size.body.sm,
@@ -414,7 +414,7 @@ export default function EditProposalPage() {
         </div>
 
         {/* Line items */}
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
             <Button type="button" variant="secondary" size="sm" onClick={addItem}>
@@ -549,7 +549,7 @@ export default function EditProposalPage() {
         </Card>
 
         {/* Notes */}
-        <Card variant="elevated" padding="lg" style={{ maxWidth: '720px' }}>
+        <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <TextArea
             label="Notes (internal)"
             placeholder="Internal notes — not visible to the client..."

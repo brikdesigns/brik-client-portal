@@ -230,9 +230,8 @@ const companyTypeColors: Record<string, { bg: string; text: string }> = {
 };
 
 const roleLabels: Record<string, string> = {
-  admin: 'Admin',
+  super_admin: 'Brik Admin',
   client: 'Client',
-  manager: 'Manager',
 };
 
 // ── Exported Components ─────────────────────────────────────────────

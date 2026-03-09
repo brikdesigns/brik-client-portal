@@ -58,10 +58,19 @@ for arg in "$@"; do
   esac
 done
 
-# Resolve project ref
+# Source .env.local for DB passwords (if not already in env)
+if [ -f "$PROJECT_ROOT/.env.local" ]; then
+  # Only import SUPABASE_ vars to avoid overwriting other env
+  eval "$(grep '^SUPABASE_' "$PROJECT_ROOT/.env.local" | sed 's/^/export /')"
+fi
+
+STAGING_REF="${SUPABASE_STAGING_PROJECT_REF:-}"
+
+# Resolve project ref and DB password
 if [ "$TARGET" = "production" ]; then
   PROJECT_REF="$PROD_REF"
   LABEL="PRODUCTION"
+  # Production uses SUPABASE_DB_PASSWORD (already set)
 else
   if [ -z "$STAGING_REF" ]; then
     fail "SUPABASE_STAGING_PROJECT_REF not set. Add it to .env.local or export it."
@@ -70,6 +79,13 @@ else
   fi
   PROJECT_REF="$STAGING_REF"
   LABEL="STAGING"
+  # Swap to staging DB password for supabase link/push
+  if [ -n "${SUPABASE_STAGING_DB_PASSWORD:-}" ]; then
+    export SUPABASE_DB_PASSWORD="$SUPABASE_STAGING_DB_PASSWORD"
+  else
+    fail "SUPABASE_STAGING_DB_PASSWORD not set. Add it to .env.local or export it."
+    exit 1
+  fi
 fi
 
 echo ""
@@ -118,7 +134,8 @@ fi
 info "Migration status:"
 echo ""
 supabase migration list 2>/dev/null || {
-  fail "Could not list migrations. Check supabase login status."
+  fail "Could not list migrations. Check DB password and supabase login status."
+  warn "If the pooler password hasn't propagated yet, push to staging branch — CI will apply via access token."
   exit 1
 }
 echo ""

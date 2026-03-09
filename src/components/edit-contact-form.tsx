@@ -9,17 +9,10 @@ import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
 
 const iconSize = { width: 14, height: 14 };
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
-}
 
 const roleOptions = [
   { label: 'Client', value: 'client' },
@@ -45,7 +38,7 @@ interface EditContactFormProps {
 export function EditContactForm({ contact, companies }: EditContactFormProps) {
   const [fullName, setFullName] = useState(contact.full_name);
   const [email, setEmail] = useState(contact.email ?? '');
-  const [phone, setPhone] = useState(contact.phone ?? '');
+  const [phone, setPhone] = useState(formatPhone(contact.phone ?? ''));
   const [title, setTitle] = useState(contact.title ?? '');
   const [role, setRole] = useState(contact.role);
   const [isPrimary, setIsPrimary] = useState(contact.is_primary);

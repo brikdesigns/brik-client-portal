@@ -109,6 +109,7 @@ export default async function ProposalDetailPage({ params }: Props) {
               status={proposal.status}
               shareableLink={shareableLink}
               clientSlug={slug}
+              companyName={company.name}
             />
           </div>
         }

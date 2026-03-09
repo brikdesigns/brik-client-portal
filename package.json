@@ -13,6 +13,7 @@
     "db:seed": "supabase db reset --db-only",
     "prepare": "husky",
     "maintenance": "./scripts/portal-maintenance.sh",
+    "typecheck": "tsc --noEmit",
     "audit:tokens": "./scripts/token-audit.sh",
     "deploy:staging": "npx netlify-cli deploy --build",
     "deploy:prod": "npx netlify-cli deploy --build --prod"

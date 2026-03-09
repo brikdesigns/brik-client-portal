@@ -17,7 +17,7 @@ const adminNavItems = [
   { label: 'Contacts', href: '/admin/contacts' },
   { label: 'Services', href: '/admin/services' },
   { label: 'Projects', href: '/admin/projects' },
-  { label: 'Invoices', href: '/admin/invoices' },
+  { label: 'Billing', href: '/admin/invoices' },
   { label: 'Reporting', href: '/admin/reporting' },
 ];
 
@@ -28,12 +28,8 @@ const clientNavItems = [
   { label: 'Payments', href: '/dashboard/payments' },
 ];
 
-// Items managers should NOT see (admin-only sections)
-const managerHiddenHrefs = ['/admin/contacts'];
-
 interface PortalSidebarProps {
   role: 'admin' | 'client';
-  portalRole?: 'admin' | 'manager' | 'client';
   userId: string;
   userName: string;
   isAdmin?: boolean;
@@ -43,7 +39,6 @@ interface PortalSidebarProps {
 
 export function PortalSidebar({
   role,
-  portalRole,
   userId,
   userName,
   isAdmin = false,
@@ -53,9 +48,7 @@ export function PortalSidebar({
   const pathname = usePathname();
 
   const allItems = role === 'admin' ? adminNavItems : clientNavItems;
-  const baseItems = portalRole === 'manager'
-    ? allItems.filter((item) => !managerHiddenHrefs.includes(item.href))
-    : allItems;
+  const baseItems = allItems;
   const homeHref = role === 'admin' ? '/admin' : '/dashboard';
 
   function isActive(href: string) {

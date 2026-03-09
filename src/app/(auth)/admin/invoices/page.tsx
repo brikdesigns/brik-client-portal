@@ -46,8 +46,9 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
   const pendingAgreements = allAgreements.filter((a) => a.status === 'sent' || a.status === 'viewed');
   const signedAgreements = allAgreements.filter((a) => a.status === 'signed');
 
-  const showInvoices = !tabFilter || tabFilter === 'invoices';
-  const showAgreements = !tabFilter || tabFilter === 'agreements';
+  const activeTab = tabFilter === 'agreements' ? 'agreements' : 'invoices';
+  const showInvoices = activeTab === 'invoices';
+  const showAgreements = activeTab === 'agreements';
 
   // Transform for client components
   const invoiceRows: InvoiceRow[] = allInvoices.map((inv) => ({
@@ -75,8 +76,12 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
   return (
     <div>
       <PageHeader
-        title="Invoices"
-        subtitle={`${allInvoices.length} invoices, ${allAgreements.length} agreements across all clients.`}
+        title="Billing"
+        subtitle={
+          showInvoices
+            ? `${allInvoices.length} invoices across all clients.`
+            : `${allAgreements.length} agreements across all clients.`
+        }
         tabs={<BillingTabs />}
       />
 
@@ -89,10 +94,19 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
           marginBottom: space.lg,
         }}
       >
-        <CardSummary label="Open Invoices" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
-        <CardSummary label="Paid" value={paidInvoices.length} />
-        <CardSummary label="Pending Agreements" value={pendingAgreements.length} />
-        <CardSummary label="Signed" value={signedAgreements.length} />
+        {showInvoices ? (
+          <>
+            <CardSummary label="Open" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
+            <CardSummary label="Paid" value={paidInvoices.length} />
+            <CardSummary label="Total" value={allInvoices.length} />
+          </>
+        ) : (
+          <>
+            <CardSummary label="Pending" value={pendingAgreements.length} />
+            <CardSummary label="Signed" value={signedAgreements.length} />
+            <CardSummary label="Total" value={allAgreements.length} />
+          </>
+        )}
       </div>
 
       {showInvoices && (

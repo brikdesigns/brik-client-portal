@@ -77,7 +77,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
   const iconSize = { width: 14, height: 14 };
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+    <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: gap.xs }}>
         <h2 style={sectionStyle}>Meeting Notes</h2>
         {!searching && (

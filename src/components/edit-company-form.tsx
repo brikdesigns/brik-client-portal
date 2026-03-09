@@ -11,6 +11,7 @@ import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { parseAddressString } from '@/lib/address';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
 import { useToast } from '@/components/toast-provider';
 
@@ -18,14 +19,6 @@ const iconSize = { width: 14, height: 14 };
 
 function toSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-}
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)}) ${d.slice(3)}`;
-  return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
 const statusOptions = [
@@ -68,7 +61,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
   const [state, setState] = useState(client.state ?? '');
   const [postalCode, setPostalCode] = useState(client.postal_code ?? '');
   const [country, setCountry] = useState(client.country ?? '');
-  const [phone, setPhone] = useState(client.phone ?? '');
+  const [phone, setPhone] = useState(formatPhone(client.phone ?? ''));
   const [industry, setIndustry] = useState(client.industry ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(client.website_url ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');

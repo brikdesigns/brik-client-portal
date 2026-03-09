@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { formatIndustry } from '@/lib/format';
+import { formatIndustry, formatPhone } from '@/lib/format';
 import { parseAddressString, extractStreet } from '@/lib/address';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
@@ -322,7 +322,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             </div>
             <div>
               <p style={fieldLabelStyle}>Phone</p>
-              <p style={fieldValueStyle}>{client.phone || '—'}</p>
+              <p style={fieldValueStyle}>{client.phone ? formatPhone(client.phone) : '—'}</p>
             </div>
             <div>
               <p style={fieldLabelStyle}>Domain Hosted</p>
@@ -525,7 +525,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   </Button>
                 ) : (
                   <>
-                    <GenerateProposalButton companyId={client.id} slug={client.slug} hideIcon />
+                    <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} hideIcon />
                     <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
                       Manual
                     </Button>
@@ -731,7 +731,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
               {
                 header: 'Phone',
-                accessor: (c) => c.phone || '—',
+                accessor: (c) => c.phone ? formatPhone(c.phone) : '—',
                 style: { color: color.text.secondary },
               },
               {

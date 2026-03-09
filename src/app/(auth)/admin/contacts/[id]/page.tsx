@@ -5,6 +5,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { font, color, gap } from '@/lib/tokens';
+import { formatPhone } from '@/lib/format';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -132,7 +133,7 @@ export default async function ContactDetailPage({ params }: Props) {
           </div>
           <div>
             <p style={fieldLabelStyle}>Phone</p>
-            <p style={fieldValueStyle}>{contact.phone || '—'}</p>
+            <p style={fieldValueStyle}>{contact.phone ? formatPhone(contact.phone) : '—'}</p>
           </div>
           <div>
             <p style={fieldLabelStyle}>Job title</p>

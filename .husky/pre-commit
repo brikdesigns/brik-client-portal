@@ -1,6 +1,9 @@
 echo "🔍 Running linter before commit..."
 npm run lint
 
+echo "🔍 Running typecheck before commit..."
+npm run typecheck
+
 # Check staged .tsx/.ts files for hardcoded values that should use BDS tokens
 STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.tsx' 'src/**/*.ts' | grep -v 'email\.ts' | grep -v 'src/emails/' || true)
 

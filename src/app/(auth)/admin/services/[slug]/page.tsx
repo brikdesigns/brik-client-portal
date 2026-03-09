@@ -66,7 +66,8 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
     color: active ? color.text.brand : color.text.muted,
     textDecoration: 'none' as const,
     padding: `${gap.sm} 0`,
-    borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
+    borderBottom: active ? `${border.width.lg} solid ${color.text.brand}` : `${border.width.lg} solid transparent`,
+    marginBottom: `calc(-1 * ${border.width.lg})`,
     display: 'inline-block' as const,
   });
 
@@ -147,14 +148,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
           },
         ]}
         tabs={
-          <div
-            style={{
-              display: 'flex',
-              gap: gap.xl,
-              borderBottom: `${border.width.lg} solid ${color.border.muted}`,
-              width: '100%',
-            }}
-          >
+          <div style={{ display: 'flex', gap: gap.xl }}>
             {tabs.map((t) => (
               <a key={t.key} href={`/admin/services/${service.slug}?tab=${t.key}`} style={tabStyle(activeTab === t.key)}>
                 {t.label}
