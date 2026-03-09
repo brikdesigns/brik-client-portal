@@ -318,11 +318,19 @@ async function analyzeWithSerper(
     const data = await res.json();
     const results = data.organic ?? [];
 
-    if (results.length > 0) {
-      const topResult = results[0];
+    // Filter results by location — reject results clearly belonging to wrong state/city
+    const locationFiltered = address
+      ? results.filter((r: Record<string, string>) => isResultNearLocation(r, address))
+      : results;
+
+    if (locationFiltered.length > 0) {
+      const topResult = locationFiltered[0];
       const snippet = topResult.snippet ?? '';
+      const title = topResult.title ?? '';
       const rating = extractRatingFromSnippet(snippet);
       const reviewCount = extractReviewCountFromSnippet(snippet);
+      const extractedAddr = extractAddressFromSnippet(snippet, title);
+      const extractedPhone = extractPhoneFromSnippet(snippet);
 
       return {
         category: platform,
@@ -333,12 +341,31 @@ async function analyzeWithSerper(
         metadata: {
           searchUrl: topResult.link ?? fallbackUrl,
           name_on_listing: topResult.title ?? clientName,
-          phone_listed: '',
-          address_listed: '',
+          phone_listed: extractedPhone,
+          address_listed: extractedAddr,
           ...(rating ? { rating } : {}),
           ...(reviewCount ? { total_reviews: reviewCount } : {}),
           method: 'serper',
           totalResults: results.length,
+          locationFilteredCount: locationFiltered.length,
+        },
+      };
+    }
+
+    // Had results but all were wrong location
+    if (results.length > 0 && locationFiltered.length === 0) {
+      return {
+        category: platform,
+        status: 'fail',
+        score: 0,
+        feedback_summary: `Found on ${platform} but listing is for a different location.`,
+        notes: `${results.length} result(s) found but none matched the expected location. Verify manually.`,
+        metadata: {
+          searchUrl: fallbackUrl,
+          method: 'serper',
+          totalResults: results.length,
+          locationFilteredCount: 0,
+          rejectedLocation: true,
         },
       };
     }
@@ -490,6 +517,90 @@ function extractReviewCountFromSnippet(snippet: string): number | null {
     if (val > 0 && val < 1_000_000) return val;
   }
   return null;
+}
+
+/**
+ * Check if a Serper search result is geographically near the expected address.
+ *
+ * Strategy: extract state abbreviations from the result's title + snippet.
+ * If the result mentions a US state that doesn't match the company's state,
+ * reject it. This catches "Renew Dental, North Haven, CT" when we want TN.
+ *
+ * If no state can be determined from the result, we allow it (benefit of doubt).
+ */
+function isResultNearLocation(
+  result: Record<string, string>,
+  address: string,
+): boolean {
+  const expectedState = extractStateFromAddress(address);
+  if (!expectedState) return true; // Can't validate, allow it
+
+  const expectedCity = extractCityFromAddress(address)?.toLowerCase();
+
+  const text = `${result.title ?? ''} ${result.snippet ?? ''}`;
+
+  // Look for "City, ST" patterns in the result text
+  const stateMatches = text.matchAll(/([A-Za-z\s.-]+),\s*([A-Z]{2})\b/g);
+  const foundStates = new Set<string>();
+  for (const m of stateMatches) {
+    foundStates.add(m[2]);
+  }
+
+  // If we found state abbreviations in the result
+  if (foundStates.size > 0) {
+    // If our expected state is among them, it's a match
+    if (foundStates.has(expectedState)) return true;
+    // If only other states are mentioned, reject
+    return false;
+  }
+
+  // No state found in result — check if expected city name appears
+  if (expectedCity && text.toLowerCase().includes(expectedCity)) {
+    return true;
+  }
+
+  // Can't determine location from result, allow it (conservative)
+  return true;
+}
+
+/** Extract the 2-letter state code from a US address */
+function extractStateFromAddress(address: string | null): string | null {
+  if (!address) return null;
+  const parts = address.split(',').map((p) => p.trim());
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const match = parts[i].match(/^([A-Z]{2})\b/);
+    if (match) return match[1];
+  }
+  return null;
+}
+
+/** Extract the city name from a US address (part before state) */
+function extractCityFromAddress(address: string | null): string | null {
+  if (!address) return null;
+  const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+  // Find the part with the state, city is the one before it
+  for (let i = parts.length - 1; i >= 1; i--) {
+    if (/^[A-Z]{2}\b/.test(parts[i])) {
+      const city = parts[i - 1];
+      if (city && !/^\d/.test(city)) return city;
+    }
+  }
+  return null;
+}
+
+/** Try to extract a phone number from a search snippet */
+function extractPhoneFromSnippet(snippet: string): string {
+  const match = snippet.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  return match ? match[0] : '';
+}
+
+/** Try to extract an address from a search snippet/title */
+function extractAddressFromSnippet(snippet: string, title: string): string {
+  const text = `${title} ${snippet}`;
+  // Look for "123 Street Name, City, ST" pattern
+  const match = text.match(/\d{1,5}\s+[A-Za-z\s.]+(?:St|Ave|Blvd|Dr|Rd|Way|Ln|Ct|Pl|Pkwy|Hwy|Cir|Ter)\b[^,]*,\s*[A-Za-z\s]+,\s*[A-Z]{2}(?:\s+\d{5})?/i);
+  return match ? match[0].trim() : '';
 }
 
 function buildPlatformSearchUrl(platform: string, name: string, address: string | null): string {

@@ -210,6 +210,17 @@ export function EditableReportTable({
 
   return (
     <div>
+      <h3
+        style={{
+          fontFamily: font.family.heading,
+          fontSize: font.size.heading.small,
+          fontWeight: font.weight.semibold,
+          color: color.text.primary,
+          marginBottom: space.md,
+        }}
+      >
+        Audit details
+      </h3>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
