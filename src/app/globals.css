@@ -7,6 +7,14 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Match overscroll background to page color so scrolling past content bounds is seamless */
+html {
+  background-color: var(--page-primary);
+}
+:root[data-theme="dark"] {
+  background-color: var(--grayscale--black);
+}
+
 /*
  * Reset Webflow .body class border/radius.
  * In Webflow preview, .body has a visible border. In the app, we want a clean body.
@@ -327,6 +335,19 @@ blockquote {
  */
 .bds-filter-button-dropdown {
   --padding-xl: var(--padding-md);
+}
+
+/*
+ * Table cell link — hover turns brand-primary.
+ * Apply className="cell-link" to <a> tags inside table cells.
+ */
+.cell-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.cell-link:hover {
+  color: var(--text-brand-primary);
 }
 
 /* Dark mode logo inversion — filter to white */

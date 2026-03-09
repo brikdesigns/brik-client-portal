@@ -118,7 +118,8 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
               return client ? (
                 <a
                   href={`/admin/companies/${client.slug}`}
-                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
+                  className="cell-link"
+                  style={{ fontWeight: font.weight.medium }}
                 >
                   {client.name}
                 </a>
