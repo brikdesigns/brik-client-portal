@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, isAuthError } from '@/lib/auth';
 import { type Industry, getReportConfigs, type ReportType } from '@/lib/analysis/report-config';
 import { analyzeWebsite, type WebsiteCheckResult } from '@/lib/analysis/website';
 import { analyzeBrand } from '@/lib/analysis/brand';
@@ -12,22 +13,11 @@ import { sendAnalysisCompleteEmail, logEmail } from '@/lib/email';
 const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
 
 export async function POST(request: Request) {
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
+  const { user } = auth;
+
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
 
   const body = await request.json();
   const { report_id, report_type } = body as { report_id: string; report_type: string };
@@ -182,15 +172,9 @@ export async function POST(request: Request) {
 
   // Send notification email to the admin who triggered analysis
   try {
-    const { data: adminProfile } = await supabase
-      .from('profiles')
-      .select('full_name')
-      .eq('id', user.id)
-      .single();
-
     const emailData = await sendAnalysisCompleteEmail({
       to: user.email!,
-      recipientName: adminProfile?.full_name ?? undefined,
+      recipientName: auth.profile.full_name ?? undefined,
       companyName: client.name,
       companySlug: client.slug,
     });

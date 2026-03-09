@@ -1,26 +1,13 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { requireAdmin, isAuthError } from '@/lib/auth';
 import { sendInviteEmail, logEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
-  // Verify the requesting user is an admin
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const { user, profile } = auth;
 
   // Parse request body
   const body = await request.json();
@@ -30,7 +17,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
   }
 
-  if (role && !['admin', 'client'].includes(role)) {
+  if (role && !['super_admin', 'client'].includes(role)) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
   }
 

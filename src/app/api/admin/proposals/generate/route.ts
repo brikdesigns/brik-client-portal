@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getMeetingNotes, searchMeetingByClientName } from '@/lib/notion-fetch';
 import {
   generateProposalSections,
@@ -16,22 +17,10 @@ import {
  * Returns: { sections, meeting_notes_content, meeting_notes_url }
  */
 export async function POST(request: Request) {
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
+
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
 
   const body = await request.json();
   const { company_id, meeting_notes_url, service_ids } = body as {
@@ -157,22 +146,10 @@ export async function POST(request: Request) {
  * Returns matching meeting pages for the admin to select.
  */
 export async function GET(request: Request) {
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
+
   const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
 
   const url = new URL(request.url);
   const companyId = url.searchParams.get('company_id');

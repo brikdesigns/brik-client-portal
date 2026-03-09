@@ -1,5 +1,5 @@
 import { redirect } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser, isBrikAdmin } from '@/lib/auth';
 import { PortalSidebar } from '@/components/portal-sidebar';
 import { color, space } from '@/lib/tokens';
 
@@ -8,31 +8,24 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const authUser = await getAuthUser();
 
-  if (!user) {
+  if (!authUser) {
     redirect('/login');
   }
 
-  // Check admin role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role, full_name')
-    .eq('id', user.id)
-    .single();
-
-  if (!['admin', 'manager'].includes(profile?.role ?? '')) {
+  if (!isBrikAdmin(authUser)) {
     redirect('/dashboard');
   }
+
+  const { user, profile } = authUser;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PortalSidebar
         role="admin"
-        portalRole={profile?.role as 'admin' | 'manager'}
         userId={user.id}
-        userName={profile?.full_name || user.email || 'Admin'}
+        userName={profile.full_name || user.email || 'Admin'}
         isAdmin
       />
       <main

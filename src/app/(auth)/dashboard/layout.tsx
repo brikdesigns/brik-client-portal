@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { getAuthUser, isBrikAdmin } from '@/lib/auth';
 import { PortalSidebar } from '@/components/portal-sidebar';
 import { getCurrentClientId, getUserClients } from '@/lib/current-client';
 import { color, space } from '@/lib/tokens';
@@ -8,26 +8,22 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const authUser = await getAuthUser();
+  if (!authUser) return null;
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('full_name, role')
-    .eq('id', user!.id)
-    .single();
+  const { user, profile } = authUser;
 
   // Get current client from cookie and available clients
-  const currentClientId = await getCurrentClientId(user!.id);
-  const clients = await getUserClients(user!.id);
+  const currentClientId = await getCurrentClientId(user.id);
+  const clients = await getUserClients(user.id);
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PortalSidebar
         role="client"
-        userId={user!.id}
-        userName={profile?.full_name || user!.email || 'User'}
-        isAdmin={profile?.role === 'admin'}
+        userId={user.id}
+        userName={profile.full_name || user.email || 'User'}
+        isAdmin={isBrikAdmin(authUser)}
         clients={clients}
         currentClientId={currentClientId}
       />
