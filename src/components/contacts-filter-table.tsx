@@ -4,7 +4,6 @@ import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Tag } from '@bds/components/ui/Tag/Tag';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 
@@ -110,9 +109,12 @@ export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
             header: 'Company',
             accessor: (c) => {
               return c.companies ? (
-                <TextLink href={`/admin/companies/${c.companies.slug}`} size="small">
+                <a
+                  href={`/admin/companies/${c.companies.slug}`}
+                  className="cell-link"
+                >
                   {c.companies.name}
-                </TextLink>
+                </a>
               ) : '—';
             },
           },
