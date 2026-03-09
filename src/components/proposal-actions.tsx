@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@bds/components/ui/Button/Button';
+import { useToast } from '@/components/toast-provider';
 import { gap } from '@/lib/tokens';
 
 interface ProposalActionsProps {
@@ -11,13 +12,16 @@ interface ProposalActionsProps {
   status: string;
   shareableLink: string;
   clientSlug: string;
+  companyName: string;
 }
 
-export function ProposalActions({ proposalId, status, shareableLink, clientSlug }: ProposalActionsProps) {
+export function ProposalActions({ proposalId, status, shareableLink, clientSlug, companyName }: ProposalActionsProps) {
   const [copied, setCopied] = useState(false);
   const router = useRouter();
+  const { toastSuccess, toastError } = useToast();
 
   const [sending, setSending] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   async function handleSend() {
     setSending(true);
@@ -32,7 +36,7 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug 
         .eq('id', proposalId);
 
       if (error) {
-        alert(`Failed to send: ${error.message}`);
+        toastError(`Failed to send: ${error.message}`);
         return;
       }
 
@@ -50,6 +54,7 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug 
 
       // Copy link to clipboard
       await navigator.clipboard.writeText(shareableLink);
+      toastSuccess(`Proposal sent to ${companyName}`);
       router.refresh();
     } finally {
       setSending(false);
@@ -64,13 +69,15 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug 
 
   async function handleDelete() {
     const supabase = createClient();
+    setDeleting(true);
     const { error } = await supabase
       .from('proposals')
       .delete()
       .eq('id', proposalId);
 
     if (error) {
-      alert(`Failed to delete: ${error.message}`);
+      toastError(`Failed to delete: ${error.message}`);
+      setDeleting(false);
       return;
     }
 
@@ -82,11 +89,11 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug 
     <div style={{ display: 'flex', gap: gap.md }}>
       {status === 'draft' && (
         <>
-          <Button variant="secondary" size="sm" onClick={handleDelete}>
+          <Button variant="secondary" size="sm" loading={deleting} onClick={handleDelete}>
             Delete
           </Button>
-          <Button variant="primary" size="sm" onClick={handleSend} disabled={sending}>
-            {sending ? 'Sending...' : 'Send & Copy Link'}
+          <Button variant="primary" size="sm" loading={sending} onClick={handleSend}>
+            Send & Copy Link
           </Button>
         </>
       )}

@@ -5,7 +5,7 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp } from '@fortawesome/free-solid-svg-icons';
 import { Prose } from '@/components/prose';
-import { label, heading } from '@/lib/styles';
+import { heading } from '@/lib/styles';
 import { font, color, space, gap } from '@/lib/tokens';
 
 interface ProposalSectionViewerProps {
@@ -19,7 +19,7 @@ export function ProposalSectionViewer({ title, content, sectionNumber }: Proposa
   const iconSize = { width: 12, height: 12 };
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '100%', marginBottom: space.md }}>
+    <Card variant="elevated" padding="lg" style={{ marginBottom: space.md }}>
       <div
         style={{
           display: 'flex',
@@ -32,8 +32,9 @@ export function ProposalSectionViewer({ title, content, sectionNumber }: Proposa
         <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
           <span
             style={{
-              ...label.subtitle,
+              fontFamily: font.family.label,
               fontSize: font.size.body.xs,
+              fontWeight: font.weight.medium,
               color: color.text.muted,
             }}
           >

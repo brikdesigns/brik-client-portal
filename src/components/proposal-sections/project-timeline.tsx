@@ -2,7 +2,7 @@
 
 import { Accordion, type AccordionItemData } from '@bds/components/ui/Accordion/Accordion';
 import { text, list } from '@/lib/styles';
-import { color } from '@/lib/tokens';
+import { color, font } from '@/lib/tokens';
 import type { TimelinePhase } from '@/lib/proposal-types';
 
 interface ProjectTimelineContentProps {
@@ -38,7 +38,15 @@ export function ProjectTimelineContent({ phases }: ProjectTimelineContentProps) 
 
   const accordionItems: AccordionItemData[] = phases.map((phase, index) => ({
     id: `phase-${index}`,
-    title: phase.phase_label,
+    title: (
+      <span style={{
+        fontFamily: font.family.body,
+        fontSize: font.size.body.md,
+        fontWeight: font.weight.medium,
+      }}>
+        {phase.phase_label}
+      </span>
+    ),
     content: <PhaseContent phase={phase} />,
   }));
 

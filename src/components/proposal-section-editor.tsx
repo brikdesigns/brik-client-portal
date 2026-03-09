@@ -9,7 +9,6 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faChevronDown, faChevronUp, faRotateRight, faEye, faEdit } from '@fortawesome/free-solid-svg-icons';
 import ReactMarkdown from 'react-markdown';
 import { font, color, space, gap, border } from '@/lib/tokens';
-import { label as labelStyle } from '@/lib/styles';
 
 export interface ProposalSection {
   type: string;
@@ -42,7 +41,7 @@ export function ProposalSectionEditor({
   const isFeeSection = section.type === 'fee_summary';
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.md }}>
+    <Card variant="elevated" padding="lg" style={{ marginBottom: space.md }}>
       <div
         style={{
           display: 'flex',
@@ -55,8 +54,9 @@ export function ProposalSectionEditor({
         <div style={{ display: 'flex', alignItems: 'center', gap: gap.sm }}>
           <span
             style={{
-              ...labelStyle.subtitle,
+              fontFamily: font.family.label,
               fontSize: font.size.body.xs,
+              fontWeight: font.weight.medium,
               color: color.text.muted,
             }}
           >
