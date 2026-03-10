@@ -10,7 +10,7 @@ interface Props {
 
 export default async function EditClientPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: client, error } = await supabase
     .from('companies')

@@ -77,7 +77,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
   const iconSize = { width: 14, height: 14 };
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+    <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: gap.xs }}>
         <h2 style={sectionStyle}>Meeting Notes</h2>
         {!searching && (
@@ -136,7 +136,7 @@ export function MeetingNotesPicker({ companyId, companyName, onNotesLoaded }: Me
               <div style={{ flex: 1 }}>
                 <p style={{
                   fontFamily: font.family.label,
-                  fontWeight: font.weight.semibold,
+                  fontWeight: font.weight.medium,
                   fontSize: font.size.body.sm,
                   color: color.text.primary,
                   margin: 0,

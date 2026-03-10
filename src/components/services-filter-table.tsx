@@ -87,18 +87,21 @@ export function ServicesFilterTable({
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <FilterButton
+            size="sm"
             label="Category"
             value={categoryFilter}
             onChange={setCategoryFilter}
             options={categoryOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
           <FilterButton
+            size="sm"
             label="Client"
             value={clientFilter}
             onChange={setClientFilter}
             options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
           <FilterButton
+            size="sm"
             label="Status"
             value={statusFilter}
             onChange={setStatusFilter}
@@ -181,7 +184,7 @@ export function ServicesFilterTable({
                   asLink
                   href={`/admin/services/${s.slug}`}
                 >
-                  View Details
+                  View
                 </Button>
               ),
               style: { textAlign: 'right' },

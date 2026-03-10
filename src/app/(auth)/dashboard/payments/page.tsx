@@ -10,7 +10,7 @@ import { getCurrentClientId } from '@/lib/current-client';
 import { font, color, space } from '@/lib/tokens';
 
 export default async function PaymentsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   // Get current client from cookie

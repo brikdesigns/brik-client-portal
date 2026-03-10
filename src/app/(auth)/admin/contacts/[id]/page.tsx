@@ -5,6 +5,8 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { font, color, gap } from '@/lib/tokens';
+import { detail } from '@/lib/styles';
+import { formatPhone } from '@/lib/format';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -12,7 +14,7 @@ interface Props {
 
 export default async function ContactDetailPage({ params }: Props) {
   const { id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: contact, error } = await supabase
     .from('contacts')
@@ -39,20 +41,8 @@ export default async function ContactDetailPage({ params }: Props) {
 
   const company = contact.companies as unknown as { id: string; name: string; slug: string } | null;
 
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.semibold,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
+  const fieldLabelStyle = detail.label;
+  const fieldValueStyle = detail.value;
 
   return (
     <div>
@@ -74,14 +64,6 @@ export default async function ContactDetailPage({ params }: Props) {
           </div>
         }
         metadata={[
-          {
-            label: 'Role',
-            value: (
-              <Tag size="sm" style={{ color: color.text.muted }}>
-                {contact.role.charAt(0).toUpperCase() + contact.role.slice(1)}
-              </Tag>
-            ),
-          },
           ...(contact.is_primary ? [{
             label: '',
             value: (
@@ -92,6 +74,28 @@ export default async function ContactDetailPage({ params }: Props) {
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+        {/* Role + dates row */}
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
+          <div>
+            <p style={fieldLabelStyle}>Role</p>
+            <p style={fieldValueStyle}>
+              {contact.role.charAt(0).toUpperCase() + contact.role.slice(1)}
+            </p>
+          </div>
+          <div>
+            <p style={fieldLabelStyle}>Date added</p>
+            <p style={fieldValueStyle}>
+              {new Date(contact.created_at).toLocaleDateString()}
+            </p>
+          </div>
+          <div>
+            <p style={fieldLabelStyle}>Last updated</p>
+            <p style={fieldValueStyle}>
+              {new Date(contact.updated_at).toLocaleDateString()}
+            </p>
+          </div>
+        </div>
+
         {/* Company */}
         <div>
           <p style={fieldLabelStyle}>Company</p>
@@ -105,7 +109,7 @@ export default async function ContactDetailPage({ params }: Props) {
         </div>
 
         {/* Contact info grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Email</p>
             <p style={fieldValueStyle}>
@@ -118,23 +122,12 @@ export default async function ContactDetailPage({ params }: Props) {
           </div>
           <div>
             <p style={fieldLabelStyle}>Phone</p>
-            <p style={fieldValueStyle}>{contact.phone || '—'}</p>
+            <p style={fieldValueStyle}>{contact.phone ? formatPhone(contact.phone) : '—'}</p>
           </div>
           <div>
-            <p style={fieldLabelStyle}>Job Title</p>
+            <p style={fieldLabelStyle}>Job title</p>
             <p style={fieldValueStyle}>{contact.title || '—'}</p>
           </div>
-        </div>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
-          <div>
-            <p style={fieldLabelStyle}>Added</p>
-            <p style={fieldValueStyle}>
-              {new Date(contact.created_at).toLocaleDateString()}
-            </p>
-          </div>
-          <div />
-          <div />
         </div>
 
         {/* Notes */}

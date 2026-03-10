@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { sendAgreementSignedEmail, logEmail } from '@/lib/email';
+
+const ADMIN_EMAIL = 'nick@brikdesigns.com';
 
 function getServiceClient() {
   return createServiceClient(
@@ -82,6 +85,39 @@ export async function POST(
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Notify admin that agreement was signed (non-blocking)
+  try {
+    const { data: fullAgreement } = await supabase
+      .from('agreements')
+      .select('title, company_id, companies(name, slug)')
+      .eq('id', agreement.id)
+      .single();
+
+    if (fullAgreement) {
+      const company = fullAgreement.companies as unknown as { name: string; slug: string };
+      const signedAt = new Date().toISOString();
+      const result = await sendAgreementSignedEmail({
+        to: ADMIN_EMAIL,
+        companyName: company.name,
+        agreementTitle: fullAgreement.title || 'Agreement',
+        signedByName: name!.trim(),
+        signedByEmail: email!.trim(),
+        signedAt,
+        companySlug: company.slug,
+      });
+
+      await logEmail(supabase, {
+        to: ADMIN_EMAIL,
+        subject: `Agreement signed: ${company.name} — ${fullAgreement.title || 'Agreement'}`,
+        template: 'agreement_signed',
+        resendId: result?.id,
+        companyId: fullAgreement.company_id,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send agreement signed notification:', err);
   }
 
   return NextResponse.json({ success: true });

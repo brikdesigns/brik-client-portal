@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
@@ -61,7 +60,6 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <Card variant="elevated" padding="lg">
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           <TextInput
             label="Full Name"
@@ -89,9 +87,9 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
             label="Role"
             value={formData.role}
             onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+            placeholder="Select role"
             options={[
-              { label: 'Admin', value: 'admin' },
-              { label: 'Manager', value: 'manager' },
+              { label: 'Brik Admin', value: 'super_admin' },
               { label: 'Client', value: 'client' },
             ]}
             fullWidth
@@ -141,6 +139,7 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
             <Button
               type="button"
               variant="secondary"
+              size="md"
               onClick={() => router.push(`/admin/users/${user.id}`)}
               disabled={isLoading}
             >
@@ -151,7 +150,6 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
             </Button>
           </div>
         </div>
-      </Card>
     </form>
   );
 }

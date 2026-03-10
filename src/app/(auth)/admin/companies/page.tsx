@@ -6,7 +6,7 @@ import { CompaniesFilterTable, type CompanyRow } from '@/components/companies-fi
 import { gap, space } from '@/lib/tokens';
 
 export default async function AdminCompaniesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: allCompanies } = await supabase
     .from('companies')
@@ -46,7 +46,7 @@ export default async function AdminCompaniesPage() {
         subtitle="Manage leads and client accounts."
         actions={
           <Button variant="primary" size="md" asLink href="/admin/companies/new">
-            Add New
+            Add Company
           </Button>
         }
       />

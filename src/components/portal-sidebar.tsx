@@ -8,7 +8,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ClientSwitcher } from '@/components/client-switcher';
-import { setCurrentClientIdInBrowser } from '@/lib/current-client-browser';
+import { clearCurrentClientIdInBrowser } from '@/lib/current-client-browser';
 import { font, color, gap } from '@/lib/tokens';
 
 const adminNavItems = [
@@ -17,7 +17,7 @@ const adminNavItems = [
   { label: 'Contacts', href: '/admin/contacts' },
   { label: 'Services', href: '/admin/services' },
   { label: 'Projects', href: '/admin/projects' },
-  { label: 'Invoices', href: '/admin/invoices' },
+  { label: 'Billing', href: '/admin/invoices' },
   { label: 'Reporting', href: '/admin/reporting' },
 ];
 
@@ -28,12 +28,8 @@ const clientNavItems = [
   { label: 'Payments', href: '/dashboard/payments' },
 ];
 
-// Items managers should NOT see (admin-only sections)
-const managerHiddenHrefs = ['/admin/contacts'];
-
 interface PortalSidebarProps {
   role: 'admin' | 'client';
-  portalRole?: 'admin' | 'manager' | 'client';
   userId: string;
   userName: string;
   isAdmin?: boolean;
@@ -43,7 +39,6 @@ interface PortalSidebarProps {
 
 export function PortalSidebar({
   role,
-  portalRole,
   userId,
   userName,
   isAdmin = false,
@@ -53,9 +48,7 @@ export function PortalSidebar({
   const pathname = usePathname();
 
   const allItems = role === 'admin' ? adminNavItems : clientNavItems;
-  const baseItems = portalRole === 'manager'
-    ? allItems.filter((item) => !managerHiddenHrefs.includes(item.href))
-    : allItems;
+  const baseItems = allItems;
   const homeHref = role === 'admin' ? '/admin' : '/dashboard';
 
   function isActive(href: string) {
@@ -68,15 +61,17 @@ export function PortalSidebar({
     active: isActive(item.href),
   }));
 
-  // Brik Designs client ID (default for "View as Client")
-  const BRIK_DESIGNS_ID = 'b0000000-0000-0000-0000-000000000001';
-
   function handleViewAsClient() {
-    setCurrentClientIdInBrowser(BRIK_DESIGNS_ID);
+    // Clear stale cookie — dashboard will auto-select first available company
+    clearCurrentClientIdInBrowser();
     window.location.href = '/dashboard';
   }
 
-  const footerActions = role === 'admin' ? (
+  function handleBackToAdmin() {
+    window.location.href = '/admin';
+  }
+
+  const switchButton = role === 'admin' ? (
     <Button
       variant="secondary"
       size="sm"
@@ -89,8 +84,7 @@ export function PortalSidebar({
     <Button
       variant="secondary"
       size="sm"
-      asLink
-      href="/admin"
+      onClick={handleBackToAdmin}
       style={{ width: '100%' }}
     >
       Back to Admin
@@ -119,14 +113,14 @@ export function PortalSidebar({
         navItems={navItems}
         footerActions={
           <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
-            {role === 'client' && clients.length > 1 && (
+            {role === 'client' && (clients.length > 1 || isAdmin) && (
               <ClientSwitcher
                 clients={clients}
                 currentClientId={currentClientId || null}
                 isAdmin={isAdmin}
               />
             )}
-            {footerActions}
+            {switchButton}
           </div>
         }
         userSection={

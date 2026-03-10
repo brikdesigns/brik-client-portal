@@ -4,7 +4,6 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { TabBar } from '@bds/components/ui/TabBar/TabBar';
 
 const tabs = [
-  { label: 'All', value: '' },
   { label: 'Invoices', value: 'invoices' },
   { label: 'Agreements', value: 'agreements' },
 ];
@@ -12,10 +11,11 @@ const tabs = [
 export function BillingTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get('tab') ?? '';
+  const activeTab = searchParams.get('tab') ?? 'invoices';
 
   return (
     <TabBar
+      variant="tab"
       items={tabs.map((t) => ({
         label: t.label,
         active: activeTab === t.value,

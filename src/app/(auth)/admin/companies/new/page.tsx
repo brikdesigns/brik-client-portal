@@ -3,16 +3,18 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { AddressAutocomplete } from '@/components/address-autocomplete';
+import { parseAddressString } from '@/lib/address';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
 import { heading } from '@/lib/styles';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap, border } from '@/lib/tokens';
+import { useToast } from '@/components/toast-provider';
 
 const iconSize = { width: 14, height: 14 };
 
@@ -23,14 +25,6 @@ function toSlug(text: string): string {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-')
     .replace(/^-|-$/g, '');
-}
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
-  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
 export default function NewCompanyPage() {
@@ -51,6 +45,7 @@ export default function NewCompanyPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toastSuccess } = useToast();
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -67,6 +62,17 @@ export default function NewCompanyPage() {
       const slug = toSlug(name);
       const defaultStatus = type === 'lead' ? 'needs_qualified' : 'active';
 
+      // If structured fields are empty, extract them from the address string
+      let finalCity = city;
+      let finalState = state;
+      let finalPostalCode = postalCode;
+      if (!city && !state && !postalCode && address) {
+        const parsed = parseAddressString(address);
+        finalCity = parsed.city ?? '';
+        finalState = parsed.state ?? '';
+        finalPostalCode = parsed.postalCode ?? '';
+      }
+
       const { error: insertError } = await supabase
         .from('companies')
         .insert({
@@ -75,9 +81,9 @@ export default function NewCompanyPage() {
           type,
           status: defaultStatus,
           address: address || null,
-          city: city || null,
-          state: state || null,
-          postal_code: postalCode || null,
+          city: finalCity || null,
+          state: finalState || null,
+          postal_code: finalPostalCode || null,
           country: country || null,
           phone: phone || null,
           industry: industry || null,
@@ -90,6 +96,7 @@ export default function NewCompanyPage() {
         return;
       }
 
+      toastSuccess(`${name} added successfully`);
       router.push(`/admin/companies/${slug}`);
       router.refresh();
     } catch {
@@ -134,8 +141,7 @@ export default function NewCompanyPage() {
         </p>
       </div>
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
           <div
             style={{
               display: 'flex',
@@ -202,7 +208,7 @@ export default function NewCompanyPage() {
                 label="Phone"
                 type="tel"
                 inputMode="numeric"
-                placeholder="(555)-555-5555"
+                placeholder="(555) 555-5555"
                 value={phone}
                 onChange={handlePhoneChange}
                 iconBefore={<FontAwesomeIcon icon={faPhone} style={iconSize} />}
@@ -262,7 +268,7 @@ export default function NewCompanyPage() {
             }}
           >
             <a href="/admin/companies">
-              <Button type="button" variant="outline" size="md">
+              <Button type="button" variant="secondary" size="md">
                 Cancel
               </Button>
             </a>
@@ -270,8 +276,7 @@ export default function NewCompanyPage() {
               {type === 'lead' ? 'Add Lead' : 'Begin'}
             </Button>
           </div>
-        </form>
-      </Card>
+      </form>
     </div>
   );
 }

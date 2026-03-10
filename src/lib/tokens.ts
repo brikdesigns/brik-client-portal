@@ -114,6 +114,7 @@ export const color = {
     secondary: 'var(--surface-secondary)',
     tertiary: 'var(--surface-tertiary)',
     negative: 'var(--surface-negative)',
+    overlay: 'var(--surface-overlay)',
     brandPrimary: 'var(--surface-brand-primary)',
     brandSecondary: 'var(--surface-brand-secondary)',
   },

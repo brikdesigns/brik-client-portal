@@ -360,7 +360,6 @@ export default function NewProposalPage() {
           alignItems: 'center',
           gap: gap.xs,
           marginBottom: space.lg,
-          maxWidth: '720px',
         }}
       >
         {([1, 2, 3] as Step[]).map((s) => (
@@ -385,7 +384,7 @@ export default function NewProposalPage() {
                   justifyContent: 'center',
                   fontFamily: font.family.label,
                   fontSize: font.size.body.xs,
-                  fontWeight: font.weight.semibold,
+                  fontWeight: font.weight.medium,
                   backgroundColor: s <= step ? color.brand.primary : color.surface.tertiary,
                   color: s <= step ? '#fff' : color.text.muted,
                 }}
@@ -396,7 +395,7 @@ export default function NewProposalPage() {
                 style={{
                   fontFamily: font.family.label,
                   fontSize: font.size.body.xs,
-                  fontWeight: s === step ? font.weight.semibold : font.weight.regular,
+                  fontWeight: s === step ? font.weight.medium : font.weight.regular,
                   color: s === step ? color.text.primary : color.text.muted,
                   whiteSpace: 'nowrap',
                 }}
@@ -431,7 +430,7 @@ export default function NewProposalPage() {
           />
 
           {/* Service Selection */}
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+          <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
             <h2 style={{ ...sectionHeadingStyle }}>Select Services</h2>
             <p
               style={{
@@ -453,11 +452,9 @@ export default function NewProposalPage() {
                     <span
                       style={{
                         fontFamily: font.family.label,
-                        fontSize: font.size.body.xs,
-                        fontWeight: font.weight.semibold,
+                        fontSize: font.size.body.sm,
+                        fontWeight: font.weight.medium,
                         color: color.text.secondary,
-                        textTransform: 'uppercase' as const,
-                        letterSpacing: '0.05em',
                       }}
                     >
                       {categoryName}
@@ -542,7 +539,6 @@ export default function NewProposalPage() {
                 fontFamily: font.family.body,
                 fontSize: font.size.body.sm,
                 margin: `0 0 ${space.md}`,
-                maxWidth: '720px',
               }}
             >
               {error}
@@ -550,9 +546,9 @@ export default function NewProposalPage() {
           )}
 
           {/* Step 1 Actions */}
-          <div style={{ display: 'flex', gap: gap.sm, maxWidth: '720px', justifyContent: 'flex-end' }}>
+          <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
             <a href={`/admin/companies/${slug}`}>
-              <Button type="button" variant="outline" size="md">
+              <Button type="button" variant="secondary" size="md">
                 Cancel
               </Button>
             </a>
@@ -600,14 +596,13 @@ export default function NewProposalPage() {
                 fontFamily: font.family.body,
                 fontSize: font.size.body.sm,
                 margin: `0 0 ${space.md}`,
-                maxWidth: '720px',
               }}
             >
               {error}
             </p>
           )}
 
-          <div style={{ display: 'flex', gap: gap.sm, maxWidth: '720px', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'space-between' }}>
             <Button type="button" variant="outline" size="md" onClick={() => setStep(1)}>
               <FontAwesomeIcon icon={faArrowLeft} style={iconSize} /> Back
             </Button>
@@ -627,7 +622,7 @@ export default function NewProposalPage() {
       {/* ═══ STEP 3: Review & Save ═══ */}
       {step === 3 && (
         <form onSubmit={handleSubmit}>
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+          <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
               <TextInput
                 label="Proposal Title"
@@ -647,7 +642,7 @@ export default function NewProposalPage() {
             </div>
           </Card>
 
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px', marginBottom: space.lg }}>
+          <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
               <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
               <Button type="button" variant="secondary" size="sm" onClick={addItem}>
@@ -789,7 +784,7 @@ export default function NewProposalPage() {
             )}
           </Card>
 
-          <Card variant="elevated" padding="lg" style={{ maxWidth: '720px' }}>
+          <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
             <TextArea
               label="Notes (internal)"
               placeholder="Internal notes — not visible to the client..."

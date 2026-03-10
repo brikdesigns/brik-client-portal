@@ -1,38 +1,28 @@
-/* BDS Design System — fonts + token definitions */
+/* BDS Design System — fonts + clean React token definitions */
 @import '../../brik-bds/tokens/fonts.css';
-@import '../../brik-bds/tokens/webflow-tokens.css';
+@import '../../brik-bds/tokens/react-tokens.css';
 
 /* Tailwind layers */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/*
- * Reset Webflow .body class border/radius.
- * In Webflow preview, .body has a visible border. In the app, we want a clean body.
- */
-.body {
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
+/* Match overscroll background to page color so scrolling past content bounds is seamless */
+html {
+  background-color: var(--page-primary);
+}
+:root[data-theme="dark"] {
+  background-color: var(--grayscale--black);
 }
 
 /*
  * Brik Designs company brand overrides.
  *
- * The BDS Webflow CSS defines 8 web template themes (theme-1 through theme-8).
- * These are a PRODUCT offering, not the Brik Designs company identity.
- * The actual brand palette comes from brikdesigns.com (the company site).
+ * react-tokens.css provides BDS defaults (blue-green theme, Open Sans).
+ * This .body block overrides with Brik Designs company identity:
+ * poppy red, Poppins font, custom grayscale.
  *
- * Architecture: The portal is decoupled from numbered themes. ThemeProvider
- * has applyToBody={false}, so no theme-X class is added to <body>. This
- * means BDS theme-specific CSS rules (like @media 1440px .body.theme-1
- * spacious spacing) never match. Our .body selector (0,1,0) only competes
- * with the BDS .body defaults (also 0,1,0) and wins by source order since
- * globals.css loads after the BDS CSS import.
- *
- * Brand source: /GitHub/brikdesigns/css/brikdesigns.webflow.css
- * Figma tokens: /GitHub/brik-bds/figma-variables.json → theme.brik
+ * Brand source: brikdesigns.com + figma-variables.json → theme.brik
  */
 .body {
   /* ---- Brik brand color primitives ---- */
@@ -81,16 +71,21 @@
   --text-on-color-dark: var(--grayscale--white);
   --text-on-color-light: var(--grayscale--black);
   --text-brand-primary: var(--brand--primary);
+  --text-negative: #eb5757;
 
   /* Surface */
   --surface-primary: var(--grayscale--white);
   --surface-secondary: var(--grayscale--lightest);
+  --surface-tertiary: var(--grayscale--lighter);
+  --surface-negative: #fdeaea;
   --surface-brand-primary: var(--brand--primary);
+  --surface-brand-secondary: var(--grayscale--white);
 
   /* Background */
   --background-brand-primary: var(--brand--primary);
   --background-primary: var(--grayscale--white);
   --background-secondary: var(--grayscale--lightest);
+  --background-elevated: var(--grayscale--white);
   --background-inverse: var(--grayscale--darkest);
   --background-input: var(--grayscale--white);
 
@@ -99,11 +94,33 @@
   --border-secondary: var(--grayscale--lighter);
   --border-muted: var(--grayscale--lighter);
   --border-brand-primary: var(--brand--primary);
+  --border-negative: #eb5757;
   --border-input: var(--grayscale--light);
   --border-inverse: var(--grayscale--white);
 
   /* System */
   --color-system-link: #0034ea;
+  --color-system-red: #eb5757;
+  --color-system-green: #27ae60;
+  --color-system-yellow: #f2c94c;
+  --color-system-blue: #2f80ed;
+  --color-system-orange: #f2994a;
+  --system--red: #eb5757;
+
+  /* ---- BDS component CSS aliases ---- */
+  /* BDS component .css files reference full-namespaced tokens (--_color---...).
+     Map them to the portal's shorthand tokens so ::placeholder, focus, disabled
+     styles work correctly. */
+  --_color---text--muted: var(--text-muted);
+  --_color---text--inverse: var(--text-inverse);
+  --_color---text--primary: var(--text-primary);
+  --_color---text--secondary: var(--text-secondary);
+  --_color---border--brand-primary: var(--border-brand-primary);
+  --_color---border--brand: var(--border-brand-primary);
+  --_color---border--primary: var(--border-primary);
+  --_color---surface--secondary: var(--surface-secondary);
+  --_color---background--brand-primary: var(--background-brand-primary);
+  --_color---background--input: var(--background-input);
 
   /* ---- Typography (Poppins — Brik brand font) ---- */
   --font-family-body: Poppins, sans-serif;
@@ -111,14 +128,10 @@
   --font-family-heading: Poppins, sans-serif;
   --font-family-display: Poppins, sans-serif;
 
-  /*
-   * Component-level spacing — overrides BDS .body spacious mode.
-   *
-   * The BDS .body block sets spacious spacing (48px+ padding for sections).
-   * We reset to component-level values (Base mode from :root).
-   *
-   * Primitive scale uses SINGLE dashes: --space-200 (8px), --space-400 (16px).
-   */
+  /* Brand override: labels use medium (500) instead of BDS default semi-bold (600) */
+  --font-weight-semi-bold: 500;
+
+  /* ---- Spacing (Base mode — component-level, not spacious) ---- */
   --padding-none: var(--space-0);
   --padding-tiny: var(--space-200);
   --padding-xs: var(--space-250);
@@ -137,7 +150,7 @@
   --gap-xl: var(--space-600);
   --gap-huge: var(--space-800);
 
-  /* Font size overrides — .body sets same values but we keep explicit for clarity */
+  /* ---- Typography scale ---- */
   --body-tiny: var(--font-size-25);
   --body-xs: var(--font-size-50);
   --body-sm: var(--font-size-75);
@@ -197,11 +210,15 @@
   --text-muted: var(--grayscale--dark);
   --text-brand-primary: var(--brand--primary);
   --text-inverse: var(--grayscale--darkest);
+  --text-negative: #ff6b6b;
 
   /* Surface */
   --surface-primary: var(--grayscale--black);
   --surface-secondary: var(--grayscale--darkest);
+  --surface-tertiary: var(--grayscale--darker);
+  --surface-negative: #3d1a1a;
   --surface-brand-primary: var(--brand--primary);
+  --surface-brand-secondary: var(--grayscale--darkest);
 
   /* Page */
   --page-primary: var(--grayscale--black);
@@ -212,6 +229,7 @@
   --background-brand-primary: var(--brand--primary);
   --background-primary: var(--grayscale--darker);
   --background-secondary: var(--grayscale--darkest);
+  --background-elevated: var(--grayscale--darker);
   --background-inverse: var(--brand--primary);
   --background-input: var(--grayscale--black);
 
@@ -220,11 +238,24 @@
   --border-secondary: var(--grayscale--darker);
   --border-muted: var(--grayscale--darker);
   --border-brand-primary: var(--brand--primary);
+  --border-negative: #ff6b6b;
   --border-input: var(--grayscale--dark);
   --border-inverse: var(--grayscale--black);
 
   /* System */
   --color-system-link: #6b8aff;
+
+  /* BDS component CSS aliases (dark mode) */
+  --_color---text--muted: var(--text-muted);
+  --_color---text--inverse: var(--text-inverse);
+  --_color---text--primary: var(--text-primary);
+  --_color---text--secondary: var(--text-secondary);
+  --_color---border--brand-primary: var(--border-brand-primary);
+  --_color---border--brand: var(--border-brand-primary);
+  --_color---border--primary: var(--border-primary);
+  --_color---surface--secondary: var(--surface-secondary);
+  --_color---background--brand-primary: var(--background-brand-primary);
+  --_color---background--input: var(--background-input);
 
   /* Service category colors (dark mode — slightly muted for dark backgrounds) */
   --services--yellow: #d4b54a;
@@ -244,14 +275,7 @@
   --services--orange-light: #241008;
 }
 
-/*
- * Bare element overrides.
- *
- * The Webflow export CSS defines bare element selectors (li, h3, h4,
- * blockquote) with hardcoded fonts (IBM Plex Mono, Libre Franklin) and
- * colors (#000). These bleed into rendered markdown and other dynamic
- * content. Override them here so all text inherits the Brik brand tokens.
- */
+/* Bare element overrides — ensure markdown/dynamic content inherits brand tokens */
 li {
   color: var(--text-primary);
   font-family: var(--font-family-body);
@@ -273,8 +297,51 @@ blockquote {
   font-family: var(--font-family-body);
 }
 
+/*
+ * Portal PageHeader — BDS default is heading-lg (32px).
+ * Portal uses heading-md (~25px) for tighter page scale.
+ * Component-tier rule referencing alias token (correct architecture).
+ */
+.bds-page-header .bds-page-header-title {
+  font-size: var(--heading-md);
+}
+
+/*
+ * Portal dropdown density — BDS defaults to padding-xl (24px) inside
+ * dropdown panels. Override to padding-md (16px) for a tighter feel.
+ * Scoped variable override uses primitive (--space-400), not alias.
+ */
+.bds-filter-button-dropdown {
+  --padding-xl: var(--space-400);
+}
+
+/*
+ * Table cell link — hover turns brand-primary.
+ * Apply className="cell-link" to <a> tags inside table cells.
+ */
+.cell-link {
+  color: var(--text-primary);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.cell-link:hover {
+  color: var(--text-brand-primary);
+}
+
 /* Dark mode logo inversion — filter to white */
 :root[data-theme="dark"] .portal-logo {
   filter: brightness(0) invert(1);
   transition: filter 0.3s ease;
+}
+
+/* Toast slide-up entrance animation */
+@keyframes toast-slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

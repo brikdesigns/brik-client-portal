@@ -3,7 +3,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
@@ -93,8 +92,7 @@ export default function NewInvoicePage() {
         </p>
       </div>
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
             <TextInput
               label="Description"
@@ -118,6 +116,7 @@ export default function NewInvoicePage() {
                 label="Status"
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
+                placeholder="Select status"
                 options={[
                   { label: 'Draft', value: 'draft' },
                   { label: 'Open', value: 'open' },
@@ -170,13 +169,12 @@ export default function NewInvoicePage() {
               Create invoice
             </Button>
             <a href={`/admin/companies/${clientSlug}`}>
-              <Button type="button" variant="outline" size="md">
+              <Button type="button" variant="secondary" size="md">
                 Cancel
               </Button>
             </a>
           </div>
-        </form>
-      </Card>
+      </form>
     </div>
   );
 }

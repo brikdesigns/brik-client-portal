@@ -5,7 +5,7 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { AgreementStatusBadge } from '@/components/status-badges';
 import { AgreementActions } from '@/components/agreement-actions';
-import { heading } from '@/lib/styles';
+import { heading, detail } from '@/lib/styles';
 import { font, color, space, gap, border } from '@/lib/tokens';
 
 interface Props {
@@ -14,7 +14,7 @@ interface Props {
 
 export default async function AgreementDetailPage({ params }: Props) {
   const { slug, id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: agreement, error } = await supabase
     .from('agreements')
@@ -39,20 +39,8 @@ export default async function AgreementDetailPage({ params }: Props) {
 
   const sectionHeadingStyle = heading.section;
 
-  const metaLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.xs,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: `0 0 ${gap.xs}`,
-  };
-
-  const metaValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
+  const metaLabelStyle = detail.label;
+  const metaValueStyle = detail.value;
 
   return (
     <div>
@@ -144,7 +132,7 @@ export default async function AgreementDetailPage({ params }: Props) {
       {agreement.status === 'signed' && (
         <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
           <h2 style={sectionHeadingStyle}>Signing Record</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md, textAlign: 'left' }}>
             <div>
               <p style={metaLabelStyle}>Signed By</p>
               <p style={metaValueStyle}>{agreement.signed_by_name}</p>

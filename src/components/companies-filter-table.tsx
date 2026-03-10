@@ -1,10 +1,10 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { Select } from '@bds/components/ui/Select/Select';
-
+import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
+import { formatIndustry } from '@/lib/format';
 import { DataTable } from './data-table';
 import { CompanyStatusBadge, CompanyTypeTag } from './status-badges';
 
@@ -35,14 +35,14 @@ const statusOptions = [
 ];
 
 export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] }) {
-  const [typeFilter, setTypeFilter] = useState('');
-  const [statusFilter, setStatusFilter] = useState('');
-  const [industryFilter, setIndustryFilter] = useState('');
+  const [typeFilter, setTypeFilter] = useState<string | undefined>();
+  const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [industryFilter, setIndustryFilter] = useState<string | undefined>();
 
   const industryOptions = useMemo(() => {
     const unique = Array.from(new Set(companies.map((c) => c.industry).filter(Boolean) as string[]));
     unique.sort((a, b) => a.localeCompare(b));
-    return unique.map((i) => ({ label: i, value: i }));
+    return unique.map((i) => ({ label: formatIndustry(i), value: i }));
   }, [companies]);
 
   const filtered = useMemo(() => {
@@ -53,8 +53,6 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
       return true;
     });
   }, [companies, typeFilter, statusFilter, industryFilter]);
-
-  const hasFilters = typeFilter || statusFilter || industryFilter;
 
   return (
     <div>
@@ -80,43 +78,27 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <Select
+          <FilterButton
+            size="sm"
+            label="Type"
             value={typeFilter}
-            onChange={(e) => setTypeFilter(e.target.value)}
-            placeholder="All types"
-            options={typeOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setTypeFilter}
+            options={typeOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            size="sm"
+            label="Status"
             value={statusFilter}
-            onChange={(e) => setStatusFilter(e.target.value)}
-            placeholder="All statuses"
-            options={statusOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setStatusFilter}
+            options={statusOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          <Select
+          <FilterButton
+            size="sm"
+            label="Industry"
             value={industryFilter}
-            onChange={(e) => setIndustryFilter(e.target.value)}
-            placeholder="All industries"
-            options={industryOptions}
-            size="sm"
-            fullWidth={false}
+            onChange={setIndustryFilter}
+            options={industryOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setTypeFilter('');
-                setStatusFilter('');
-                setIndustryFilter('');
-              }}
-            >
-              Clear
-            </Button>
-          )}
         </div>
       </div>
 
@@ -142,7 +124,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             },
             {
               header: 'Industry',
-              accessor: (c) => c.industry || '—',
+              accessor: (c) => formatIndustry(c.industry),
               style: { color: color.text.secondary },
             },
             {

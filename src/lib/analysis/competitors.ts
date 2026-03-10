@@ -252,7 +252,7 @@ async function findNearbyCompetitors(
           distanceMeters,
         };
       })
-      .sort((a: NearbyCompetitor, b: NearbyCompetitor) => (a.distanceMeters ?? 99999) - (b.distanceMeters ?? 99999))
+      .sort((a: NearbyCompetitor, b: NearbyCompetitor) => (a.distanceMeters ?? Infinity) - (b.distanceMeters ?? Infinity))
       .slice(0, 3); // Closest 3
   } catch {
     return [];

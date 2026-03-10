@@ -70,12 +70,14 @@ export function InvoicesFilterTable({
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <FilterButton
+            size="sm"
             label="Client"
             value={clientFilter}
             onChange={setClientFilter}
             options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
           <FilterButton
+            size="sm"
             label="Status"
             value={statusFilter}
             onChange={setStatusFilter}
@@ -142,7 +144,7 @@ export function InvoicesFilterTable({
                 </Button>
                 {inv.invoice_url && (
                   <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                    <Button variant="primary" size="sm">View Details</Button>
+                    <Button variant="primary" size="sm">View</Button>
                   </a>
                 )}
               </div>

@@ -51,9 +51,6 @@ export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]>
   let fetchError: string | null = null;
 
   try {
-    const parsedUrl = new URL(normalizedUrl);
-    isHttps = parsedUrl.protocol === 'https:';
-
     const start = Date.now();
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 10000);
@@ -66,6 +63,11 @@ export async function analyzeWebsite(url: string): Promise<WebsiteCheckResult[]>
 
     clearTimeout(timeout);
     responseTime = Date.now() - start;
+
+    // Check actual response URL (after redirects), not the input URL
+    const finalUrl = new URL(res.url || normalizedUrl);
+    isHttps = finalUrl.protocol === 'https:';
+
     html = await res.text();
   } catch (err) {
     fetchError = err instanceof Error ? err.message : 'Failed to fetch';

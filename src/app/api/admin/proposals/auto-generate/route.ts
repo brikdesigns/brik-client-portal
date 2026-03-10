@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getMeetingNotes } from '@/lib/notion-fetch';
 import { recommendServices, type CatalogService } from '@/lib/service-recommendation';
 import {
@@ -26,22 +27,10 @@ import crypto from 'crypto';
  * Returns: { proposal_id, token, slug, recommendations }
  */
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const supabase = await createClient();
 
   const body = await request.json();
   const { company_id } = body as { company_id: string };
@@ -75,7 +64,9 @@ export async function POST(request: Request) {
     if (!notesResult.content || notesResult.content.trim().length < 50) {
       return NextResponse.json(
         {
-          error: `No meeting notes found for "${company.name}" in Notion. Create a discovery call page titled with the company name, or use the manual proposal builder.`,
+          error: `No meeting notes found for "${company.name}" in Notion.`,
+          error_code: 'NO_MEETING_NOTES',
+          company_name: company.name,
         },
         { status: 400 }
       );

@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
+import { formatIndustry, formatPhone } from '@/lib/format';
+import { parseAddressString, extractStreet } from '@/lib/address';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
@@ -22,11 +24,12 @@ import { DeleteCompanyButton } from '@/components/delete-company-button';
 import { QualifyLeadButton } from '@/components/qualify-lead-button';
 import { GenerateProposalButton } from '@/components/generate-proposal-button';
 import { RunAnalysisButton } from '@/components/run-analysis-button';
+import { GHLSyncButton } from '@/components/ghl-sync-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
 import { font, color, gap, space, border } from '@/lib/tokens';
-import { heading } from '@/lib/styles';
+import { heading, detail } from '@/lib/styles';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -36,7 +39,7 @@ interface Props {
 export default async function CompanyDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tab } = await searchParams;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: client, error } = await supabase
     .from('companies')
@@ -46,6 +49,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       city, state, postal_code, country,
       domain_hosted, referred_by, other_marketing_company,
       pipeline, pipeline_stage, opportunity_owner, followers, introduction_date, ghl_contact_id,
+      ghl_tags, ghl_source, ghl_opportunity_value_cents, ghl_last_synced,
       projects(id, name, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
       company_services(
@@ -127,26 +131,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const companyType = (client as unknown as { type: string }).type;
 
-  // Parse formatted address string as fallback for companies without structured fields.
-  // Geoapify US format: "Street, City, ST 12345, Country"
-  function parseAddress(formatted: string): { city: string | null; state: string | null; postalCode: string | null } {
-    const parts = formatted.split(',').map((s) => s.trim());
-    if (parts.length < 3) return { city: null, state: null, postalCode: null };
-    const stateZip = parts[parts.length - 2];
-    const match = stateZip.match(/^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/);
-    if (!match) return { city: null, state: null, postalCode: null };
-    return {
-      city: parts[parts.length - 3] ?? null,
-      state: match[1],
-      postalCode: match[2],
-    };
-  }
-
   const rawCity = (client as unknown as Record<string, string>).city;
   const rawState = (client as unknown as Record<string, string>).state;
   const rawPostalCode = (client as unknown as Record<string, string>).postal_code;
   const rawCountry = (client as unknown as Record<string, string>).country;
-  const parsed = (!rawCity && client.address) ? parseAddress(client.address) : null;
+  // Fallback: parse structured fields from address string for legacy data
+  const parsed = (!rawCity && client.address) ? parseAddressString(client.address) : null;
   const displayCity = rawCity || parsed?.city || '—';
   const displayState = rawState || parsed?.state || '—';
   const displayPostalCode = rawPostalCode || parsed?.postalCode || '—';
@@ -168,8 +158,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const tabStyle = (active: boolean) => ({
     fontFamily: font.family.label,
     fontSize: font.size.body.md,
-    fontWeight: font.weight.semibold,
-    color: active ? color.text.brand : color.text.secondary,
+    fontWeight: font.weight.medium,
+    color: active ? color.text.brand : color.text.muted,
     textDecoration: 'none' as const,
     padding: `${gap.sm} 0`,
     borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
@@ -178,36 +168,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const sectionHeadingStyle = heading.section;
 
-  const sectionLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.lg,
-    fontWeight: font.weight.semibold,
-    color: color.text.muted,
-    margin: 0,
-    paddingTop: space.xl,
-  };
-
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.semibold,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
-
-  const linkStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.xs,
-    color: color.system.link,
-    textDecoration: 'none' as const,
-  };
+  const fieldLabelStyle = detail.label;
+  const fieldValueStyle = detail.value;
 
   return (
     <div>
@@ -222,8 +184,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           />
         }
         actions={
-          <div style={{ display: 'flex', gap: gap.md }}>
+          <div style={{ display: 'flex', gap: gap.md, alignItems: 'center' }}>
             <DeleteCompanyButton companyId={client.id} companyName={client.name} />
+            <GHLSyncButton companyId={client.id} hasGhlId={!!(client as unknown as Record<string, string>).ghl_contact_id} />
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
               Edit
             </Button>
@@ -238,7 +201,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         metadata={[
           { label: 'Status', value: <CompanyStatusBadge status={client.status} /> },
           { label: 'Type', value: <CompanyTypeTag type={companyType} muted={client.status === 'not_active'} /> },
-          ...(client.industry ? [{ label: 'Industry', value: client.industry }] : []),
+          ...(client.industry ? [{ label: 'Industry', value: formatIndustry(client.industry) }] : []),
         ]}
       />
 
@@ -264,7 +227,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         style={{
           display: 'flex',
           gap: gap.xl,
-          borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+          borderBottom: `${border.width.lg} solid ${color.border.muted}`,
           marginBottom: space.lg,
         }}
       >
@@ -279,15 +242,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Overview</h2>
+            <h2 style={detail.sectionHeading}>Location</h2>
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
               Edit
             </Button>
           </div>
-
-          {/* Location */}
-          <p style={sectionLabelStyle}>Location</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Business Name</p>
               <p style={fieldValueStyle}>{client.name || '—'}</p>
@@ -301,10 +261,10 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{displayCountry}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Address</p>
-              <p style={fieldValueStyle}>{client.address || '—'}</p>
+              <p style={fieldValueStyle}>{client.address ? extractStreet(client.address) : '—'}</p>
             </div>
             <div>
               <p style={fieldLabelStyle}>State</p>
@@ -317,13 +277,13 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Contact */}
-          <p style={sectionLabelStyle}>Contact</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <h2 style={detail.sectionHeading}>Contact</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Website</p>
               <p style={fieldValueStyle}>
                 {client.website_url ? (
-                  <a href={client.website_url} target="_blank" rel="noopener noreferrer" style={{ color: color.system.link, textDecoration: 'none' }}>
+                  <a href={client.website_url} target="_blank" rel="noopener noreferrer" style={detail.link}>
                     {client.website_url}
                   </a>
                 ) : '—'}
@@ -331,14 +291,14 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             </div>
             <div>
               <p style={fieldLabelStyle}>Phone</p>
-              <p style={fieldValueStyle}>{client.phone || '—'}</p>
+              <p style={fieldValueStyle}>{client.phone ? formatPhone(client.phone) : '—'}</p>
             </div>
             <div>
               <p style={fieldLabelStyle}>Domain Hosted</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).domain_hosted || '—'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Referred By</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).referred_by || '—'}</p>
@@ -351,8 +311,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Opportunities */}
-          <p style={sectionLabelStyle}>Opportunities</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <h2 style={detail.sectionHeading}>Opportunities</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Pipeline</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).pipeline || '—'}</p>
@@ -366,7 +326,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).opportunity_owner || '—'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Followers</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).followers || '—'}</p>
@@ -380,21 +340,70 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               </p>
             </div>
             <div>
-              <p style={fieldLabelStyle}>GoHighLevel ID</p>
-              <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).ghl_contact_id || '—'}</p>
+              <p style={fieldLabelStyle}>GoHighLevel</p>
+              <p style={fieldValueStyle}>
+                {(client as unknown as Record<string, string>).ghl_contact_id ? (
+                  <a
+                    href={`https://app.gohighlevel.com/v2/location/IZPqVFfrhjIQrXkmHChN/contacts/detail/${(client as unknown as Record<string, string>).ghl_contact_id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={detail.link}
+                  >
+                    View in GoHighLevel &#x2197;
+                  </a>
+                ) : '—'}
+              </p>
             </div>
           </div>
+
+          {/* GoHighLevel */}
+          {(client as unknown as Record<string, string>).ghl_contact_id && (
+            <>
+              <h2 style={detail.sectionHeading}>GoHighLevel</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
+                <div>
+                  <p style={fieldLabelStyle}>Source</p>
+                  <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).ghl_source || '—'}</p>
+                </div>
+                <div>
+                  <p style={fieldLabelStyle}>Opportunity Value</p>
+                  <p style={fieldValueStyle}>
+                    {(client as unknown as Record<string, number>).ghl_opportunity_value_cents
+                      ? formatCurrency((client as unknown as Record<string, number>).ghl_opportunity_value_cents)
+                      : '—'}
+                  </p>
+                </div>
+                <div>
+                  <p style={fieldLabelStyle}>Last Synced</p>
+                  <p style={fieldValueStyle}>
+                    {(client as unknown as Record<string, string>).ghl_last_synced
+                      ? new Date((client as unknown as Record<string, string>).ghl_last_synced).toLocaleString()
+                      : 'Never'}
+                  </p>
+                </div>
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
+                <div style={{ gridColumn: '1 / -1' }}>
+                  <p style={fieldLabelStyle}>Tags</p>
+                  <div style={{ display: 'flex', gap: gap.sm, flexWrap: 'wrap', marginTop: gap.xs }}>
+                    {(client as unknown as Record<string, string[]>).ghl_tags?.length
+                      ? (client as unknown as Record<string, string[]>).ghl_tags.map((tag) => (
+                          <Tag key={tag} size="sm">{tag}</Tag>
+                        ))
+                      : <p style={fieldValueStyle}>—</p>}
+                  </div>
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Notes */}
           {client.notes && (
             <>
-              <p style={sectionLabelStyle}>Notes</p>
+              <h2 style={detail.sectionHeading}>Notes</h2>
               <p
                 style={{
-                  fontFamily: font.family.body,
-                  fontSize: font.size.body.sm,
-                  color: color.text.secondary,
-                  margin: 0,
+                  ...fieldValueStyle,
                   lineHeight: font.lineHeight.relaxed,
                   whiteSpace: 'pre-wrap',
                 }}
@@ -452,7 +461,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   header: '',
                   accessor: (r) => (
                     <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}/${r.report_type}`}>
-                      View Details
+                      View
                     </Button>
                   ),
                   style: { textAlign: 'right' },
@@ -482,8 +491,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   </Button>
                 ) : (
                   <>
-                    <GenerateProposalButton companyId={client.id} slug={client.slug} />
-                    <Button variant="outline" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
+                    <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} hideIcon />
+                    <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
                       Manual
                     </Button>
                   </>
@@ -518,7 +527,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
-            <a href={`/admin/companies/${client.slug}/services/new`} style={linkStyle}>Assign service</a>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/services/new`}>Assign service</Button>
           </div>
           <DataTable
             data={clientServices}
@@ -573,7 +582,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
-            <a href={`/admin/companies/${client.slug}/projects/new`} style={linkStyle}>Add project</a>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/projects/new`}>Add project</Button>
           </div>
           <DataTable
             data={projects}
@@ -609,7 +618,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
-            <a href={`/admin/companies/${client.slug}/invoices/new`} style={linkStyle}>Add invoice</a>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
           </div>
           <DataTable
             data={invoices}
@@ -640,7 +649,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   inv.invoice_url ? (
                     <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                       <Button variant="secondary" size="sm">
-                        View Details
+                        View
                       </Button>
                     </a>
                   ) : null,
@@ -688,7 +697,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
               {
                 header: 'Phone',
-                accessor: (c) => c.phone || '—',
+                accessor: (c) => c.phone ? formatPhone(c.phone) : '—',
                 style: { color: color.text.secondary },
               },
               {

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, isAuthError } from '@/lib/auth';
 import { type Industry, getReportConfigs, type ReportType } from '@/lib/analysis/report-config';
 import { analyzeWebsite, type WebsiteCheckResult } from '@/lib/analysis/website';
 import { analyzeBrand } from '@/lib/analysis/brand';
@@ -7,26 +8,16 @@ import { analyzeReviews } from '@/lib/analysis/reviews';
 import { analyzeCompetitors } from '@/lib/analysis/competitors';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
+import { sendAnalysisCompleteEmail, logEmail } from '@/lib/email';
 
 const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
 
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
+  const { user } = auth;
 
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const supabase = await createClient();
 
   const body = await request.json();
   const { report_id, report_type } = body as { report_id: string; report_type: string };
@@ -62,7 +53,7 @@ export async function POST(request: Request) {
 
   const { data: client } = await supabase
     .from('companies')
-    .select('id, name, industry, website_url, address, phone')
+    .select('id, name, slug, industry, website_url, address, phone')
     .eq('id', reportSet.company_id)
     .single();
 
@@ -134,30 +125,36 @@ export async function POST(request: Request) {
   const configs = getReportConfigs((client.industry as Industry) || null);
   const reportConfig = configs.find((c) => c.type === report_type as ReportType);
 
-  // Update each item with analysis results
+  // Update each item with analysis results (including neutral/error results)
   let updatedCount = 0;
+  const updateErrors: string[] = [];
   for (const item of existingItems) {
     const result = results.find((r) => r.category === item.category);
-    if (result && result.score !== null) {
-      const catConfig = reportConfig?.categories.find((c) => c.category === item.category);
-      const maxScore = catConfig?.maxScore ?? (item.metadata as Record<string, unknown>)?.maxScore ?? 5;
+    if (!result) continue;
 
-      await supabase
-        .from('report_items')
-        .update({
-          status: result.status,
-          score: result.score,
-          rating: (result.metadata?.rating as number) ?? null,
-          total_reviews: (result.metadata?.total_reviews as number) ?? null,
-          feedback_summary: result.feedback_summary,
-          notes: result.notes,
-          metadata: {
-            maxScore,
-            ...result.metadata,
-          },
-        })
-        .eq('id', item.id);
+    const catConfig = reportConfig?.categories.find((c) => c.category === item.category);
+    const maxScore = catConfig?.maxScore ?? (item.metadata as Record<string, unknown>)?.maxScore ?? 5;
 
+    const { error: updateError } = await supabase
+      .from('report_items')
+      .update({
+        status: result.status,
+        score: result.score,
+        rating: (result.metadata?.rating as number) ?? null,
+        total_reviews: (result.metadata?.total_reviews as number) ?? null,
+        feedback_summary: result.feedback_summary,
+        notes: result.notes,
+        metadata: {
+          maxScore,
+          ...result.metadata,
+        },
+      })
+      .eq('id', item.id);
+
+    if (updateError) {
+      console.error(`Failed to update item ${item.category}:`, updateError.message);
+      updateErrors.push(`${item.category}: ${updateError.message}`);
+    } else {
       updatedCount++;
     }
   }
@@ -173,8 +170,30 @@ export async function POST(request: Request) {
   await recalculateReportScore(supabase, report_id);
   await recalculateReportSetScore(supabase, report.report_set_id);
 
+  // Send notification email to the admin who triggered analysis
+  try {
+    const emailData = await sendAnalysisCompleteEmail({
+      to: user.email!,
+      recipientName: auth.profile.full_name ?? undefined,
+      companyName: client.name,
+      companySlug: client.slug,
+    });
+
+    await logEmail(supabase, {
+      to: user.email!,
+      subject: `Marketing analysis is ready for ${client.name}`,
+      template: 'analysis_complete',
+      resendId: emailData?.id,
+      companyId: client.id,
+    });
+  } catch (emailErr) {
+    // Don't fail the analysis response if email fails
+    console.error('Failed to send analysis complete email:', emailErr);
+  }
+
   return NextResponse.json({
     updated: updatedCount,
     total: existingItems.length,
+    ...(updateErrors.length > 0 ? { errors: updateErrors } : {}),
   });
 }

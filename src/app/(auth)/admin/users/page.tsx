@@ -9,7 +9,7 @@ import { heading } from '@/lib/styles';
 import { color, font } from '@/lib/tokens';
 
 export default async function AdminUsersPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: users } = await supabase
     .from('profiles')

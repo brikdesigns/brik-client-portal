@@ -214,38 +214,335 @@ function createItemsFromAnalysis(
 }
 
 /**
- * Build a plain-text opportunities summary from analysis results.
+ * Build a consultative summary from analysis results.
  * Exported so the analyze route can regenerate it after re-analysis.
+ *
+ * Voice: StoryBrand (client is the hero, we're the guide) + Sandler
+ * (reference specific pains, quantify impact) + Brik (warm, clear,
+ * confident but not pushy). Summaries should read like a trusted
+ * advisor explaining what the data means — not a robot listing stats.
+ *
+ * Dispatches to report-type-specific generators for tailored output.
  */
 export function generateOpportunities(results: WebsiteCheckResult[]): string {
-  const lines: string[] = [];
+  const passed = results.filter(
+    (r) => r.status === 'pass' && r.score !== null,
+  );
+  const issues = results.filter(
+    (r) =>
+      r.score !== null &&
+      (r.status === 'fail' || r.status === 'warning' ||
+        (r.score <= 2 && r.status !== 'pass')),
+  );
+  const unscored = results.filter((r) => r.score === null);
 
-  // Platforms/categories with low scores
-  const issues = results.filter((r) => r.score !== null && r.score <= 2);
-  for (const issue of issues) {
-    if (issue.feedback_summary) {
-      lines.push(`${issue.category} — ${issue.feedback_summary}`);
+  // Detect report type by shape of the data
+  const isListingsReport = results.length > 0 && results.every(
+    (r) => r.score === null || r.score === 0 || r.score === 1,
+  );
+  const isCompetitorReport = results.length > 0 && results.some(
+    (r) => r.category.startsWith('Competitor ') && r.metadata?.competitor_name !== undefined,
+  );
+
+  if (isCompetitorReport) {
+    return generateCompetitorOpportunities(results, unscored);
+  }
+  if (isListingsReport) {
+    return generateListingsOpportunities(results, passed, issues, unscored);
+  }
+  return generateScoredOpportunities(results, passed, issues, unscored);
+}
+
+// ── Online Listings & Reviews ──────────────────────────────────────
+
+function generateListingsOpportunities(
+  results: WebsiteCheckResult[],
+  passed: WebsiteCheckResult[],
+  issues: WebsiteCheckResult[],
+  unscored: WebsiteCheckResult[],
+): string {
+  const sentences: string[] = [];
+  const total = results.length;
+  const listedCount = passed.length;
+
+  // Aggregate ratings and reviews
+  const withRatings = passed.filter((r) => {
+    const rating = r.metadata?.rating as number | null;
+    return rating !== null && rating !== undefined;
+  });
+  const totalReviews = passed.reduce(
+    (sum, r) => sum + ((r.metadata?.total_reviews as number) ?? 0), 0,
+  );
+
+  // Opening — what the data tells us (guide framing)
+  if (listedCount === total && totalReviews > 500) {
+    sentences.push(
+      `Your online presence is strong — listed on all ${total} platforms with ${totalReviews.toLocaleString()} reviews across them.`,
+    );
+  } else if (listedCount === total) {
+    sentences.push(
+      `You're listed on all ${total} platforms we checked, which is a solid foundation.`,
+    );
+  } else {
+    const coverage = Math.round((listedCount / total) * 100);
+    sentences.push(
+      `You're currently visible on ${listedCount} of ${total} platforms (${coverage}% coverage).`,
+    );
+  }
+
+  // Rating context — what it means for their business
+  if (withRatings.length > 0) {
+    const ratings = withRatings.map((r) => r.metadata?.rating as number);
+    const avgRating = ratings.reduce((a, b) => a + b, 0) / ratings.length;
+    const avgStr = avgRating.toFixed(1);
+
+    if (avgRating >= 4.5 && totalReviews > 100) {
+      sentences.push(
+        `With a ${avgStr} average rating and ${totalReviews.toLocaleString()} total reviews, your reputation is a real competitive advantage — new patients searching online will see strong social proof.`,
+      );
+    } else if (avgRating >= 4.0) {
+      sentences.push(
+        `Your ${avgStr} average rating is solid. Continuing to encourage reviews will help maintain momentum, especially on platforms where your review count is still building.`,
+      );
+    } else if (avgRating >= 3.5) {
+      sentences.push(
+        `At ${avgStr} average, your rating is fair but there's room to grow. A consistent review request strategy could make a meaningful difference in how new patients perceive you online.`,
+      );
+    } else {
+      sentences.push(
+        `Your ${avgStr} average rating may be turning away potential patients before they ever call. Addressing the reviews and building a proactive request strategy would be a high-impact starting point.`,
+      );
     }
   }
 
-  // Platforms that passed
-  const passed = results.filter((r) => r.status === 'pass' && r.score !== null && r.score > 2);
-  for (const item of passed) {
-    if (item.feedback_summary) {
-      lines.push(`${item.category} — ${item.feedback_summary}`);
+  // Missing listings — the specific opportunity (Sandler: quantify the gap)
+  if (issues.length > 0) {
+    const wrongLocation = issues.filter((r) => r.metadata?.rejectedLocation);
+    const notFound = issues.filter((r) => !r.metadata?.rejectedLocation);
+
+    if (notFound.length > 0) {
+      sentences.push(
+        `We didn't find you on ${notFound.map((r) => r.category).join(' or ')}. These are platforms where patients actively search, so each missing listing is a missed chance to be found.`,
+      );
+    }
+    if (wrongLocation.length > 0) {
+      sentences.push(
+        `${wrongLocation.map((r) => r.category).join(' and ')} ${wrongLocation.length === 1 ? 'shows a' : 'show'} listing for a different location with the same name. Claiming your correct listing would prevent patients from being directed to the wrong practice.`,
+      );
     }
   }
 
-  // Platforms that still need manual review
-  const manualCategories = results.filter((r) => r.score === null);
-  if (manualCategories.length > 0) {
-    const names = manualCategories.map((r) => r.category).join(', ');
-    lines.push(`Needs manual review — ${names}`);
+  // Data consistency — NAP (Name, Address, Phone) consistency matters for SEO
+  const missingPhone = passed.filter((r) => !r.metadata?.phone_listed);
+  const missingAddress = passed.filter((r) => !r.metadata?.address_listed);
+  const hasNapGaps = (missingPhone.length > 0 && missingPhone.length < passed.length)
+    || (missingAddress.length > 0 && missingAddress.length < passed.length);
+
+  if (hasNapGaps) {
+    const gapPlatforms = new Set([
+      ...missingPhone.map((r) => r.category),
+      ...missingAddress.map((r) => r.category),
+    ]);
+    sentences.push(
+      `Contact details are inconsistent across platforms — ${Array.from(gapPlatforms).join(', ')} ${gapPlatforms.size === 1 ? 'is' : 'are'} missing phone or address info. Consistent NAP (name, address, phone) data across all listings directly impacts local search rankings.`,
+    );
   }
 
-  if (lines.length === 0) {
-    return 'All analyzed categories look strong. Complete any remaining manual reviews to finalize the report.';
+  // Unverified
+  if (unscored.length > 0) {
+    sentences.push(
+      `We couldn't auto-verify ${unscored.map((r) => r.category).join(' or ')} — a quick manual check would complete the picture.`,
+    );
   }
 
-  return lines.join('\n');
+  return sentences.join(' ');
+}
+
+// ── Competitor Analysis ──────────────────────────────────────────────
+
+function generateCompetitorOpportunities(
+  results: WebsiteCheckResult[],
+  unscored: WebsiteCheckResult[],
+): string {
+  const sentences: string[] = [];
+
+  const analyzed = results.filter(
+    (r) => r.score !== null && r.metadata?.competitor_name,
+  );
+
+  if (analyzed.length === 0 && unscored.length > 0) {
+    return 'We couldn\'t locate competitors for analysis — this typically means the address needs to be updated or the industry type needs to be set. Once that\'s corrected, we can re-run this report.';
+  }
+
+  if (analyzed.length === 0) {
+    return 'No competitor data available yet.';
+  }
+
+  // Extract competitor details for meaningful comparison
+  const competitors = analyzed.map((r) => ({
+    name: r.metadata?.competitor_name as string,
+    distance: r.metadata?.distance as string,
+    websiteScore: r.metadata?.website_score as number | null,
+    listingsScore: r.metadata?.listings_reviews_score as number | null,
+    googleRating: r.metadata?.google_rating as number | null,
+    googleReviews: r.metadata?.google_reviews as number | null,
+    websiteExplanation: r.metadata?.website_score_explanation as string,
+  }));
+
+  // Landscape overview — set the scene
+  const distances = competitors
+    .map((c) => c.distance)
+    .filter(Boolean);
+  const closestDistance = distances[0] || '';
+
+  sentences.push(
+    `We identified ${analyzed.length} competitor${analyzed.length === 1 ? '' : 's'} within your area${closestDistance ? `, with the nearest (${competitors[0].name}) just ${closestDistance} away` : ''}.`,
+  );
+
+  // Website comparison — where do you stand?
+  const withWebScores = competitors.filter((c) => c.websiteScore !== null);
+  if (withWebScores.length > 0) {
+    const scores = withWebScores.map((c) => c.websiteScore!);
+    const avgWebScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    const maxWebScore = Math.max(...scores);
+    const bestWeb = withWebScores.find((c) => c.websiteScore === maxWebScore);
+
+    if (avgWebScore >= 35) {
+      sentences.push(
+        `Your competitors' websites are generally strong, averaging ${avgWebScore}/50. ${bestWeb ? `${bestWeb.name} leads at ${maxWebScore}/50` : ''} — this is the bar your site needs to meet or exceed to stand out in local search.`,
+      );
+    } else if (avgWebScore >= 20) {
+      sentences.push(
+        `Competitor websites average ${avgWebScore}/50 — there's a real opportunity to differentiate through a stronger web presence. ${bestWeb && bestWeb.websiteScore! >= 30 ? `${bestWeb.name} is currently the strongest at ${maxWebScore}/50, but that's still very beatable.` : 'None are particularly impressive, which means a quality website would immediately set you apart.'}`,
+      );
+    } else {
+      sentences.push(
+        `Competitor websites are weak across the board (averaging just ${avgWebScore}/50). A well-built, modern website would give you an immediate and significant competitive edge in your market.`,
+      );
+    }
+
+    // Call out specific weaknesses in competitors (Sandler: show where the opening is)
+    const weakCompetitors = withWebScores.filter((c) => c.websiteExplanation?.startsWith('Weak'));
+    if (weakCompetitors.length > 0) {
+      const weakAreas = weakCompetitors.map(
+        (c) => `${c.name} (${c.websiteExplanation?.replace('Weak areas: ', '').replace(/\.$/, '')})`,
+      );
+      sentences.push(
+        `Notable competitor gaps: ${weakAreas.join('; ')}.`,
+      );
+    }
+  }
+
+  // Reviews comparison — the social proof battle
+  const withReviews = competitors.filter(
+    (c) => c.googleRating !== null && c.googleReviews !== null,
+  );
+  if (withReviews.length > 0) {
+    const ratings = withReviews.map((c) => `${c.name}: ${c.googleRating} stars (${c.googleReviews?.toLocaleString()} reviews)`);
+    const bestReviewed = withReviews.reduce((best, c) =>
+      (c.googleReviews ?? 0) > (best.googleReviews ?? 0) ? c : best,
+    );
+
+    sentences.push(
+      `On Google, your competitors' review profiles look like this: ${ratings.join(', ')}. ${bestReviewed.googleReviews! > 200 ? `${bestReviewed.name}'s ${bestReviewed.googleReviews?.toLocaleString()} reviews represent strong social proof — matching that volume takes sustained effort but is achievable with a consistent review request process.` : 'Review counts are still manageable, so there\'s a window to build a lead with a proactive review strategy.'}`,
+    );
+  }
+
+  // Unanalyzed slots
+  const empty = results.filter((r) => !r.metadata?.competitor_name);
+  if (empty.length > 0 && analyzed.length > 0) {
+    // Don't mention — just means fewer than 3 competitors found
+  }
+
+  return sentences.join(' ');
+}
+
+// ── Website, Brand/Logo, and other scored reports ────────────────────
+
+function generateScoredOpportunities(
+  results: WebsiteCheckResult[],
+  passed: WebsiteCheckResult[],
+  issues: WebsiteCheckResult[],
+  unscored: WebsiteCheckResult[],
+): string {
+  const sentences: string[] = [];
+
+  const scored = results.filter((r) => r.score !== null);
+  if (scored.length === 0) {
+    return 'Analysis is pending — run the report to generate insights.';
+  }
+
+  const totalScore = scored.reduce((sum, r) => sum + (r.score ?? 0), 0);
+  const maxPossible = scored.length * 5;
+  const pct = Math.round((totalScore / maxPossible) * 100);
+
+  // Opening — contextualize the score (guide helping hero understand their position)
+  if (pct >= 80) {
+    sentences.push(
+      `Scoring ${totalScore}/${maxPossible} (${pct}%) puts you in strong shape overall.`,
+    );
+  } else if (pct >= 60) {
+    sentences.push(
+      `At ${totalScore}/${maxPossible} (${pct}%), you have a solid foundation with clear room to improve.`,
+    );
+  } else if (pct >= 40) {
+    sentences.push(
+      `Scoring ${totalScore}/${maxPossible} (${pct}%) tells us there are meaningful gaps that may be costing you visibility or credibility with potential clients.`,
+    );
+  } else {
+    sentences.push(
+      `At ${totalScore}/${maxPossible} (${pct}%), there are significant areas to address — but this also means there's a lot of low-hanging fruit where improvements will make an immediate impact.`,
+    );
+  }
+
+  // Strengths — acknowledge what's working (StoryBrand: hero has existing strengths)
+  const strong = results.filter((r) => r.score !== null && r.score >= 4);
+  if (strong.length > 0) {
+    if (strong.length <= 3) {
+      sentences.push(
+        `Your strongest areas are ${strong.map((r) => r.category).join(' and ')} — these are working well and worth maintaining.`,
+      );
+    } else {
+      sentences.push(
+        `You're strong across ${strong.length} categories including ${strong.slice(0, 3).map((r) => r.category).join(', ')}.`,
+      );
+    }
+  }
+
+  // Issues — frame as specific, solvable problems (Sandler: name the pain, then the plan)
+  if (issues.length > 0) {
+    const issueDetails = issues.map((r) => {
+      const feedback = r.feedback_summary?.replace(/\.$/, '') ?? '';
+      return feedback
+        ? `${r.category} (${r.score}/5) — ${feedback}`
+        : `${r.category} (${r.score}/5)`;
+    });
+
+    if (issues.length <= 2) {
+      sentences.push(
+        `The areas that need the most attention: ${issueDetails.join('; ')}. These are the kind of improvements that directly affect how patients or clients perceive you online.`,
+      );
+    } else {
+      sentences.push(
+        `Several areas need attention: ${issueDetails.join('; ')}. We'd recommend prioritizing the lowest-scoring categories first for the biggest impact.`,
+      );
+    }
+  }
+
+  // Mid-range — the "good but not great" areas are easy wins
+  const midRange = results.filter((r) => r.score !== null && r.score === 3);
+  if (midRange.length > 0 && issues.length > 0) {
+    sentences.push(
+      `${midRange.map((r) => r.category).join(' and ')} scored average (3/5) — small improvements here could move the needle without major effort.`,
+    );
+  }
+
+  // Unverified
+  if (unscored.length > 0) {
+    sentences.push(
+      `${unscored.map((r) => r.category).join(' and ')} couldn't be auto-verified and ${unscored.length === 1 ? 'needs' : 'need'} a quick manual check to complete the picture.`,
+    );
+  }
+
+  return sentences.join(' ');
 }

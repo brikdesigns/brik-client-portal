@@ -10,6 +10,17 @@ Brik Designs client portal — secure web app where agency clients track project
 
 **Always use Opus for this project.** This overrides the global Sonnet default.
 
+## Session Startup
+
+**Run the health check at the start of every work session:**
+
+```bash
+./scripts/health-check.sh --quick    # Fast check (skip build + Netlify)
+./scripts/health-check.sh            # Full check (includes build + Netlify API)
+```
+
+This catches stale secrets, broken connections, and migration drift before you waste time debugging. A weekly GitHub Action also runs automatically (Mondays 9am CT).
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -23,15 +34,61 @@ Brik Designs client portal — secure web app where agency clients track project
 | Design System | brik-bds git submodule |
 | Deployment | Netlify (Agent Runners enabled) |
 
-## Supabase
+## Environments
 
-- **Project Ref:** `rnspxmrkpoukccahggli`
-- **URL:** `https://rnspxmrkpoukccahggli.supabase.co`
-- **Admin User:** nick@brikdesigns.com
-- **Schema:** 8 tables — profiles, clients, projects, invoices, email_log, service_categories, services, client_services
+### Quick reference — where does my work go?
+
+| Branch | Supabase | Netlify URL | Purpose |
+|--------|----------|-------------|---------|
+| `staging` | Staging project | Branch deploy (auto) | Day-to-day development, test migrations |
+| `main` | Production project | `portal.brikdesigns.com` | Live client-facing app |
+
+### Rules for agents (CRITICAL — read this)
+
+1. **Staging is the default target.** All new migrations, features, and fixes go to `staging` first.
+2. **Never push directly to `main`** without user confirmation. Merge via PR or explicit request.
+3. **Migrations flow one way:** write → apply to staging (automatic on push) → test → merge to main → apply to prod (automatic on push).
+4. **Don't wait to merge.** Staging exists so you can move fast and break things. Push early, push often to `staging`. Only `main` needs to be careful.
+5. **If a migration fails on staging,** fix it and push again. Staging is disposable — it can be rebuilt from scratch by running all migrations.
+6. **Production repairs list** (`APPLIED_MIGRATIONS` in the workflow) only applies to prod. Staging gets all migrations via CLI from the start, so no repair step is needed.
+
+### Supabase projects
+
+| Environment | Project Ref | URL | Admin User |
+|-------------|-------------|-----|------------|
+| **Production** | `rnspxmrkpoukccahggli` | `https://rnspxmrkpoukccahggli.supabase.co` | nick@brikdesigns.com |
+| **Staging** | `lmhzpzobdkstzpvsqest` | `https://lmhzpzobdkstzpvsqest.supabase.co` | nick@brikdesigns.com |
+
 - **Auth Model:** Admin-invite-only, role-based (admin/client)
-- **RLS:** Admin bypass via `(select role from profiles where id = auth.uid()) = 'admin'`
+- **RLS:** Admin bypass via `get_user_role()` SECURITY DEFINER function
 - **Keys:** JWT format (`eyJ...`), stored in `.env.local`
+
+### GitHub secrets required
+
+| Secret | Scope | Status |
+|--------|-------|--------|
+| `SUPABASE_ACCESS_TOKEN` | Both envs (account-level) | Set |
+| `SUPABASE_DB_PASSWORD` | Production | Needs update (wrong password causing CI failures) |
+| `SUPABASE_STAGING_PROJECT_REF` | Staging | Needs adding (`lmhzpzobdkstzpvsqest`) |
+| `SUPABASE_STAGING_DB_PASSWORD` | Staging | Needs adding |
+
+### Netlify env vars (branch-scoped)
+
+Production env vars are already set. Staging needs branch-scoped overrides:
+
+| Variable | Production (main) | Staging (staging branch) |
+|----------|-------------------|--------------------------|
+| `NEXT_PUBLIC_SUPABASE_URL` | prod URL | staging URL |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | prod anon key | staging anon key |
+| `SUPABASE_SERVICE_ROLE_KEY` | prod service key | staging service key |
+| `NEXT_PUBLIC_SITE_URL` | `https://portal.brikdesigns.com` | Netlify branch deploy URL |
+
+### Future environments
+
+| Environment | When to add | Supabase project | Netlify |
+|-------------|-------------|-----------------|---------|
+| **Demo** | When colleague needs sales demos | New project, seeded with realistic fake data | `demo.brikdesigns.com` or branch deploy |
+| **New product** | When building a separate tool (analytics, ops dashboard, etc.) | Completely separate project(s) per env | Separate Netlify site |
 
 ## Netlify
 
@@ -68,6 +125,22 @@ Browser → Next.js (Netlify) → Supabase Auth + PostgreSQL
 
 Git submodule at `./brik-bds/`. Uses **Brik Designs company brand** — NOT any of the 8 BDS web template themes.
 
+### BDS Workflow (CRITICAL)
+
+**NEVER edit files inside `brik-client-portal/brik-bds/`.** That directory is a read-only submodule. All BDS development happens in the standalone repo at `~/Documents/GitHub/brik/brik-bds/`.
+
+**Workflow:**
+1. Make BDS changes in `~/Documents/GitHub/brik/brik-bds/` → commit → push
+2. Pull into portal: `./scripts/bds-sync.sh` (fetches latest, builds, commits submodule ref)
+3. Push portal when ready
+
+**Available commands:**
+| Command | What it does |
+|---------|-------------|
+| `./scripts/bds-sync.sh` | Pull latest BDS + build + commit |
+| `./scripts/bds-sync.sh --dry-run` | Pull + build, no commit |
+| `./scripts/bds-sync.sh --check` | Show current vs latest (read-only) |
+
 ### Brand vs Templates (critical distinction)
 
 | | Brik Designs Brand | BDS Web Templates |
@@ -101,18 +174,60 @@ This project follows the BDS token consumption standard. See `brik-bds/CONSUMING
 
 ```tsx
 import { font, color, space, gap, border } from '@/lib/tokens';  // Individual values
-import { text, heading, label, meta, list } from '@/lib/styles';  // Composed presets
+import { text, heading, label, meta, detail } from '@/lib/styles';  // Composed presets
 import { Prose } from '@/components/prose';                        // Markdown rendering
 ```
 
 **Key files:**
 
 - `src/lib/tokens.ts` — Figma style name to CSS var() mapping
-- `src/lib/styles.ts` — Composed CSSProperties presets
+- `src/lib/styles.ts` — Composed CSSProperties presets (includes `detail` for read-only pages)
 - `src/components/prose.tsx` — Shared ReactMarkdown renderer
 - `.husky/pre-commit` — Blocks hardcoded px font sizes and numeric line heights
 
 **Pre-commit enforcement:** The husky hook checks staged `.ts`/`.tsx` files for `fontSize: '[0-9]` and `lineHeight: [0-9]` patterns and blocks the commit if found.
+
+### Read-only vs Edit-mode convention (CRITICAL)
+
+Data in this portal has two presentation modes that share the same data points but render differently. Inspired by [Carbon's read-only states pattern](https://carbondesignsystem.com/patterns/read-only-states-pattern/).
+
+| | Read mode (detail/view pages) | Edit mode (form pages) |
+|---|---|---|
+| **Labels** | `detail.label` — label/md, text-muted | BDS TextInput/Select built-in label |
+| **Values** | `detail.value` — body/md, text-primary | BDS form component (interactive input) |
+| **Layout** | `detail.grid` — 3-col grid, left-aligned | Single-column form, maxWidth 600px |
+| **Links** | `detail.link` — body/md, system-link color | N/A (edit mode uses inputs) |
+| **Empty** | `detail.empty` — text-muted dash (—) | Empty input placeholder |
+| **Sections** | `detail.sectionLabel` — label/md, muted, top padding | `heading.section` for form groups |
+
+**Always use `detail.*` presets on view pages.** Never define local `fieldLabelStyle` / `fieldValueStyle` variables — import from `@/lib/styles` instead.
+
+```tsx
+import { detail } from '@/lib/styles';
+
+// Read-only field pair
+<p style={detail.label}>Status</p>
+<p style={detail.value}><ProjectStatusBadge status={project.status} /></p>
+
+// 3-column grid
+<div style={detail.grid}>
+  <div>
+    <p style={detail.label}>Field</p>
+    <p style={detail.value}>Value</p>
+  </div>
+</div>
+
+// Empty values
+<span style={detail.empty}>—</span>
+
+// Links inside values
+<a style={detail.link} href="...">Open in Notion ↗</a>
+
+// Section dividers
+<p style={detail.sectionLabel}>ClickUp</p>
+```
+
+**Reference implementation:** `src/app/(auth)/admin/projects/[slug]/page.tsx`
 
 ### BDS Components Used
 | Component | Import Path | Usage |
@@ -269,27 +384,68 @@ npm run db:status  # List migration status (applied/pending)
 npm run db:seed    # Reset local DB with seeds (destructive!)
 ```
 
+### Infrastructure scripts
+
+```bash
+./scripts/health-check.sh            # Full infra health check
+./scripts/health-check.sh --quick    # Fast check (skip build + Netlify)
+./scripts/health-check.sh --ci       # CI mode (exit code = failure count)
+./scripts/db-migrate.sh              # Apply migrations to staging (default)
+./scripts/db-migrate.sh --prod       # Apply migrations to production
+./scripts/bds-sync.sh               # Pull latest BDS submodule
+```
+
 ## Migration Workflow
 
 Supabase CLI manages database schema via SQL migration files in `supabase/migrations/`.
 
-**Local development:**
+### How migrations flow
 
-1. Make schema changes → write SQL in `supabase/migrations/00003_*.sql`
-2. `npm run db:push` to apply to live Supabase (requires `supabase link` first)
-3. Commit and push — GitHub Action auto-applies on merge to main
+```
+Write SQL → push to staging → CI applies to staging DB → test → merge to main → CI applies to prod DB
+```
 
-**GitHub Action (`.github/workflows/migrate.yml`):**
+Staging is the default target. You should never need to apply migrations to production manually.
 
-- Triggers on push to `main` when `supabase/migrations/**` changes
-- Runs `supabase db push` against live project
-- Requires GitHub secrets: `SUPABASE_ACCESS_TOKEN`, `SUPABASE_DB_PASSWORD`
+### Creating migrations
 
-**First-time setup:**
+1. Write SQL in `supabase/migrations/NNNNN_description.sql` (increment the number)
+2. Commit and push to `staging` — CI auto-applies to staging Supabase
+3. Test on staging branch deploy
+4. Merge `staging` → `main` — CI auto-applies to production Supabase
 
-1. `supabase login` (opens browser for Supabase dashboard OAuth)
-2. `supabase link --project-ref rnspxmrkpoukccahggli`
-3. Add secrets to GitHub: Settings → Secrets → Actions
+### Applying migrations locally
+
+The helper script defaults to staging. Use `--prod` to target production (requires typing "production" to confirm).
+
+```bash
+./scripts/db-migrate.sh                    # Staging: show status + apply
+./scripts/db-migrate.sh --prod             # Production: show status + apply (requires confirmation)
+./scripts/db-migrate.sh --status           # Status only
+./scripts/db-migrate.sh --dry-run          # Preview what would be applied
+./scripts/db-migrate.sh --prod --dry-run   # Preview against production
+```
+
+Requires `SUPABASE_STAGING_PROJECT_REF` in `.env.local` or exported.
+
+### Manual Dashboard migrations (production only)
+
+If you apply SQL via Supabase Dashboard, add the version number to the `APPLIED_MIGRATIONS` list in:
+- `.github/workflows/migrate.yml`
+- `scripts/db-migrate.sh`
+
+This is only needed for production. Staging gets all migrations via CLI.
+
+### GitHub Action (`.github/workflows/migrate.yml`)
+
+- Triggers on push to `main` or `staging` when `supabase/migrations/**` changes
+- Auto-detects environment from branch (`main` → prod, `staging` → staging)
+- Supports manual dispatch with environment override and dry-run option
+- Production repairs manually-applied migrations; staging skips this step
+
+### Required GitHub secrets
+
+See the Environments section above for the full secrets list.
 
 ## Key Integrations
 

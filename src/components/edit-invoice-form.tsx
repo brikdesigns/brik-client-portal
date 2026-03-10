@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
@@ -95,7 +94,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
   }
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
+    <div style={{ maxWidth: '600px' }}>
       <div
         style={{
           fontFamily: font.family.body,
@@ -136,6 +135,7 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
               label="Status"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              placeholder="Select status"
               options={[
                 { label: 'Draft', value: 'draft' },
                 { label: 'Open', value: 'open' },
@@ -203,12 +203,12 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
             Save changes
           </Button>
           <a href="/admin/invoices">
-            <Button type="button" variant="outline" size="md">
+            <Button type="button" variant="secondary" size="md">
               Cancel
             </Button>
           </a>
         </div>
       </form>
-    </Card>
+    </div>
   );
 }

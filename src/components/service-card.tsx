@@ -38,7 +38,7 @@ export function ServiceCard({
           style={{
             fontFamily: font.family.label,
             fontSize: font.size.label.md,
-            fontWeight: font.weight.semibold,
+            fontWeight: font.weight.medium,
             color: color.text.primary,
             margin: 0,
             overflow: 'hidden',

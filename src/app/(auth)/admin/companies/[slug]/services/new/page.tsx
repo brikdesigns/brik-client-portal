@@ -3,7 +3,6 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { formatCurrency } from '@/lib/format';
@@ -28,7 +27,7 @@ const textareaLabelStyle = {
   display: 'block' as const,
   marginBottom: space.sm,
   fontFamily: font.family.label,
-  fontWeight: font.weight.semibold,
+  fontWeight: font.weight.medium,
   fontSize: font.size.label.md,
   color: color.text.primary,
 };
@@ -137,8 +136,7 @@ export default function AssignServicePage() {
         </p>
       </div>
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
-        <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
             <div>
               <Select
@@ -221,13 +219,12 @@ export default function AssignServicePage() {
               Assign service
             </Button>
             <a href={`/admin/companies/${clientSlug}`}>
-              <Button type="button" variant="outline" size="md">
+              <Button type="button" variant="secondary" size="md">
                 Cancel
               </Button>
             </a>
           </div>
-        </form>
-      </Card>
+      </form>
     </div>
   );
 }

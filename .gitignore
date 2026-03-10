@@ -45,9 +45,16 @@ next-env.d.ts
 # Local asset drop zone (source files, not committed)
 updates/
 
+# Scratch / temp
+tmp/
+
 # Misc
 *.log
 *.cache
 
 # Local credentials reference
 .credentials.md
+
+# Deno
+deno.lock
+.next-prepush

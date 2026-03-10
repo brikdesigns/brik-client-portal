@@ -1,32 +1,64 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useSyncExternalStore } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import ReactMarkdown from 'react-markdown';
 import { Button } from '@bds/components/ui/Button/Button';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Skeleton } from '@bds/components/ui/Skeleton/Skeleton';
 import { formatCurrency } from '@/lib/format';
 import { font, color, border, space, gap } from '@/lib/tokens';
 
 /**
- * Dark palette for standalone proposal viewer.
+ * Force dark theme on this standalone page.
  *
- * This page is always dark-themed (not affected by portal theme toggle).
- * Uses BDS grayscale primitives directly since semantic tokens (--text-primary etc.)
- * resolve to light-mode values outside of data-theme="dark" context.
+ * Sets data-theme="dark" on <html> so all semantic tokens (color.text.primary,
+ * color.page.primary, etc.) resolve to their dark-mode CSS values. Restores
+ * the previous theme on unmount so portal theme toggle isn't affected.
  */
-const dk = {
-  pageBg: 'var(--grayscale--black)',
-  surface: 'var(--grayscale--darkest)',
-  border: 'var(--grayscale--darker)',
-  borderSubtle: 'var(--grayscale--dark)',
-  text: 'var(--grayscale--white)',
-  textSecondary: 'var(--grayscale--light)',
-  textMuted: 'var(--grayscale--dark)',
-  brand: 'var(--brand--primary)',
-} as const;
+function useForceDarkTheme() {
+  useEffect(() => {
+    const html = document.documentElement;
+    const prev = html.dataset.theme;
+    html.dataset.theme = 'dark';
+    html.style.colorScheme = 'dark';
+    return () => {
+      if (prev) {
+        html.dataset.theme = prev;
+        html.style.colorScheme = prev;
+      } else {
+        delete html.dataset.theme;
+        html.style.colorScheme = '';
+      }
+    };
+  }, []);
+}
+
+// --- Mobile breakpoint hook ---
+
+const MOBILE_BREAKPOINT = 768;
+
+function subscribeMobile(cb: () => void) {
+  const mql = window.matchMedia(`(max-width: ${MOBILE_BREAKPOINT}px)`);
+  mql.addEventListener('change', cb);
+  return () => mql.removeEventListener('change', cb);
+}
+
+function getSnapshotMobile() {
+  return window.innerWidth <= MOBILE_BREAKPOINT;
+}
+
+function getServerSnapshotMobile() {
+  return false; // SSR default: desktop
+}
+
+function useIsMobile() {
+  return useSyncExternalStore(subscribeMobile, getSnapshotMobile, getServerSnapshotMobile);
+}
+
+// --- Types ---
 
 interface ProposalItem {
   id: string;
@@ -59,9 +91,62 @@ interface Proposal {
   proposal_items: ProposalItem[];
 }
 
+// --- Loading skeleton ---
+
+function ProposalSkeleton({ isMobile }: { isMobile: boolean }) {
+  return (
+    <div style={{ minHeight: '100vh', backgroundColor: color.page.primary, display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
+      {!isMobile && (
+        <aside style={{ ...sidebarStyle, gap: space.lg }}>
+          <div>
+            <Skeleton variant="rectangular" width={100} height={35} />
+            <div style={{ marginTop: space.xl }}>
+              <Skeleton variant="text" width={160} height={14} />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm, marginTop: space.lg }}>
+              {[1, 2, 3].map(i => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
+                  <Skeleton variant="circular" width={22} height={22} />
+                  <Skeleton variant="text" width={120} height={14} />
+                </div>
+              ))}
+            </div>
+          </div>
+        </aside>
+      )}
+      <main style={isMobile ? mainMobileStyle : mainStyle}>
+        {/* Dots */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: gap.md, marginBottom: space.xl }}>
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} variant="rectangular" width={i === 1 ? 24 : 8} height={8} />
+          ))}
+        </div>
+        {/* Card */}
+        <div style={isMobile ? cardMobileStyle : cardStyle}>
+          <Skeleton variant="text" width="60%" height={28} />
+          <div style={{ marginTop: space.lg, display: 'flex', flexDirection: 'column', gap: gap.md }}>
+            <Skeleton variant="text" width="100%" height={16} />
+            <Skeleton variant="text" width="90%" height={16} />
+            <Skeleton variant="text" width="95%" height={16} />
+            <Skeleton variant="text" width="70%" height={16} />
+          </div>
+          <div style={{ marginTop: space.xl, display: 'flex', flexDirection: 'column', gap: gap.sm }}>
+            <Skeleton variant="text" width="100%" height={16} />
+            <Skeleton variant="text" width="85%" height={16} />
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
+
+// --- Main page ---
+
 export default function PublicProposalPage() {
   const params = useParams();
   const token = params.token as string;
+  const isMobile = useIsMobile();
+  useForceDarkTheme();
 
   const [proposal, setProposal] = useState<Proposal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -71,6 +156,13 @@ export default function PublicProposalPage() {
   const [accepted, setAccepted] = useState(false);
   const [error, setError] = useState('');
   const [activeSection, setActiveSection] = useState(0);
+  // Track the furthest step reached — linear navigation only allows going back
+  const [highestVisited, setHighestVisited] = useState(0);
+
+  function goToSection(index: number) {
+    setActiveSection(index);
+    setHighestVisited(prev => Math.max(prev, index));
+  }
 
   useEffect(() => {
     async function load() {
@@ -126,21 +218,15 @@ export default function PublicProposalPage() {
   }
 
   if (loading) {
-    return (
-      <div style={containerStyle}>
-        <p style={{ textAlign: 'center', color: dk.textMuted, fontFamily: font.family.body }}>
-          Loading proposal...
-        </p>
-      </div>
-    );
+    return <ProposalSkeleton isMobile={isMobile} />;
   }
 
   if (notFound || !proposal) {
     return (
-      <div style={containerStyle}>
+      <div style={{ ...containerStyle, backgroundColor: color.page.primary, minHeight: '100vh' }}>
         <div style={{ textAlign: 'center', padding: `${space.huge} 0` }}>
-          <h1 style={{ ...headingStyle, marginBottom: space.tiny }}>Proposal not found</h1>
-          <p style={bodyStyle}>This proposal may have been removed or the link is invalid.</p>
+          <h1 style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, color: color.text.primary, margin: `0 0 ${space.tiny}` }}>Proposal not found</h1>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.md, color: color.text.secondary, margin: 0 }}>This proposal may have been removed or the link is invalid.</p>
         </div>
       </div>
     );
@@ -151,128 +237,169 @@ export default function PublicProposalPage() {
   const sections = (proposal.sections || []).filter(s => s.content || s.type === 'fee_summary').sort((a, b) => a.sort_order - b.sort_order);
   const hasSections = sections.length > 0;
 
-  // If no sections, fall back to simple line-items view
   if (!hasSections) {
     return <SimpleFallback proposal={proposal} items={items} isExpired={!!isExpired} accepted={accepted} email={email} setEmail={setEmail} error={error} accepting={accepting} onAccept={handleAccept} />;
   }
 
   const currentSection = sections[activeSection];
+  const isLastSection = activeSection === sections.length - 1;
 
   return (
-    <div style={{ minHeight: '100vh', backgroundColor: dk.pageBg, display: 'flex' }}>
-      {/* Sidebar */}
-      <aside style={sidebarStyle}>
-        <div>
+    <div style={{ minHeight: '100vh', backgroundColor: color.page.primary, display: 'flex', flexDirection: isMobile ? 'column' : 'row' }}>
+      {/* Sidebar — hidden on mobile */}
+      {!isMobile && (
+        <aside style={sidebarStyle}>
+          <div>
+            <Image
+              src="/images/brik-logo-white.svg"
+              alt="Brik Designs"
+              width={100}
+              height={35}
+              priority
+              style={{ marginBottom: space.xl }}
+              onError={(e) => {
+                (e.target as HTMLImageElement).src = '/images/brik-logo.svg';
+              }}
+            />
+            <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.muted, margin: `0 0 ${space.lg}` }}>
+              Proposal for {proposal.companies.name}
+            </p>
+            <nav style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
+              {sections.map((section, index) => {
+                const isActive = index === activeSection;
+                const isVisited = index <= highestVisited;
+                const canNavigate = isVisited && !isActive;
+                return (
+                  <button
+                    key={section.type}
+                    onClick={() => canNavigate && goToSection(index)}
+                    aria-disabled={!canNavigate && !isActive}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: gap.md,
+                      padding: `${space.xs} ${space.md}`,
+                      background: 'none',
+                      border: 'none',
+                      borderLeft: isActive ? `3px solid ${color.brand.primary}` : '3px solid transparent',
+                      cursor: canNavigate ? 'pointer' : 'default',
+                      textAlign: 'left',
+                      fontFamily: font.family.body,
+                      fontSize: font.size.body.sm,
+                      fontWeight: isActive ? font.weight.semibold : font.weight.regular,
+                      color: isActive ? color.brand.primary : isVisited ? color.text.secondary : color.text.muted,
+                      opacity: isVisited || isActive ? 1 : 0.5,
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <span style={{
+                      width: '22px',
+                      height: '22px',
+                      borderRadius: border.radius.circle,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: font.size.body.tiny,
+                      fontWeight: font.weight.semibold,
+                      backgroundColor: isActive ? color.brand.primary : isVisited ? color.border.muted : color.border.secondary,
+                      color: isActive ? color.text.inverse : color.text.muted,
+                      flexShrink: 0,
+                    }}>
+                      {index + 1}
+                    </span>
+                    {section.title}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {proposal.valid_until && (
+            <p style={{ fontFamily: font.family.body, fontSize: font.size.body.tiny, color: color.text.muted, marginTop: 'auto' }}>
+              Valid until {new Date(proposal.valid_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            </p>
+          )}
+        </aside>
+      )}
+
+      {/* Mobile header */}
+      {isMobile && (
+        <div style={{ padding: `${space.lg} ${space.md}`, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Image
             src="/images/brik-logo-white.svg"
             alt="Brik Designs"
-            width={100}
-            height={35}
+            width={80}
+            height={28}
             priority
-            style={{ marginBottom: space.xl }}
             onError={(e) => {
               (e.target as HTMLImageElement).src = '/images/brik-logo.svg';
             }}
           />
-          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.xs, color: dk.textMuted, margin: `0 0 ${space.lg}` }}>
-            Proposal for {proposal.companies.name}
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.muted, margin: 0 }}>
+            {proposal.companies.name}
           </p>
-          <nav style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
-            {sections.map((section, index) => {
-              const isActive = index === activeSection;
-              return (
-                <button
-                  key={section.type}
-                  onClick={() => setActiveSection(index)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: gap.md,
-                    padding: `${space.xs} ${space.md}`,
-                    background: 'none',
-                    border: 'none',
-                    borderLeft: isActive ? `3px solid ${dk.brand}` : '3px solid transparent',
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontFamily: font.family.body,
-                    fontSize: font.size.body.sm,
-                    fontWeight: isActive ? font.weight.semibold : font.weight.regular,
-                    color: isActive ? dk.brand : dk.textSecondary,
-                    transition: 'all 0.15s ease',
-                  }}
-                >
-                  <span style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: border.radius.circle,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontSize: font.size.body.tiny,
-                    fontWeight: font.weight.semibold,
-                    backgroundColor: isActive ? dk.brand : dk.border,
-                    color: isActive ? dk.text : dk.textMuted,
-                    flexShrink: 0,
-                  }}>
-                    {index + 1}
-                  </span>
-                  {section.title}
-                </button>
-              );
-            })}
-          </nav>
         </div>
-
-        {proposal.valid_until && (
-          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.tiny, color: dk.textMuted, marginTop: 'auto' }}>
-            Valid until {new Date(proposal.valid_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-          </p>
-        )}
-      </aside>
+      )}
 
       {/* Main content */}
-      <main style={mainStyle}>
-        {/* Page dots */}
-        <div style={{ display: 'flex', justifyContent: 'center', gap: gap.md, marginBottom: space.xl }}>
-          {sections.map((_, index) => (
-            <button
-              key={index}
-              onClick={() => setActiveSection(index)}
-              style={{
-                width: index === activeSection ? '24px' : '8px',
-                height: '8px',
-                borderRadius: border.radius.sm,
-                backgroundColor: index === activeSection ? dk.brand : dk.border,
-                border: 'none',
-                cursor: 'pointer',
-                transition: 'all 0.2s ease',
-                padding: 0,
-              }}
-              aria-label={`Go to section ${index + 1}`}
-            />
-          ))}
+      <main style={isMobile ? mainMobileStyle : mainStyle}>
+        {/* Page dots — linear: only visited dots are clickable */}
+        <div style={{ display: 'flex', justifyContent: 'center', gap: gap.md, marginBottom: isMobile ? space.lg : space.xl }}>
+          {sections.map((_, index) => {
+            const isActive = index === activeSection;
+            const isVisited = index <= highestVisited;
+            const canNavigate = isVisited && !isActive;
+            return (
+              <button
+                key={index}
+                onClick={() => canNavigate && goToSection(index)}
+                style={{
+                  width: isActive ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: border.radius.sm,
+                  backgroundColor: isActive ? color.brand.primary : isVisited ? color.border.muted : color.border.secondary,
+                  border: 'none',
+                  cursor: canNavigate ? 'pointer' : 'default',
+                  transition: 'all 0.2s ease',
+                  padding: 0,
+                }}
+                aria-label={`Go to section ${index + 1}`}
+                aria-disabled={!canNavigate}
+              />
+            );
+          })}
         </div>
 
         {/* Content card */}
-        <div style={cardStyle}>
-          <h1 style={{ fontFamily: font.family.heading, fontSize: font.size.heading.medium, fontWeight: font.weight.semibold, color: dk.text, margin: `0 0 ${space.lg}` }}>
+        <div style={isMobile ? cardMobileStyle : cardStyle}>
+          <h1 style={{ fontFamily: font.family.heading, fontSize: isMobile ? font.size.heading.small : font.size.heading.medium, fontWeight: font.weight.semibold, color: color.text.primary, margin: `0 0 ${space.lg}` }}>
             {currentSection.title}
           </h1>
 
           {currentSection.type === 'fee_summary' ? (
-            <FeeSummaryContent items={items} total={proposal.total_amount_cents} />
+            <FeeSummaryContent
+              items={items}
+              total={proposal.total_amount_cents}
+              accepted={accepted}
+              isExpired={!!isExpired}
+              email={email}
+              setEmail={setEmail}
+              error={error}
+              accepting={accepting}
+              onAccept={handleAccept}
+            />
           ) : (
             <div style={proseStyle}>
               <ReactMarkdown
                 components={{
-                  h2: ({ children }) => <h2 style={{ fontSize: font.size.body.lg, fontWeight: font.weight.semibold, color: dk.text, margin: `${space.lg} 0 ${space.sm}` }}>{children}</h2>,
-                  h3: ({ children }) => <h3 style={{ fontSize: font.size.body.md, fontWeight: font.weight.semibold, color: dk.text, margin: `${space.lg} 0 ${space.tiny}` }}>{children}</h3>,
-                  p: ({ children }) => <p style={{ margin: `0 0 ${space.sm}`, lineHeight: font.lineHeight.relaxed, color: dk.textSecondary }}>{children}</p>,
-                  ul: ({ children }) => <ul style={{ paddingLeft: space.lg, margin: `0 0 ${space.sm}`, color: dk.textSecondary }}>{children}</ul>,
-                  ol: ({ children }) => <ol style={{ paddingLeft: space.lg, margin: `0 0 ${space.sm}`, color: dk.textSecondary }}>{children}</ol>,
-                  li: ({ children }) => <li style={{ marginBottom: gap.sm, lineHeight: font.lineHeight.normal }}>{children}</li>,
-                  strong: ({ children }) => <strong style={{ fontWeight: font.weight.semibold, color: dk.text }}>{children}</strong>,
-                  hr: () => <hr style={{ border: 'none', borderTop: `${border.width.sm} solid ${dk.border}`, margin: `${space.lg} 0` }} />,
+                  h2: ({ children }) => <h2 style={{ fontSize: font.size.body.lg, fontWeight: font.weight.semibold, color: color.text.primary, margin: `${space.lg} 0 ${space.sm}` }}>{children}</h2>,
+                  h3: ({ children }) => <h3 style={{ fontSize: font.size.body.md, fontWeight: font.weight.semibold, color: color.text.primary, margin: `${space.lg} 0 ${space.tiny}` }}>{children}</h3>,
+                  p: ({ children }) => <p style={{ margin: `0 0 ${space.sm}`, lineHeight: font.lineHeight.relaxed, color: color.text.primary }}>{children}</p>,
+                  ul: ({ children }) => <ul style={{ paddingLeft: space.lg, margin: `0 0 ${space.sm}`, color: color.text.primary, listStyleType: 'disc' }}>{children}</ul>,
+                  ol: ({ children }) => <ol style={{ paddingLeft: space.lg, margin: `0 0 ${space.sm}`, color: color.text.primary, listStyleType: 'decimal' }}>{children}</ol>,
+                  li: ({ children }) => <li style={{ marginBottom: gap.sm, lineHeight: font.lineHeight.normal, color: color.text.primary }}>{children}</li>,
+                  strong: ({ children }) => <strong style={{ fontWeight: font.weight.semibold, color: color.text.primary }}>{children}</strong>,
+                  hr: () => <hr style={{ border: 'none', borderTop: `${border.width.sm} solid ${color.border.secondary}`, margin: `${space.lg} 0` }} />,
                 }}
               >
                 {currentSection.content || ''}
@@ -285,40 +412,28 @@ export default function PublicProposalPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: space.lg }}>
           <div>
             {activeSection > 0 && (
-              <Button variant="outline" size="md" onClick={() => setActiveSection(activeSection - 1)}>
+              <Button variant="secondary" size="md" onClick={() => goToSection(activeSection - 1)}>
                 Previous
               </Button>
             )}
           </div>
           <div>
-            {activeSection < sections.length - 1 ? (
-              <Button variant="primary" size="md" onClick={() => setActiveSection(activeSection + 1)}>
+            {!isLastSection ? (
+              <Button variant="primary" size="md" onClick={() => goToSection(activeSection + 1)}>
                 Next
               </Button>
-            ) : !accepted && !isExpired ? (
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: space.sm }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: space.sm }}>
-                  <TextInput
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                  <Button variant="primary" size="md" onClick={handleAccept} disabled={accepting}>
-                    {accepting ? 'Accepting...' : 'Accept Proposal'}
-                  </Button>
-                </div>
-                {error && (
-                  <p style={{ color: color.system.red, fontSize: font.size.body.xs, fontFamily: font.family.body, margin: 0 }}>
-                    {error}
-                  </p>
-                )}
-              </div>
             ) : accepted ? (
               <Badge status="positive">Accepted</Badge>
             ) : null}
           </div>
         </div>
+
+        {/* Mobile: valid until */}
+        {isMobile && proposal.valid_until && (
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.muted, textAlign: 'center', marginTop: space.xl }}>
+            Valid until {new Date(proposal.valid_until).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          </p>
+        )}
       </main>
     </div>
   );
@@ -326,7 +441,17 @@ export default function PublicProposalPage() {
 
 // --- Fee Summary Section ---
 
-function FeeSummaryContent({ items, total }: { items: ProposalItem[]; total: number }) {
+function FeeSummaryContent({ items, total, accepted, isExpired, email, setEmail, error, accepting, onAccept }: {
+  items: ProposalItem[];
+  total: number;
+  accepted: boolean;
+  isExpired: boolean;
+  email: string;
+  setEmail: (v: string) => void;
+  error: string;
+  accepting: boolean;
+  onAccept: () => void;
+}) {
   return (
     <div>
       {items.map((item, index) => (
@@ -337,34 +462,77 @@ function FeeSummaryContent({ items, total }: { items: ProposalItem[]; total: num
             justifyContent: 'space-between',
             alignItems: 'flex-start',
             padding: `${space.md} 0`,
-            borderBottom: index < items.length - 1 ? `${border.width.sm} solid ${dk.border}` : undefined,
+            borderBottom: index < items.length - 1 ? `${border.width.sm} solid ${color.border.secondary}` : undefined,
           }}
         >
-          <div style={{ flex: 1 }}>
-            <p style={{ fontFamily: font.family.label, fontWeight: font.weight.medium, fontSize: font.size.body.sm, color: dk.text, margin: 0 }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{ fontFamily: font.family.label, fontWeight: font.weight.medium, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
               {item.name}
-              {item.quantity > 1 && <span style={{ color: dk.textMuted, fontWeight: font.weight.regular }}> x{item.quantity}</span>}
+              {item.quantity > 1 && <span style={{ color: color.text.muted, fontWeight: font.weight.regular }}> x{item.quantity}</span>}
             </p>
             {item.description && (
-              <p style={{ fontFamily: font.family.body, color: dk.textMuted, fontSize: font.size.body.xs, margin: `${gap.xs} 0 0` }}>
+              <p style={{ fontFamily: font.family.body, color: color.text.secondary, fontSize: font.size.body.sm, margin: `${gap.xs} 0 0` }}>
                 {item.description}
               </p>
             )}
           </div>
-          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, fontWeight: font.weight.medium, color: dk.text, margin: 0, whiteSpace: 'nowrap' }}>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, fontWeight: font.weight.medium, color: color.text.primary, margin: 0, whiteSpace: 'nowrap', marginLeft: space.md }}>
             {formatCurrency(item.unit_price_cents * item.quantity)}
           </p>
         </div>
       ))}
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: space.md, marginTop: space.tiny, borderTop: `${border.width.md} solid ${dk.borderSubtle}` }}>
-        <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: dk.text, margin: 0 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: space.md, marginTop: space.tiny, borderTop: `${border.width.md} solid ${color.border.muted}` }}>
+        <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: color.text.primary, margin: 0 }}>
           Total
         </p>
-        <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: dk.brand, margin: 0 }}>
+        <p style={{ fontFamily: font.family.heading, fontWeight: font.weight.semibold, fontSize: font.size.body.lg, color: color.brand.primary, margin: 0 }}>
           {formatCurrency(total)}
         </p>
       </div>
+
+      {/* Accept section — inside the card */}
+      {!accepted && !isExpired && (
+        <div style={{ borderTop: `${border.width.sm} solid ${color.border.secondary}`, marginTop: space.lg, paddingTop: space.lg }}>
+          <TextInput
+            label="Email address"
+            type="email"
+            placeholder="you@company.com"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            fullWidth
+            required
+          />
+          {error && (
+            <p style={{ color: color.system.red, fontSize: font.size.body.sm, fontFamily: font.family.body, margin: `${gap.sm} 0 0` }}>
+              {error}
+            </p>
+          )}
+          <div style={{ marginTop: space.md }}>
+            <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.secondary, margin: `0 0 ${space.sm}` }}>
+              By clicking Accept, you agree to the scope and pricing outlined in this proposal.
+            </p>
+            <Button variant="primary" size="md" loading={accepting} onClick={onAccept}>
+              Accept Proposal
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {accepted && (
+        <div style={{ borderTop: `${border.width.sm} solid ${color.border.secondary}`, marginTop: space.lg, paddingTop: space.lg }}>
+          <Badge status="positive">Accepted</Badge>
+        </div>
+      )}
+
+      {isExpired && !accepted && (
+        <div style={{ borderTop: `${border.width.sm} solid ${color.border.secondary}`, marginTop: space.lg, paddingTop: space.lg }}>
+          <Badge status="warning">Expired</Badge>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.secondary, margin: `${space.sm} 0 0` }}>
+            This proposal has expired. Please contact us for an updated proposal.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
@@ -487,7 +655,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
               </p>
               <div style={{ maxWidth: '320px', margin: `0 auto ${space.md}` }}>
                 <TextInput
-                  label="Your Email"
+                  label="Email address"
                   type="email"
                   placeholder="you@company.com"
                   value={email}
@@ -501,14 +669,14 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
                   {error}
                 </p>
               )}
-              <Button variant="primary" size="md" onClick={onAccept} disabled={accepting}>
-                {accepting ? 'Accepting...' : 'Accept Proposal'}
+              <Button variant="primary" size="md" loading={accepting} onClick={onAccept}>
+                Accept Proposal
               </Button>
             </>
           )}
         </div>
 
-        <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, fontSize: font.size.body.xs, marginTop: space.xl }}>
+        <p style={{ ...bodyStyle, textAlign: 'center', color: color.text.muted, fontSize: font.size.body.sm, marginTop: space.xl }}>
           Powered by Brik Designs
         </p>
       </div>
@@ -530,7 +698,7 @@ const sidebarStyle: React.CSSProperties = {
   padding: `${space.xl} ${space.lg}`,
   display: 'flex',
   flexDirection: 'column',
-  borderRight: `${border.width.sm} solid ${dk.surface}`,
+  borderRight: `${border.width.sm} solid ${color.surface.secondary}`,
   position: 'sticky',
   top: 0,
   height: '100vh',
@@ -544,11 +712,24 @@ const mainStyle: React.CSSProperties = {
   margin: '0 auto',
 };
 
+const mainMobileStyle: React.CSSProperties = {
+  flex: 1,
+  padding: `${space.md} ${space.md} ${space.xl}`,
+  maxWidth: '100%',
+};
+
 const cardStyle: React.CSSProperties = {
-  backgroundColor: dk.surface,
-  border: `${border.width.sm} solid ${dk.border}`,
+  backgroundColor: color.surface.secondary,
+  border: `${border.width.sm} solid ${color.border.secondary}`,
   borderRadius: border.radius.lg,
   padding: `${space.xl} ${space.lg}`,
+};
+
+const cardMobileStyle: React.CSSProperties = {
+  backgroundColor: color.surface.secondary,
+  border: `${border.width.sm} solid ${color.border.secondary}`,
+  borderRadius: border.radius.md,
+  padding: `${space.lg} ${space.md}`,
 };
 
 const proseStyle: React.CSSProperties = {

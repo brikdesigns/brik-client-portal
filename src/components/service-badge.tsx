@@ -40,9 +40,14 @@ const serviceIconOverrides: Record<string, string> = {
   'Social Media Graphic Designs': 'marketing-social-graphics',
   'Swag and Merchandise Design': 'marketing-swag',
   'Website Experience Mapping': 'website-experience',
+  'Website Maintenance': 'marketing-web-design',
+  'SEO Optimization': 'marketing-consulting',
+  'Google Business Profile Management': 'marketing-consulting',
+  'Social Media Management': 'marketing-social-graphics',
 
   // Service (Back Office) category mappings
   'Automated Workflow and AI Integration': 'back-office-automation-ai',
+  'Back Office Support': 'back-office-business-solutions',
   'CRM Setup and Data Cleanup': 'back-office-crm-data',
   'Customer Journey Mapping': 'back-office-journey-mapping',
   'Digital File Organization': 'back-office-digital-file-organization',

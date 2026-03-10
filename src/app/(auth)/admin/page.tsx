@@ -8,7 +8,7 @@ import { heading } from '@/lib/styles';
 import { color, gap, space } from '@/lib/tokens';
 
 export default async function AdminOverviewPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const [leadsRes, clientsRes, projectsRes, invoicesRes] = await Promise.all([
     supabase.from('companies').select('id', { count: 'exact', head: true }).eq('type', 'lead'),
@@ -77,8 +77,8 @@ export default async function AdminOverviewPage() {
           {
             header: '',
             accessor: (p) => (
-              <Button variant="primary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
-                View Details
+              <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                View
               </Button>
             ),
             style: { textAlign: 'right' },

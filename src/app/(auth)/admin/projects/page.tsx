@@ -7,7 +7,7 @@ import { ProjectsFilterTable, type ProjectRow } from '@/components/projects-filt
 import { space } from '@/lib/tokens';
 
 export default async function AdminProjectsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: projects } = await supabase
     .from('projects')

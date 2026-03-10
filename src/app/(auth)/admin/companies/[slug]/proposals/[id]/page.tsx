@@ -23,7 +23,7 @@ interface Props {
 
 export default async function ProposalDetailPage({ params }: Props) {
   const { slug, id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch proposal with company, line items, and service categories
   const { data: proposal, error } = await supabase
@@ -109,6 +109,7 @@ export default async function ProposalDetailPage({ params }: Props) {
               status={proposal.status}
               shareableLink={shareableLink}
               clientSlug={slug}
+              companyName={company.name}
             />
           </div>
         }

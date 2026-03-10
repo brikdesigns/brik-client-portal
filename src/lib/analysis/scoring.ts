@@ -1,9 +1,9 @@
 /**
  * Score calculation, tier assignment, and cascading recalculation.
  *
- * Tiers:
- * - Pass: >= 70% of max score
- * - Fair: 40-69% of max score
+ * Tiers (these ARE the status now — no separate status field):
+ * - Pass: >= 80% of max score
+ * - Fair (Needs Attention): 40-79% of max score
  * - Fail: < 40% of max score
  */
 
@@ -33,23 +33,22 @@ export function tierLabel(tier: ScoreTier): string {
 }
 
 /**
- * Recalculate a single report's score from its items, then update the row.
- * Works with both browser and server Supabase clients.
+ * Recalculate a single report's score and tier from its items.
+ * Only items with a non-null score contribute to the total.
+ * Tier is set as soon as any item is scored; null if no items scored.
  */
 export async function recalculateReportScore(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: SupabaseClient<any, any, any>,
   reportId: string,
 ): Promise<void> {
-  // Fetch all items for this report
   const { data: items } = await supabase
     .from('report_items')
-    .select('score, status')
+    .select('score')
     .eq('report_id', reportId);
 
   if (!items || items.length === 0) return;
 
-  // Fetch the report's max_score
   const { data: report } = await supabase
     .from('reports')
     .select('max_score')
@@ -61,31 +60,20 @@ export async function recalculateReportScore(
   const maxScore = report.max_score ?? 0;
   const scoredItems = items.filter((i) => i.score !== null);
   const totalScore = scoredItems.reduce((sum, i) => sum + (i.score ?? 0), 0);
-  const allScored = scoredItems.length === items.length;
   const noneScored = scoredItems.length === 0;
-
-  // Determine report status
-  let status: string;
-  if (allScored) {
-    status = 'completed';
-  } else if (noneScored) {
-    status = 'draft';
-  } else {
-    status = 'in_progress';
-  }
 
   const score = noneScored ? null : totalScore;
   const tier = score !== null && maxScore > 0 ? calculateTier(score, maxScore) : null;
 
   await supabase
     .from('reports')
-    .update({ score, tier, status })
+    .update({ score, tier })
     .eq('id', reportId);
 }
 
 /**
- * Recalculate a report set's overall score from all its reports, then update the row.
- * This fixes the bug where only completed reports' max_score was counted.
+ * Recalculate a report set's overall score and tier from all its reports.
+ * All reports' max_score counts toward the denominator (not just scored ones).
  */
 export async function recalculateReportSetScore(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -94,24 +82,18 @@ export async function recalculateReportSetScore(
 ): Promise<void> {
   const { data: reports } = await supabase
     .from('reports')
-    .select('score, max_score, status')
+    .select('score, max_score')
     .eq('report_set_id', reportSetId);
 
   if (!reports || reports.length === 0) return;
 
-  // Sum ALL reports' max_score (not just completed ones — this is the fix)
   const overallMaxScore = reports.reduce((sum, r) => sum + (r.max_score ?? 0), 0);
-
-  // Sum scores from reports that have scores
   const scoredReports = reports.filter((r) => r.score !== null);
   const overallScore = scoredReports.reduce((sum, r) => sum + (r.score ?? 0), 0);
 
-  const allCompleted = reports.every((r) => r.status === 'completed');
   const overallTier = scoredReports.length > 0 && overallMaxScore > 0
     ? calculateTier(overallScore, overallMaxScore)
     : null;
-
-  const setStatus = allCompleted ? 'completed' : 'needs_review';
 
   await supabase
     .from('report_sets')
@@ -119,7 +101,6 @@ export async function recalculateReportSetScore(
       overall_score: scoredReports.length > 0 ? overallScore : null,
       overall_max_score: overallMaxScore,
       overall_tier: overallTier,
-      status: setStatus,
     })
     .eq('id', reportSetId);
 }

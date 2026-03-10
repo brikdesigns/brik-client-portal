@@ -194,7 +194,7 @@ export function EditableReportTable({
     fontWeight: font.weight.semibold,
     color: color.text.secondary,
     textAlign: 'left',
-    borderBottom: `2px solid ${color.border.primary}`,
+    borderBottom: `2px solid ${color.border.muted}`,
     fontFamily: font.family.body,
     whiteSpace: 'nowrap',
   };
@@ -203,13 +203,24 @@ export function EditableReportTable({
     padding: `${space.sm} ${space.sm}`,
     fontSize: font.size.body.sm,
     color: color.text.primary,
-    borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+    borderBottom: `${border.width.lg} solid ${color.border.muted}`,
     fontFamily: font.family.body,
     verticalAlign: 'top',
   };
 
   return (
     <div>
+      <h3
+        style={{
+          fontFamily: font.family.heading,
+          fontSize: font.size.heading.small,
+          fontWeight: font.weight.semibold,
+          color: color.text.primary,
+          marginBottom: space.md,
+        }}
+      >
+        Audit details
+      </h3>
       <div style={{ overflowX: 'auto' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
           <thead>
@@ -282,7 +293,7 @@ export function EditableReportTable({
                         colSpan={columns.length + 1}
                         style={{
                           padding: `${space.xs} ${space.sm} ${space.md}`,
-                          borderBottom: `${border.width.lg} solid ${color.border.primary}`,
+                          borderBottom: `${border.width.lg} solid ${color.border.muted}`,
                           background: color.background.secondary,
                         }}
                       >

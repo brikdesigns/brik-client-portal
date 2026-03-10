@@ -6,6 +6,11 @@ import InvoiceDueEmail from '@/emails/invoice-due';
 import PaymentReceivedEmail from '@/emails/payment-received';
 import ProjectUpdateEmail from '@/emails/project-update';
 import NewsletterEmail from '@/emails/newsletter';
+import AgreementSentEmail from '@/emails/agreement-sent';
+import AgreementSignedEmail from '@/emails/agreement-signed';
+import ProposalAcceptedEmail from '@/emails/proposal-accepted';
+import AnalysisCompleteEmail from '@/emails/analysis-complete';
+import WelcomeToBrikEmail from '@/emails/welcome-to-brik';
 
 function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
@@ -181,7 +186,7 @@ export async function sendProposalEmail({
   const { data, error } = await getResend().emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `${companyName} — Your proposal from Brik Designs is ready`,
+    subject: 'Brik Designs sent you a proposal',
     react: ProposalSentEmail({
       recipientName,
       companyName,
@@ -230,6 +235,186 @@ export async function sendNewsletterEmail({
 
   if (error) {
     console.error('Failed to send newsletter email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Agreement sent (to client)
+// ---------------------------------------------------------------------------
+
+export async function sendAgreementEmail({
+  to,
+  recipientName,
+  companyName,
+  agreementTitle,
+  agreementUrl,
+}: {
+  to: string;
+  recipientName?: string;
+  companyName: string;
+  agreementTitle: string;
+  agreementUrl: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `${companyName} — Your agreement from Brik Designs is ready to sign`,
+    react: AgreementSentEmail({
+      recipientName,
+      companyName,
+      agreementTitle,
+      agreementUrl,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send agreement email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Agreement signed (admin notification)
+// ---------------------------------------------------------------------------
+
+export async function sendAgreementSignedEmail({
+  to,
+  companyName,
+  agreementTitle,
+  signedByName,
+  signedByEmail,
+  signedAt,
+  companySlug,
+}: {
+  to: string;
+  companyName: string;
+  agreementTitle: string;
+  signedByName: string;
+  signedByEmail: string;
+  signedAt: string;
+  companySlug: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Agreement signed: ${companyName} — ${agreementTitle}`,
+    react: AgreementSignedEmail({
+      companyName,
+      agreementTitle,
+      signedByName,
+      signedByEmail,
+      signedAt,
+      companySlug,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send agreement signed email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Proposal accepted (admin notification)
+// ---------------------------------------------------------------------------
+
+export async function sendProposalAcceptedEmail({
+  to,
+  recipientName,
+  companyName,
+  companySlug,
+  proposalId,
+}: {
+  to: string;
+  recipientName?: string;
+  companyName: string;
+  companySlug: string;
+  proposalId: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Proposal signed: ${companyName}`,
+    react: ProposalAcceptedEmail({
+      recipientName,
+      companyName,
+      companySlug,
+      proposalId,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send proposal accepted email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Analysis complete (admin notification)
+// ---------------------------------------------------------------------------
+
+export async function sendAnalysisCompleteEmail({
+  to,
+  recipientName,
+  companyName,
+  companySlug,
+}: {
+  to: string;
+  recipientName?: string;
+  companyName: string;
+  companySlug: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: `Marketing analysis is ready for ${companyName}`,
+    react: AnalysisCompleteEmail({
+      recipientName,
+      companyName,
+      companySlug,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send analysis complete email:', error);
+    throw error;
+  }
+  return data;
+}
+
+// ---------------------------------------------------------------------------
+// Welcome to Brik (sent to prospect on proposal acceptance)
+// ---------------------------------------------------------------------------
+
+export async function sendWelcomeToBrikEmail({
+  to,
+  recipientName,
+  companyName,
+  setupUrl,
+}: {
+  to: string;
+  recipientName?: string;
+  companyName: string;
+  setupUrl?: string;
+}) {
+  const { data, error } = await getResend().emails.send({
+    from: FROM_EMAIL,
+    to,
+    subject: 'Welcome to Brik!',
+    react: WelcomeToBrikEmail({
+      recipientName,
+      companyName,
+      setupUrl,
+    }),
+  });
+
+  if (error) {
+    console.error('Failed to send welcome email:', error);
     throw error;
   }
   return data;

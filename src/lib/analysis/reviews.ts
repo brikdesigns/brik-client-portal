@@ -1,9 +1,14 @@
 /**
  * Automated online reviews/listings analysis.
  *
- * Checks listing platforms for the client's business. Uses Google Places API
- * and Yelp Fusion API when keys are available; generates search URLs for
- * platforms without API access.
+ * Checks listing platforms for the client's business:
+ * - Google: Google Places API (text search)
+ * - Yelp: Yelp Fusion API (business search)
+ * - Apple Maps: Google Places as proxy (if on Google, almost certainly
+ *   on Apple Maps too) with a direct Apple Maps link
+ * - Healthgrades, WebMD, Vitals, Facebook: Serper.dev (Google Search API)
+ *   for site-scoped searches. 2,500 free queries, no credit card.
+ *   Falls back to manual verification links when not configured.
  *
  * Matches the Notion "Online Listings & Reviews" database schema:
  * - Score: 1 (listed) or 0 (not listed)
@@ -37,25 +42,14 @@ export async function analyzeReviews(
         case 'Healthgrades':
         case 'WebMD':
         case 'Vitals':
-          result = await scrapeDirectoryListing(
-            platform,
-            buildGenericSearchUrl(platform, clientName, address),
-            clientName,
-          );
-          break;
         case 'Facebook':
-          result = await scrapeFacebook(clientName, address);
+          result = await analyzeViaSiteSearch(platform, clientName, address);
           break;
         case 'Apple Maps':
-          result = generatePlatformFallback(
-            'Apple Maps',
-            clientName,
-            address,
-            'Apple Maps has no public search API.',
-          );
+          result = await analyzeAppleMaps(clientName, address);
           break;
         default:
-          result = generateSearchUrl(platform, clientName, address);
+          result = await analyzeViaSiteSearch(platform, clientName, address);
           break;
       }
     } catch {
@@ -65,7 +59,7 @@ export async function analyzeReviews(
         score: null,
         feedback_summary: `Analysis failed for ${platform}.`,
         notes: null,
-        metadata: { searchUrl: buildGenericSearchUrl(platform, clientName, address) },
+        metadata: { searchUrl: buildPlatformSearchUrl(platform, clientName, address) },
       };
     }
 
@@ -131,7 +125,7 @@ async function analyzeGoogle(
       notes: null,
       metadata: {
         name_on_listing: place.name ?? '',
-        phone_listed: '', // Not in Text Search — would need Place Details
+        phone_listed: '',
         address_listed: place.formatted_address ?? '',
         rating: place.rating ?? null,
         total_reviews: place.user_ratings_total ?? null,
@@ -237,44 +231,106 @@ async function analyzeYelp(
   };
 }
 
-// ── Directory scraping (Healthgrades, WebMD, Vitals) ─────────────────
+// ── Serper.dev (Google Search API) for platforms without native APIs ─────
 
-const SCRAPE_HEADERS = {
-  'User-Agent':
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-  Accept: 'text/html,application/xhtml+xml',
-  'Accept-Language': 'en-US,en;q=0.9',
+const PLATFORM_DOMAINS: Record<string, string> = {
+  'Healthgrades': 'healthgrades.com',
+  'WebMD': 'doctor.webmd.com',
+  'Vitals': 'vitals.com',
+  'Facebook': 'facebook.com',
+  'Zillow': 'zillow.com',
+  'Realtor.com': 'realtor.com',
+  'TripAdvisor': 'tripadvisor.com',
+  'Airbnb': 'airbnb.com',
+  'Vrbo': 'vrbo.com',
+  'Booking.com': 'booking.com',
 };
 
 /**
- * Attempt to fetch a directory search page and determine if the business
- * is listed by looking for the full business name (or significant phrases)
- * in the returned HTML. Falls back gracefully if the request fails or the
- * site blocks automated access.
+ * Check if a business is listed on a platform using Google search via Serper.dev.
+ *
+ * Serper.dev provides Google Search results as JSON. Free tier: 2,500 queries
+ * (no credit card, no subscription). Supports site: operator for domain-scoped
+ * searches. Falls back to manual verification links when not configured.
+ *
+ * https://serper.dev
  */
-async function scrapeDirectoryListing(
+async function analyzeViaSiteSearch(
   platform: string,
-  searchUrl: string,
   clientName: string,
+  address: string | null,
 ): Promise<WebsiteCheckResult> {
+  const domain = PLATFORM_DOMAINS[platform];
+  const searchUrl = buildPlatformSearchUrl(platform, clientName, address);
+
+  const serperKey = process.env.SERPER_API_KEY;
+  if (serperKey && domain) {
+    return analyzeWithSerper(platform, clientName, address, domain, serperKey, searchUrl);
+  }
+
+  return {
+    category: platform,
+    status: 'neutral',
+    score: null,
+    feedback_summary: `Could not auto-verify ${platform} listing.`,
+    notes: `Verify manually: ${searchUrl}`,
+    metadata: { searchUrl, needsManualVerification: true },
+  };
+}
+
+async function analyzeWithSerper(
+  platform: string,
+  clientName: string,
+  address: string | null,
+  domain: string,
+  apiKey: string,
+  fallbackUrl: string,
+): Promise<WebsiteCheckResult> {
+  // Extract city/state from address to scope results geographically
+  // Prevents matching same-name businesses in wrong locations
+  const locationHint = extractCityState(address);
+  const query = locationHint
+    ? `"${clientName}" ${locationHint} site:${domain}`
+    : `"${clientName}" site:${domain}`;
+
   try {
-    const res = await fetch(searchUrl, {
-      headers: SCRAPE_HEADERS,
+    const res = await fetch('https://google.serper.dev/search', {
+      method: 'POST',
+      headers: {
+        'X-API-KEY': apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ q: query, num: 3 }),
       signal: AbortSignal.timeout(10000),
-      redirect: 'follow',
     });
 
     if (!res.ok) {
-      return generatePlatformFallback(platform, clientName, null, `HTTP ${res.status}`);
+      return {
+        category: platform,
+        status: 'neutral',
+        score: null,
+        feedback_summary: `Search API error (HTTP ${res.status}).`,
+        notes: `Verify manually: ${fallbackUrl}`,
+        metadata: { searchUrl: fallbackUrl },
+      };
     }
 
-    const html = await res.text();
-    const found = businessNameInHtml(clientName, html);
+    const data = await res.json();
+    const results = data.organic ?? [];
 
-    if (found) {
-      // Try to extract rating/review count from the raw HTML
-      const rating = extractRating(html);
-      const reviewCount = extractReviewCount(html);
+    // Filter results by location — reject results clearly belonging to wrong state/city
+    const locationFiltered = address
+      ? results.filter((r: Record<string, string>) => isResultNearLocation(r, address))
+      : results;
+
+    if (locationFiltered.length > 0) {
+      const topResult = locationFiltered[0];
+      const snippet = topResult.snippet ?? '';
+      const title = topResult.title ?? '';
+      const rating = extractRatingFromSnippet(snippet);
+      const reviewCount = extractReviewCountFromSnippet(snippet);
+      const extractedAddr = extractAddressFromSnippet(snippet, title);
+      const extractedPhone = extractPhoneFromSnippet(snippet);
 
       return {
         category: platform,
@@ -283,13 +339,33 @@ async function scrapeDirectoryListing(
         feedback_summary: `Found on ${platform}.${rating ? ` Rating: ${rating}.` : ''}${reviewCount ? ` Reviews: ${reviewCount}.` : ''}`,
         notes: null,
         metadata: {
-          searchUrl,
-          automated: true,
-          name_on_listing: clientName,
-          phone_listed: '',
-          address_listed: '',
+          searchUrl: topResult.link ?? fallbackUrl,
+          name_on_listing: topResult.title ?? clientName,
+          phone_listed: extractedPhone,
+          address_listed: extractedAddr,
           ...(rating ? { rating } : {}),
           ...(reviewCount ? { total_reviews: reviewCount } : {}),
+          method: 'serper',
+          totalResults: results.length,
+          locationFilteredCount: locationFiltered.length,
+        },
+      };
+    }
+
+    // Had results but all were wrong location
+    if (results.length > 0 && locationFiltered.length === 0) {
+      return {
+        category: platform,
+        status: 'fail',
+        score: 0,
+        feedback_summary: `Found on ${platform} but listing is for a different location.`,
+        notes: `${results.length} result(s) found but none matched the expected location. Verify manually.`,
+        metadata: {
+          searchUrl: fallbackUrl,
+          method: 'serper',
+          totalResults: results.length,
+          locationFilteredCount: 0,
+          rejectedLocation: true,
         },
       };
     }
@@ -300,40 +376,131 @@ async function scrapeDirectoryListing(
       score: 0,
       feedback_summary: `Not found on ${platform}.`,
       notes: null,
-      metadata: { searchUrl, automated: true },
+      metadata: { searchUrl: fallbackUrl, method: 'serper', totalResults: 0 },
     };
   } catch {
-    return generatePlatformFallback(platform, clientName, null, 'Request timed out or was blocked');
+    return {
+      category: platform,
+      status: 'neutral',
+      score: null,
+      feedback_summary: `Search timed out for ${platform}.`,
+      notes: `Verify manually: ${fallbackUrl}`,
+      metadata: { searchUrl: fallbackUrl },
+    };
   }
 }
+
+// ── Apple Maps ─────────────────────────────────────────────────────────
 
 /**
- * Check if the business name (or a significant multi-word phrase) appears
- * in the HTML. Requires at least a 2-word consecutive match to avoid
- * false positives (e.g. "dental" appearing on a healthcare directory).
+ * Apple Maps has no public search API. We use Google Places as a proxy:
+ * if the business is on Google Maps, it's almost certainly on Apple Maps.
  */
-function businessNameInHtml(clientName: string, html: string): boolean {
-  const htmlLower = html.toLowerCase();
-  const nameLower = clientName.toLowerCase();
+async function analyzeAppleMaps(
+  clientName: string,
+  address: string | null,
+): Promise<WebsiteCheckResult> {
+  const apiKey = process.env.GOOGLE_PLACES_API_KEY;
+  const query = encodeURIComponent(clientName + (address ? ' ' + address : ''));
+  const appleMapsUrl = `https://maps.apple.com/?q=${query}`;
 
-  // Full name match — best signal
-  if (htmlLower.includes(nameLower)) return true;
-
-  // Try 2-word consecutive phrases from the name
-  const words = nameLower.split(/\s+/).filter((w) => w.length > 2);
-  if (words.length >= 2) {
-    for (let i = 0; i < words.length - 1; i++) {
-      const phrase = `${words[i]} ${words[i + 1]}`;
-      if (htmlLower.includes(phrase)) return true;
-    }
+  if (!apiKey) {
+    return {
+      category: 'Apple Maps',
+      status: 'neutral',
+      score: null,
+      feedback_summary: null,
+      notes: 'Apple Maps has no public API. Add GOOGLE_PLACES_API_KEY to infer listing.',
+      metadata: { searchUrl: appleMapsUrl, apiKeyMissing: true },
+    };
   }
 
-  return false;
+  const params = new URLSearchParams({
+    query: address ? `${clientName} ${address}` : clientName,
+    key: apiKey,
+  });
+
+  try {
+    const res = await fetch(
+      `https://maps.googleapis.com/maps/api/place/textsearch/json?${params}`,
+      { signal: AbortSignal.timeout(10000) },
+    );
+
+    if (res.ok) {
+      const data = await res.json();
+      if (data.results && data.results.length > 0) {
+        return {
+          category: 'Apple Maps',
+          status: 'pass',
+          score: 1,
+          feedback_summary: 'Business confirmed on Google Maps — Apple Maps listing inferred.',
+          notes: null,
+          metadata: {
+            searchUrl: appleMapsUrl,
+            method: 'google_places_proxy',
+            name_on_listing: data.results[0].name ?? '',
+            phone_listed: '',
+            address_listed: data.results[0].formatted_address ?? '',
+          },
+        };
+      }
+    }
+  } catch {
+    // Fall through to neutral
+  }
+
+  return {
+    category: 'Apple Maps',
+    status: 'neutral',
+    score: null,
+    feedback_summary: 'Could not verify Apple Maps listing.',
+    notes: `Open in Apple Maps: ${appleMapsUrl}`,
+    metadata: { searchUrl: appleMapsUrl },
+  };
 }
 
-function extractRating(html: string): number | null {
-  // Common patterns: "4.8 out of 5", "rating: 4.8", data-rating="4.8"
-  const match = html.match(
+// ── Helpers ─────────────────────────────────────────────────────────────
+
+/**
+ * Extract city and state from a US address string.
+ *
+ * Designed for addresses stored in our companies table, which follow
+ * standard US formats:
+ *   "1835 Madison St, Ste A, Clarksville, TN 37043"
+ *   "123 Main St, Nashville, TN 37201"
+ *   "Nashville, TN"
+ *
+ * Strategy: scan right-to-left for "City, ST ZIP" or "City, ST" pattern.
+ * The state+zip segment is always the LAST comma-separated part,
+ * and the city is always the part immediately before it.
+ */
+function extractCityState(address: string | null): string | null {
+  if (!address) return null;
+
+  const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+
+  // Last part should contain state abbreviation (and optional zip)
+  const lastPart = parts[parts.length - 1];
+  const stateMatch = lastPart.match(/^([A-Z]{2})\b/);
+  if (!stateMatch) return null;
+
+  const state = stateMatch[1];
+
+  // Second-to-last part is the city — validate it looks like a city name
+  // (letters, spaces, hyphens, periods — NOT numbers which indicate a street)
+  const cityCandidate = parts[parts.length - 2];
+  if (!cityCandidate || /^\d/.test(cityCandidate)) return null;
+
+  // Additional guard: city should be mostly alphabetical (reject "Ste A", "Suite 200")
+  const alphaRatio = cityCandidate.replace(/[^a-zA-Z]/g, '').length / cityCandidate.length;
+  if (alphaRatio < 0.7) return null;
+
+  return `${cityCandidate} ${state}`;
+}
+
+function extractRatingFromSnippet(snippet: string): number | null {
+  const match = snippet.match(
     /(?:rating|score|stars?)["\s:=]*(\d+\.?\d*)(?:\s*(?:out of|\/)\s*5)?/i,
   );
   if (match) {
@@ -343,8 +510,8 @@ function extractRating(html: string): number | null {
   return null;
 }
 
-function extractReviewCount(html: string): number | null {
-  const match = html.match(/(\d[\d,]*)\s*(?:reviews?|ratings?|patient\s*reviews?)/i);
+function extractReviewCountFromSnippet(snippet: string): number | null {
+  const match = snippet.match(/(\d[\d,]*)\s*(?:reviews?|ratings?|patient\s*reviews?)/i);
   if (match) {
     const val = parseInt(match[1].replace(/,/g, ''), 10);
     if (val > 0 && val < 1_000_000) return val;
@@ -352,90 +519,91 @@ function extractReviewCount(html: string): number | null {
   return null;
 }
 
-// ── Facebook ─────────────────────────────────────────────────────────
+/**
+ * Check if a Serper search result is geographically near the expected address.
+ *
+ * Strategy: extract state abbreviations from the result's title + snippet.
+ * If the result mentions a US state that doesn't match the company's state,
+ * reject it. This catches "Renew Dental, North Haven, CT" when we want TN.
+ *
+ * If no state can be determined from the result, we allow it (benefit of doubt).
+ */
+function isResultNearLocation(
+  result: Record<string, string>,
+  address: string,
+): boolean {
+  const expectedState = extractStateFromAddress(address);
+  if (!expectedState) return true; // Can't validate, allow it
 
-async function scrapeFacebook(
-  clientName: string,
-  address: string | null,
-): Promise<WebsiteCheckResult> {
-  // Facebook blocks unauthenticated search requests, but we can try
-  // fetching a likely page URL slug (e.g. /MemphisDentalStudio)
-  const slug = clientName.replace(/[^a-zA-Z0-9]/g, '');
-  const profileUrl = `https://www.facebook.com/${slug}`;
+  const expectedCity = extractCityFromAddress(address)?.toLowerCase();
 
-  try {
-    const res = await fetch(profileUrl, {
-      headers: SCRAPE_HEADERS,
-      signal: AbortSignal.timeout(8000),
-      redirect: 'follow',
-    });
+  const text = `${result.title ?? ''} ${result.snippet ?? ''}`;
 
-    if (res.ok) {
-      const html = await res.text();
-      // Facebook returns a page even for 404s — check for the business name
-      if (businessNameInHtml(clientName, html) && !html.includes('page_not_found')) {
-        return {
-          category: 'Facebook',
-          status: 'pass',
-          score: 1,
-          feedback_summary: 'Found on Facebook.',
-          notes: null,
-          metadata: {
-            searchUrl: profileUrl,
-            automated: true,
-            name_on_listing: clientName,
-            phone_listed: '',
-            address_listed: '',
-          },
-        };
-      }
-    }
-  } catch {
-    // Expected — Facebook often blocks server-side requests
+  // Look for "City, ST" patterns in the result text
+  const stateMatches = text.matchAll(/([A-Za-z\s.-]+),\s*([A-Z]{2})\b/g);
+  const foundStates = new Set<string>();
+  for (const m of stateMatches) {
+    foundStates.add(m[2]);
   }
 
-  return generatePlatformFallback('Facebook', clientName, address, 'Facebook requires authentication for search.');
+  // If we found state abbreviations in the result
+  if (foundStates.size > 0) {
+    // If our expected state is among them, it's a match
+    if (foundStates.has(expectedState)) return true;
+    // If only other states are mentioned, reject
+    return false;
+  }
+
+  // No state found in result — check if expected city name appears
+  if (expectedCity && text.toLowerCase().includes(expectedCity)) {
+    return true;
+  }
+
+  // Can't determine location from result, allow it (conservative)
+  return true;
 }
 
-// ── Fallback helpers ─────────────────────────────────────────────────
-
-/**
- * Produce a clear fallback result when automated analysis isn't possible.
- * Unlike the old "manual verification required" message, this includes
- * the reason and a direct search link.
- */
-function generatePlatformFallback(
-  platform: string,
-  clientName: string,
-  address: string | null,
-  reason: string,
-): WebsiteCheckResult {
-  const searchUrl = buildGenericSearchUrl(platform, clientName, address);
-  return {
-    category: platform,
-    status: 'neutral',
-    score: null,
-    feedback_summary: `Could not auto-verify ${platform} listing. ${reason}`,
-    notes: `Search manually: ${searchUrl}`,
-    metadata: {
-      searchUrl,
-      manualCheck: true,
-      name_on_listing: '',
-      phone_listed: '',
-      address_listed: '',
-    },
-  };
+/** Extract the 2-letter state code from a US address */
+function extractStateFromAddress(address: string | null): string | null {
+  if (!address) return null;
+  const parts = address.split(',').map((p) => p.trim());
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const match = parts[i].match(/^([A-Z]{2})\b/);
+    if (match) return match[1];
+  }
+  return null;
 }
 
-function generateSearchUrl(
-  platform: string,
-  clientName: string,
-  address: string | null,
-): WebsiteCheckResult {
-  return generatePlatformFallback(platform, clientName, address, 'No automated check available for this platform.');
+/** Extract the city name from a US address (part before state) */
+function extractCityFromAddress(address: string | null): string | null {
+  if (!address) return null;
+  const parts = address.split(',').map((p) => p.trim()).filter(Boolean);
+  if (parts.length < 2) return null;
+  // Find the part with the state, city is the one before it
+  for (let i = parts.length - 1; i >= 1; i--) {
+    if (/^[A-Z]{2}\b/.test(parts[i])) {
+      const city = parts[i - 1];
+      if (city && !/^\d/.test(city)) return city;
+    }
+  }
+  return null;
 }
 
-function buildGenericSearchUrl(platform: string, name: string, address: string | null): string {
+/** Try to extract a phone number from a search snippet */
+function extractPhoneFromSnippet(snippet: string): string {
+  const match = snippet.match(/\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  return match ? match[0] : '';
+}
+
+/** Try to extract an address from a search snippet/title */
+function extractAddressFromSnippet(snippet: string, title: string): string {
+  const text = `${title} ${snippet}`;
+  // Look for "123 Street Name, City, ST" pattern
+  const match = text.match(/\d{1,5}\s+[A-Za-z\s.]+(?:St|Ave|Blvd|Dr|Rd|Way|Ln|Ct|Pl|Pkwy|Hwy|Cir|Ter)\b[^,]*,\s*[A-Za-z\s]+,\s*[A-Z]{2}(?:\s+\d{5})?/i);
+  return match ? match[0].trim() : '';
+}
+
+function buildPlatformSearchUrl(platform: string, name: string, address: string | null): string {
   const query = encodeURIComponent(name + (address ? ' ' + address : ''));
 
   const urls: Record<string, string> = {

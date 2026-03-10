@@ -30,9 +30,6 @@ interface ProposalSectionsViewProps {
   hasSections: boolean;
 }
 
-function padSectionNumber(n: number): string {
-  return String(n).padStart(2, '0');
-}
 
 function renderSectionContent(
   section: ProposalSectionBase,
@@ -112,13 +109,13 @@ export function ProposalSectionsView({
           items={[
             ...sortedSections.map((section, index): AccordionItemData => ({
               id: section.type,
-              title: `${padSectionNumber(index + 1)}. ${section.title}`,
+              title: `${index + 1}. ${section.title}`,
               content: renderSectionContent(section, feeSummaryItems, totalAmountCents),
             })),
             ...(!sortedSections.some(s => s.type === 'fee_summary') && feeSummaryItems.length > 0
               ? [{
                   id: 'fee_summary',
-                  title: `${padSectionNumber(sortedSections.length + 1)}. Fee Summary`,
+                  title: `${sortedSections.length + 1}. Fee Summary`,
                   content: (
                     <FeeSummaryContent
                       items={feeSummaryItems}

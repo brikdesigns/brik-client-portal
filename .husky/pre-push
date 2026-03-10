@@ -1,6 +1,3 @@
-#!/usr/bin/env sh
-. "$(dirname -- "$0")/_/husky.sh"
-
 # Fail if package.json or lock file have uncommitted changes
 DIRTY_PKG=$(git diff --name-only -- package.json package-lock.json)
 if [ -n "$DIRTY_PKG" ]; then
@@ -11,5 +8,12 @@ if [ -n "$DIRTY_PKG" ]; then
 fi
 
 echo "🔍 Running clean build check before push..."
-rm -rf .next
-npm run build
+
+# Build into a separate directory so we don't destroy the running dev server's .next cache.
+# Previously: `rm -rf .next && npm run build` — this corrupted dev server state after every push.
+rm -rf .next-prepush
+trap 'rm -rf .next-prepush' EXIT
+
+NEXT_BUILD_OUTPUT_DIR=".next-prepush" npm run build
+
+echo "✅ Build passed (dev server cache untouched)"

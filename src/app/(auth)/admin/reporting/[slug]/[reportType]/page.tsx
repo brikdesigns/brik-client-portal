@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
-import { ReportStatusBadge } from '@/components/report-badges';
+import { ScoreTierBadge } from '@/components/report-badges';
 import { AnalyzeButton } from '@/components/analyze-button';
 import { ReportContent } from '@/components/report-content';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
+import { formatIndustry } from '@/lib/format';
 
 interface Props {
   params: Promise<{ slug: string; reportType: string }>;
@@ -13,7 +14,7 @@ interface Props {
 export default async function ReportDetailPage({ params }: Props) {
   const { slug, reportType } = await params;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch client
   const { data: client, error: clientError } = await supabase
@@ -38,7 +39,7 @@ export default async function ReportDetailPage({ params }: Props) {
   // Fetch the specific report
   const { data: report, error: reportError } = await supabase
     .from('reports')
-    .select('id, report_type, status, score, max_score, tier, opportunities_text, created_at')
+    .select('id, report_type, score, max_score, tier, opportunities_text, created_at')
     .eq('report_set_id', reportSet.id)
     .eq('report_type', reportType)
     .single();
@@ -46,11 +47,15 @@ export default async function ReportDetailPage({ params }: Props) {
   if (reportError || !report) notFound();
 
   // Fetch report items
-  const { data: items } = await supabase
+  const { data: items, error: itemsError } = await supabase
     .from('report_items')
     .select('id, category, status, score, rating, total_reviews, feedback_summary, notes, metadata')
     .eq('report_id', report.id)
     .order('sort_order', { ascending: true });
+
+  if (itemsError) {
+    console.error('Failed to fetch report items:', itemsError);
+  }
 
   const allItems = (items ?? []) as Array<{
     id: string;
@@ -84,13 +89,11 @@ export default async function ReportDetailPage({ params }: Props) {
         metadata={[
           {
             label: 'Industry',
-            value: client.industry
-              ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
-              : 'General',
+            value: client.industry ? formatIndustry(client.industry) : 'General',
           },
           {
             label: 'Status',
-            value: <ReportStatusBadge status={report.status} />,
+            value: report.tier ? <ScoreTierBadge tier={report.tier} /> : 'Not scored',
           },
           {
             label: 'Progress',

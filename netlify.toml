@@ -1,6 +1,8 @@
 [build]
   command = "npm run build"
   publish = ".next"
+  # Skip build when only non-app files changed (saves Netlify credits)
+  ignore = "git diff --quiet $CACHED_COMMIT HEAD -- src/ public/ next.config.mjs package.json package-lock.json netlify.toml brik-bds/"
 
 [build.environment]
   NODE_VERSION = "20"

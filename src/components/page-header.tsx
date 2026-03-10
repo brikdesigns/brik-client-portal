@@ -11,14 +11,10 @@ export { Breadcrumb };
 /**
  * Portal-specific PageHeader wrapper
  *
- * Wraps the BDS PageHeader component and removes the default 80px horizontal padding.
- * The portal layouts (admin + dashboard) already provide 32px padding on the main element,
- * so we strip the BDS horizontal padding to prevent double-padding (32px + 80px = 112px).
- *
- * Adds vertical padding (padding-lg) for consistent spacing.
- *
- * This wrapper allows all consuming pages to continue importing from '@/components/page-header'
- * without needing to change import paths.
+ * Wraps the BDS PageHeader component:
+ * - Removes default 80px horizontal padding (portal layouts provide their own)
+ * - Title scaled to heading-md via component-tier CSS in globals.css
+ *   (.bds-page-header-title { font-size: var(--heading-md) })
  */
 export function PageHeader(props: PageHeaderProps) {
   return (

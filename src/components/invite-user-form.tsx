@@ -14,7 +14,7 @@ interface InviteUserFormProps {
 export function InviteUserForm({ clients }: InviteUserFormProps) {
   const [email, setEmail] = useState('');
   const [fullName, setFullName] = useState('');
-  const [role, setRole] = useState<'client' | 'admin' | 'manager'>('client');
+  const [role, setRole] = useState<'super_admin' | 'client'>('client');
   const [clientId, setClientId] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -106,13 +106,13 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           label="Role"
           value={role}
           onChange={(e) => {
-            setRole(e.target.value as 'client' | 'admin' | 'manager');
+            setRole(e.target.value as 'super_admin' | 'client');
             if (e.target.value !== 'client') setClientId('');
           }}
+          placeholder="Select role"
           options={[
             { label: 'Client', value: 'client' },
-            { label: 'Manager', value: 'manager' },
-            { label: 'Admin', value: 'admin' },
+            { label: 'Brik Admin', value: 'super_admin' },
           ]}
         />
 

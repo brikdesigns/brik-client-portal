@@ -3,11 +3,27 @@
 import { useState, useEffect, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
+import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Button } from '@bds/components/ui/Button/Button';
+import { ServiceBadge } from '@/components/service-badge';
 import { heading } from '@/lib/styles';
-import { font, color, space, gap, border } from '@/lib/tokens';
+import { font, color, space, gap } from '@/lib/tokens';
+
+interface ServiceOption {
+  id: string;
+  name: string;
+  category_slug: string;
+}
+
+const sectionHeadingStyle = {
+  fontFamily: font.family.label,
+  fontSize: font.size.body.lg,
+  fontWeight: font.weight.medium,
+  color: color.text.muted,
+  margin: 0,
+  paddingTop: space.lg,
+};
 
 export default function NewProjectPage() {
   const params = useParams();
@@ -17,18 +33,47 @@ export default function NewProjectPage() {
   const [description, setDescription] = useState('');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [clickupTaskId, setClickupTaskId] = useState('');
+  const [clickupFolderId, setClickupFolderId] = useState('');
+  const [clickupListId, setClickupListId] = useState('');
+  const [clickupAssignee, setClickupAssignee] = useState('');
+  const [clickupType, setClickupType] = useState('');
+  const [clickupStatus, setClickupStatus] = useState('');
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [availableServices, setAvailableServices] = useState<ServiceOption[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
-    async function resolveClient() {
+    async function loadData() {
       const supabase = createClient();
-      const { data } = await supabase.from('companies').select('id').eq('slug', clientSlug).single();
-      if (data) setClientId(data.id);
+
+      const { data: company } = await supabase.from('companies').select('id').eq('slug', clientSlug).single();
+      if (company) setClientId(company.id);
+
+      const { data: services } = await supabase
+        .from('services')
+        .select('id, name, service_categories(slug)')
+        .eq('active', true)
+        .order('name');
+
+      setAvailableServices(
+        (services ?? []).map((s) => ({
+          id: s.id,
+          name: s.name,
+          category_slug: (s.service_categories as unknown as { slug: string } | null)?.slug ?? 'service',
+        }))
+      );
     }
-    resolveClient();
+    loadData();
   }, [clientSlug]);
+
+  function toggleService(serviceId: string) {
+    setSelectedServiceIds((prev) =>
+      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
+    );
+  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -38,7 +83,7 @@ export default function NewProjectPage() {
 
     try {
       const supabase = createClient();
-      const { error: insertError } = await supabase
+      const { data: inserted, error: insertError } = await supabase
         .from('projects')
         .insert({
           company_id: clientId,
@@ -46,11 +91,26 @@ export default function NewProjectPage() {
           description: description || null,
           start_date: startDate || null,
           end_date: endDate || null,
-        });
+          clickup_task_id: clickupTaskId || null,
+          clickup_folder_id: clickupFolderId || null,
+          clickup_list_id: clickupListId || null,
+          clickup_assignee: clickupAssignee || null,
+          clickup_type: clickupType || null,
+          clickup_status: clickupStatus || null,
+        })
+        .select('id')
+        .single();
 
       if (insertError) {
         setError(insertError.message);
         return;
+      }
+
+      // Insert service assignments
+      if (inserted && selectedServiceIds.length > 0) {
+        await supabase
+          .from('project_services')
+          .insert(selectedServiceIds.map((sid) => ({ project_id: inserted.id, service_id: sid })));
       }
 
       router.push(`/admin/companies/${clientSlug}`);
@@ -80,93 +140,158 @@ export default function NewProjectPage() {
         </p>
       </div>
 
-      <Card variant="elevated" padding="lg" style={{ maxWidth: '600px' }}>
-        <form onSubmit={handleSubmit}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
+      <form onSubmit={handleSubmit} style={{ maxWidth: '600px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
+          <TextInput
+            label="Project name"
+            type="text"
+            placeholder="Website Redesign"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            required
+            fullWidth
+          />
+          <TextArea
+            label="Description"
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+            placeholder="Brief project description..."
+            rows={3}
+            fullWidth
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
             <TextInput
-              label="Project name"
-              type="text"
-              placeholder="Website Redesign"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
+              label="Start date"
+              type="date"
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
               fullWidth
             />
-            <div>
-              <label
-                style={{
-                  display: 'block',
-                  fontFamily: font.family.label,
-                  fontSize: font.size.label.sm,
-                  fontWeight: font.weight.semibold,
-                  color: color.text.secondary,
-                  marginBottom: gap.sm,
-                }}
-              >
-                Description
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Brief project description..."
-                rows={3}
-                style={{
-                  width: '100%',
-                  fontFamily: font.family.body,
-                  fontSize: font.size.body.sm,
-                  padding: `${gap.xs} ${gap.sm}`,
-                  borderRadius: border.radius.sm,
-                  border: `${border.width.sm} solid ${color.border.input}`,
-                  backgroundColor: color.background.input,
-                  color: color.text.primary,
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                }}
-              />
-            </div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
-              <TextInput
-                label="Start date"
-                type="date"
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                fullWidth
-              />
-              <TextInput
-                label="End date"
-                type="date"
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                fullWidth
-              />
-            </div>
+            <TextInput
+              label="End date"
+              type="date"
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              fullWidth
+            />
           </div>
 
-          {error && (
-            <p
-              style={{
-                color: color.system.red,
-                fontFamily: font.family.body,
-                fontSize: font.size.body.xs,
-                margin: `${space.md} 0 0`,
-              }}
-            >
-              {error}
-            </p>
-          )}
+          {/* Services */}
+          <p style={sectionHeadingStyle}>Services</p>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: gap.sm }}>
+            {availableServices.map((svc) => {
+              const selected = selectedServiceIds.includes(svc.id);
+              return (
+                <button
+                  key={svc.id}
+                  type="button"
+                  onClick={() => toggleService(svc.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: gap.xs,
+                    padding: `${gap.xs} ${gap.sm}`,
+                    borderRadius: space.sm,
+                    border: `1px solid ${selected ? color.brand.primary : color.border.secondary}`,
+                    backgroundColor: selected ? color.brand.primary + '10' : 'transparent',
+                    cursor: 'pointer',
+                    fontFamily: font.family.body,
+                    fontSize: font.size.body.sm,
+                    color: color.text.primary,
+                  }}
+                >
+                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={20} />
+                  {svc.name}
+                </button>
+              );
+            })}
+            {availableServices.length === 0 && (
+              <span style={{ color: color.text.muted, fontFamily: font.family.body, fontSize: font.size.body.sm }}>
+                Loading services...
+              </span>
+            )}
+          </div>
 
-          <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
-            <Button type="submit" variant="primary" size="md" loading={loading}>
-              Create project
+          {/* ClickUp */}
+          <p style={sectionHeadingStyle}>ClickUp</p>
+          <TextInput
+            label="Task ID"
+            type="text"
+            value={clickupTaskId}
+            onChange={(e) => setClickupTaskId(e.target.value)}
+            placeholder="e.g. 86abc123"
+            fullWidth
+          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
+            <TextInput
+              label="Folder"
+              type="text"
+              value={clickupFolderId}
+              onChange={(e) => setClickupFolderId(e.target.value)}
+              placeholder="Folder name or ID"
+              fullWidth
+            />
+            <TextInput
+              label="List"
+              type="text"
+              value={clickupListId}
+              onChange={(e) => setClickupListId(e.target.value)}
+              placeholder="List name or ID"
+              fullWidth
+            />
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: space.md }}>
+            <TextInput
+              label="Assignee"
+              type="text"
+              value={clickupAssignee}
+              onChange={(e) => setClickupAssignee(e.target.value)}
+              placeholder="Name"
+              fullWidth
+            />
+            <TextInput
+              label="Type"
+              type="text"
+              value={clickupType}
+              onChange={(e) => setClickupType(e.target.value)}
+              placeholder="e.g. task"
+              fullWidth
+            />
+            <TextInput
+              label="Status"
+              type="text"
+              value={clickupStatus}
+              onChange={(e) => setClickupStatus(e.target.value)}
+              placeholder="e.g. in progress"
+              fullWidth
+            />
+          </div>
+        </div>
+
+        {error && (
+          <p
+            style={{
+              color: color.system.red,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              margin: `${space.md} 0 0`,
+            }}
+          >
+            {error}
+          </p>
+        )}
+
+        <div style={{ display: 'flex', gap: gap.sm, marginTop: space.lg }}>
+          <Button type="submit" variant="primary" size="md" loading={loading}>
+            Create project
+          </Button>
+          <a href={`/admin/companies/${clientSlug}`}>
+            <Button type="button" variant="secondary" size="md">
+              Cancel
             </Button>
-            <a href={`/admin/companies/${clientSlug}`}>
-              <Button type="button" variant="outline" size="md">
-                Cancel
-              </Button>
-            </a>
-          </div>
-        </form>
-      </Card>
+          </a>
+        </div>
+      </form>
     </div>
   );
 }

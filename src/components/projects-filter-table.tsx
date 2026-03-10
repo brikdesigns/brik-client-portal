@@ -74,12 +74,14 @@ export function ProjectsFilterTable({
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <FilterButton
+            size="sm"
             label="Client"
             value={clientFilter}
             onChange={setClientFilter}
             options={clientOptions.map((o) => ({ id: o.value, label: o.label }))}
           />
           <FilterButton
+            size="sm"
             label="Status"
             value={statusFilter}
             onChange={setStatusFilter}
@@ -123,7 +125,8 @@ export function ProjectsFilterTable({
             accessor: (p) => (
               <a
                 href={`/admin/projects/${p.slug}`}
-                style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
+                className="cell-link"
+                style={{ fontWeight: font.weight.medium }}
               >
                 {p.name}
               </a>
@@ -135,7 +138,7 @@ export function ProjectsFilterTable({
               p.company ? (
                 <a
                   href={`/admin/companies/${p.company.slug}`}
-                  style={{ color: color.system.link, textDecoration: 'none' }}
+                  className="cell-link"
                 >
                   {p.company.name}
                 </a>
@@ -160,9 +163,14 @@ export function ProjectsFilterTable({
           {
             header: '',
             accessor: (p) => (
-              <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
-                View Details
-              </Button>
+              <div style={{ display: 'flex', gap: gap.xs, justifyContent: 'flex-end' }}>
+                <Button variant="ghost" size="sm" asLink href={`/admin/projects/${p.slug}/edit`}>
+                  Edit
+                </Button>
+                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                  View
+                </Button>
+              </div>
             ),
             style: { textAlign: 'right' },
           },

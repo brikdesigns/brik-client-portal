@@ -61,7 +61,7 @@ export function LoginForm() {
           .eq('id', authData.user.id)
           .then();
 
-        router.push(profile?.role === 'admin' ? '/admin' : '/dashboard');
+        router.push(profile?.role === 'super_admin' ? '/admin' : '/dashboard');
       } else {
         router.push('/dashboard');
       }

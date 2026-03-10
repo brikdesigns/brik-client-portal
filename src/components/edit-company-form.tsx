@@ -3,28 +3,22 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { AddressAutocomplete } from '@/components/address-autocomplete';
+import { parseAddressString } from '@/lib/address';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
+import { useToast } from '@/components/toast-provider';
 
 const iconSize = { width: 14, height: 14 };
 
 function toSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
-}
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
-  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
 }
 
 const statusOptions = [
@@ -67,13 +61,14 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
   const [state, setState] = useState(client.state ?? '');
   const [postalCode, setPostalCode] = useState(client.postal_code ?? '');
   const [country, setCountry] = useState(client.country ?? '');
-  const [phone, setPhone] = useState(client.phone ?? '');
+  const [phone, setPhone] = useState(formatPhone(client.phone ?? ''));
   const [industry, setIndustry] = useState(client.industry ?? '');
   const [websiteUrl, setWebsiteUrl] = useState(client.website_url ?? '');
   const [notes, setNotes] = useState(client.notes ?? '');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toastSuccess } = useToast();
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -88,6 +83,17 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
     try {
       const supabase = createClient();
       const newSlug = toSlug(name);
+      // If structured fields are empty, extract them from the address string
+      let finalCity = city;
+      let finalState = state;
+      let finalPostalCode = postalCode;
+      if (!city && !state && !postalCode && address) {
+        const parsed = parseAddressString(address);
+        finalCity = parsed.city ?? '';
+        finalState = parsed.state ?? '';
+        finalPostalCode = parsed.postalCode ?? '';
+      }
+
       const { error: updateError } = await supabase
         .from('companies')
         .update({
@@ -96,9 +102,9 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
           status,
           contact_id: contactId || null,
           address: address || null,
-          city: city || null,
-          state: state || null,
-          postal_code: postalCode || null,
+          city: finalCity || null,
+          state: finalState || null,
+          postal_code: finalPostalCode || null,
           country: country || null,
           phone: phone || null,
           industry: industry || null,
@@ -112,6 +118,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
         return;
       }
 
+      toastSuccess(`${name} saved successfully`);
       router.push(`/admin/companies/${newSlug}`);
       router.refresh();
     } catch {
@@ -122,8 +129,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
   }
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           <TextInput
             label="Business Name"
@@ -138,6 +144,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
             label="Status"
             value={status}
             onChange={(e) => setStatus(e.target.value)}
+            placeholder="Select status"
             options={statusOptions}
             fullWidth
           />
@@ -167,7 +174,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
               label="Phone"
               type="tel"
               inputMode="numeric"
-              placeholder="(555)-555-5555"
+              placeholder="(555) 555-5555"
               value={phone}
               onChange={handlePhoneChange}
               iconBefore={<FontAwesomeIcon icon={faPhone} style={iconSize} />}
@@ -239,7 +246,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
           }}
         >
           <a href={`/admin/companies/${client.slug}`}>
-            <Button type="button" variant="outline" size="md">
+            <Button type="button" variant="secondary" size="md">
               Cancel
             </Button>
           </a>
@@ -247,7 +254,6 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
             Save changes
           </Button>
         </div>
-      </form>
-    </Card>
+    </form>
   );
 }

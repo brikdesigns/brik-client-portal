@@ -3,7 +3,7 @@
 import { Accordion, type AccordionItemData } from '@bds/components/ui/Accordion/Accordion';
 import { ServiceBadge } from '@/components/service-badge';
 import { text, label, list } from '@/lib/styles';
-import { color, gap, space } from '@/lib/tokens';
+import { color, gap, space, font } from '@/lib/tokens';
 import type { ScopeItem } from '@/lib/proposal-types';
 
 interface ScopeOfProjectContentProps {
@@ -52,7 +52,13 @@ function ScopeItemTitle({ item }: { item: ScopeItem }) {
   return (
     <span style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
       <ServiceBadge category={item.category_slug} serviceName={item.service_name} size={28} />
-      <span>{item.service_name}</span>
+      <span style={{
+        fontFamily: font.family.body,
+        fontSize: font.size.body.md,
+        fontWeight: font.weight.medium,
+      }}>
+        {item.service_name}
+      </span>
     </span>
   );
 }

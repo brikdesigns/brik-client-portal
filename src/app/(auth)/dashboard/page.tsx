@@ -9,7 +9,7 @@ import { heading } from '@/lib/styles';
 import { gap, space } from '@/lib/tokens';
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   const { data: profile } = await supabase

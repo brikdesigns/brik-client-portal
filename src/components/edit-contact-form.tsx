@@ -3,24 +3,16 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import { Card } from '@bds/components/ui/Card/Card';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
 import { Button } from '@bds/components/ui/Button/Button';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
+import { formatPhone } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
 
 const iconSize = { width: 14, height: 14 };
-
-function formatPhone(digits: string): string {
-  const d = digits.replace(/\D/g, '').slice(0, 10);
-  if (d.length === 0) return '';
-  if (d.length <= 3) return `(${d}`;
-  if (d.length <= 6) return `(${d.slice(0, 3)})-${d.slice(3)}`;
-  return `(${d.slice(0, 3)})-${d.slice(3, 6)}-${d.slice(6)}`;
-}
 
 const roleOptions = [
   { label: 'Client', value: 'client' },
@@ -46,7 +38,7 @@ interface EditContactFormProps {
 export function EditContactForm({ contact, companies }: EditContactFormProps) {
   const [fullName, setFullName] = useState(contact.full_name);
   const [email, setEmail] = useState(contact.email ?? '');
-  const [phone, setPhone] = useState(contact.phone ?? '');
+  const [phone, setPhone] = useState(formatPhone(contact.phone ?? ''));
   const [title, setTitle] = useState(contact.title ?? '');
   const [role, setRole] = useState(contact.role);
   const [isPrimary, setIsPrimary] = useState(contact.is_primary);
@@ -97,8 +89,7 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
   }
 
   return (
-    <Card variant="elevated" padding="lg" style={{ maxWidth: '640px' }}>
-      <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
           <TextInput
             label="Full Name"
@@ -128,7 +119,7 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
               label="Phone"
               type="tel"
               inputMode="numeric"
-              placeholder="(555)-555-5555"
+              placeholder="(555) 555-5555"
               value={phone}
               onChange={handlePhoneChange}
               iconBefore={<FontAwesomeIcon icon={faPhone} style={iconSize} />}
@@ -155,6 +146,7 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
               label="Role"
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              placeholder="Select role"
               options={roleOptions}
               fullWidth
             />
@@ -164,6 +156,7 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
             label="Company"
             value={companyId}
             onChange={(e) => setCompanyId(e.target.value)}
+            placeholder="Select company"
             options={companies.map((c) => ({
               label: c.name,
               value: c.id,
@@ -222,7 +215,7 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
           }}
         >
           <a href={`/admin/contacts/${contact.id}`}>
-            <Button type="button" variant="outline" size="md">
+            <Button type="button" variant="secondary" size="md">
               Cancel
             </Button>
           </a>
@@ -230,7 +223,6 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
             Save changes
           </Button>
         </div>
-      </form>
-    </Card>
+    </form>
   );
 }

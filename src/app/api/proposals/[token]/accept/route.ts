@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { generateAgreementsForProposal } from '@/lib/agreements/generate';
+import { sendProposalAcceptedEmail, sendWelcomeToBrikEmail, logEmail } from '@/lib/email';
+
+const ADMIN_EMAIL = 'nick@brikdesigns.com';
 
 function getServiceClient() {
   return createServiceClient(
@@ -82,6 +85,64 @@ export async function POST(
   } catch (err) {
     // Log but don't fail — proposal acceptance is the critical path
     console.error('Failed to auto-generate agreements:', err);
+  }
+
+  // Fetch company details for email notifications
+  const { data: company } = await supabase
+    .from('companies')
+    .select('name, slug')
+    .eq('id', proposal.company_id)
+    .single();
+
+  // Look up the contact name for the accepting email
+  const { data: contact } = await supabase
+    .from('contacts')
+    .select('full_name')
+    .eq('company_id', proposal.company_id)
+    .eq('email', email)
+    .single();
+
+  // Notify admin that proposal was accepted (non-blocking)
+  try {
+    if (company) {
+      const result = await sendProposalAcceptedEmail({
+        to: ADMIN_EMAIL,
+        companyName: company.name,
+        companySlug: company.slug,
+        proposalId: proposal.id,
+      });
+
+      await logEmail(supabase, {
+        to: ADMIN_EMAIL,
+        subject: `Proposal signed: ${company.name}`,
+        template: 'proposal_accepted',
+        resendId: result?.id,
+        companyId: proposal.company_id,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send proposal accepted notification:', err);
+  }
+
+  // Send "Welcome to Brik" email to the prospect (non-blocking)
+  try {
+    if (company) {
+      const result = await sendWelcomeToBrikEmail({
+        to: email,
+        recipientName: contact?.full_name ?? undefined,
+        companyName: company.name,
+      });
+
+      await logEmail(supabase, {
+        to: email,
+        subject: 'Welcome to Brik!',
+        template: 'welcome_to_brik',
+        resendId: result?.id,
+        companyId: proposal.company_id,
+      });
+    }
+  } catch (err) {
+    console.error('Failed to send welcome email:', err);
   }
 
   return NextResponse.json({ success: true });

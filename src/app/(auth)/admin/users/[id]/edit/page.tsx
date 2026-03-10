@@ -9,7 +9,7 @@ interface Props {
 
 export default async function EditUserPage({ params }: Props) {
   const { id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch user data
   const { data: user, error } = await supabase

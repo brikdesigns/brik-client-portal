@@ -1,25 +1,11 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendProposalEmail, logEmail } from '@/lib/email';
 
 export async function POST(request: Request) {
-  const supabase = createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-  }
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
 
   const { proposal_id } = await request.json();
   if (!proposal_id) {
@@ -67,7 +53,7 @@ export async function POST(request: Request) {
 
     await logEmail(serviceClient, {
       to: contact.email,
-      subject: `${company.name} — Your proposal from Brik Designs is ready`,
+      subject: 'Brik Designs sent you a proposal',
       template: 'proposal_sent',
       resendId: result?.id,
       companyId: proposal.company_id,

@@ -3,9 +3,10 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
-import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
+import { ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { font, color } from '@/lib/tokens';
+import { formatIndustry } from '@/lib/format';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -13,7 +14,7 @@ interface Props {
 
 export default async function ClientReportListPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch client
   const { data: client, error } = await supabase
@@ -27,7 +28,7 @@ export default async function ClientReportListPage({ params }: Props) {
   // Fetch report set for this client
   const { data: reportSet } = await supabase
     .from('report_sets')
-    .select('id, status, overall_score, overall_max_score, overall_tier')
+    .select('id, overall_score, overall_max_score, overall_tier')
     .eq('company_id', client.id)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -38,14 +39,12 @@ export default async function ClientReportListPage({ params }: Props) {
   // Fetch reports in this set
   const { data: reports } = await supabase
     .from('reports')
-    .select('id, report_type, status, score, max_score, tier, created_at')
+    .select('id, report_type, score, max_score, tier, created_at')
     .eq('report_set_id', reportSet.id)
     .order('created_at', { ascending: true });
 
   const allReports = reports ?? [];
-  const completedCount = allReports.filter((r) => r.status === 'completed').length;
-  const totalCount = allReports.length;
-  const allComplete = completedCount === totalCount && totalCount > 0;
+  const scoredCount = allReports.filter((r) => r.score !== null).length;
 
   return (
     <div>
@@ -63,19 +62,17 @@ export default async function ClientReportListPage({ params }: Props) {
         metadata={[
           {
             label: 'Industry',
-            value: client.industry
-              ? client.industry.charAt(0).toUpperCase() + client.industry.slice(1).replace('-', ' ')
-              : 'General',
+            value: client.industry ? formatIndustry(client.industry) : 'General',
           },
           {
             label: 'Progress',
-            value: `${completedCount} of ${totalCount} reports complete`,
+            value: `${scoredCount} of ${allReports.length} reports scored`,
           },
           {
-            label: 'Overall tier',
-            value: allComplete && reportSet.overall_tier
+            label: 'Overall status',
+            value: reportSet.overall_tier
               ? <ScoreTierBadge tier={reportSet.overall_tier} />
-              : 'In progress',
+              : 'Not scored',
           },
         ]}
       />
@@ -98,10 +95,6 @@ export default async function ClientReportListPage({ params }: Props) {
           },
           {
             header: 'Status',
-            accessor: (r) => <ReportStatusBadge status={r.status} />,
-          },
-          {
-            header: 'Tier',
             accessor: (r) => r.tier ? <ScoreTierBadge tier={r.tier} /> : '—',
           },
           {
@@ -116,7 +109,7 @@ export default async function ClientReportListPage({ params }: Props) {
             header: '',
             accessor: (r) => (
               <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${slug}/${r.report_type}`}>
-                View Details
+                View
               </Button>
             ),
             style: { textAlign: 'right' },

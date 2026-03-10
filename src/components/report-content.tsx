@@ -1,15 +1,11 @@
 'use client';
 
-import { useState } from 'react';
-import { Card } from '@bds/components/ui/Card/Card';
-import { Button } from '@bds/components/ui/Button/Button';
-import { ReportDetailTable } from '@/components/report-detail-table';
 import { EditableReportTable } from '@/components/editable-report-table';
 import { type ReportType } from '@/lib/analysis/report-config';
 import { type ScoreTier } from '@/lib/analysis/scoring';
 import { ProgressBar } from '@bds/components/ui/ProgressBar/ProgressBar';
 import { font, color, gap, border } from '@/lib/tokens';
-import { heading as headingStyle, list } from '@/lib/styles';
+import { heading as headingStyle } from '@/lib/styles';
 
 interface ReportItem {
   id: string;
@@ -49,8 +45,6 @@ const TIER_COLORS: Record<ScoreTier, string> = {
 };
 
 export function ReportContent({ report, items, reportType, reportSetId }: ReportContentProps) {
-  const [editing, setEditing] = useState(false);
-
   const tier = report.tier as ScoreTier | null;
   const score = report.score ?? 0;
   const maxScore = report.max_score ?? 0;
@@ -58,12 +52,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
   const tierColor = tier ? TIER_COLORS[tier] : color.text.muted;
   const progressPercent = maxScore > 0 ? Math.round((score / maxScore) * 100) : 0;
 
-  const opportunityLines = report.opportunities_text
-    ? report.opportunities_text
-        .split(/\n+/)
-        .map((line) => line.replace(/\*\*([^*]+)\*\*/g, '$1').trim())
-        .filter(Boolean)
-    : [];
+  const opportunitiesText = report.opportunities_text?.trim() || '';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
@@ -75,99 +64,54 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
           gap: gap.lg,
         }}
       >
-        {/* Score card */}
-        <Card variant="elevated" padding="lg">
-          <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-              <span style={{ fontFamily: font.family.heading, fontSize: font.size.heading.medium, fontWeight: font.weight.bold, color: tierColor }}>
-                {score} / {maxScore}
-              </span>
-              <span style={{ fontFamily: font.family.label, fontSize: font.size.body.sm, fontWeight: font.weight.semibold, color: tierColor }}>
-                {tierLabel}
-              </span>
-            </div>
-            <ProgressBar
-              value={progressPercent}
-              label={`Score: ${score} of ${maxScore}`}
-              fillColor={tierColor}
-              style={{
-                height: '40px',
-                backgroundColor: color.background.secondary,
-                border: `${border.width.sm} solid ${color.border.primary}`,
-                borderRadius: border.radius.sm,
-              }}
-            />
+        {/* Score */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm }}>
+          <ProgressBar
+            value={progressPercent}
+            label={`Score: ${score} of ${maxScore}`}
+            fillColor={tierColor}
+            style={{
+              height: '40px',
+              backgroundColor: color.background.secondary,
+              borderRadius: border.radius.sm,
+            }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontFamily: font.family.heading, fontSize: font.size.heading.medium, fontWeight: font.weight.bold, color: tierColor }}>
+              {score} / {maxScore}
+            </span>
+            <span style={{ fontFamily: font.family.label, fontSize: font.size.body.sm, fontWeight: font.weight.medium, color: tierColor }}>
+              {tierLabel}
+            </span>
           </div>
-        </Card>
-
-        {/* Opportunities card */}
-        {opportunityLines.length > 0 ? (
-          <Card variant="elevated" padding="lg">
-            <h3 style={headingStyle.section}>
-              Opportunities
-            </h3>
-            <ul
-              style={{
-                ...list.ul,
-                margin: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: gap.sm,
-              }}
-            >
-              {opportunityLines.map((line, i) => (
-                <li key={i} style={list.li}>{line}</li>
-              ))}
-            </ul>
-          </Card>
-        ) : (
-          <Card variant="elevated" padding="lg">
-            <h3 style={headingStyle.section}>
-              Opportunities
-            </h3>
-            <p
-              style={{
-                fontFamily: font.family.body,
-                fontSize: font.size.body.md,
-                color: color.text.muted,
-                margin: 0,
-              }}
-            >
-              Run analysis to generate opportunities.
-            </p>
-          </Card>
-        )}
-      </div>
-
-      {/* Audit details table */}
-      <div>
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'flex-end',
-            marginBottom: gap.sm,
-          }}
-        >
-          <Button
-            variant={editing ? 'primary' : 'secondary'}
-            size="sm"
-            onClick={() => setEditing(!editing)}
-          >
-            {editing ? 'Done editing' : 'Edit'}
-          </Button>
         </div>
 
-        {editing ? (
-          <EditableReportTable
-            items={items}
-            reportId={report.id}
-            reportSetId={reportSetId}
-            reportType={reportType}
-          />
-        ) : (
-          <ReportDetailTable items={items} reportType={reportType} />
-        )}
+        {/* Opportunities */}
+        <div>
+          <h3 style={headingStyle.section}>
+            Opportunities
+          </h3>
+          <p
+            style={{
+              fontFamily: font.family.body,
+              fontSize: font.size.body.md,
+              lineHeight: font.lineHeight.relaxed,
+              color: opportunitiesText ? color.text.primary : color.text.muted,
+              margin: 0,
+            }}
+          >
+            {opportunitiesText || 'Run analysis to generate opportunities.'}
+          </p>
+        </div>
       </div>
+
+      {/* Audit details table — inline edit per row */}
+      <EditableReportTable
+        items={items}
+        reportId={report.id}
+        reportSetId={reportSetId}
+        reportType={reportType}
+      />
     </div>
   );
 }
