@@ -15,9 +15,10 @@ import { font, color, space, gap } from '@/lib/tokens';
 const iconSize = { width: 14, height: 14 };
 
 const roleOptions = [
-  { label: 'Client', value: 'client' },
-  { label: 'Manager', value: 'manager' },
+  { label: 'Owner', value: 'owner' },
   { label: 'Admin', value: 'admin' },
+  { label: 'Manager', value: 'manager' },
+  { label: 'Team Member', value: 'team_member' },
 ];
 
 interface NewContactFormProps {
@@ -30,7 +31,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [title, setTitle] = useState('');
-  const [role, setRole] = useState('client');
+  const [role, setRole] = useState('team_member');
   const [isPrimary, setIsPrimary] = useState(false);
   const [companyId, setCompanyId] = useState(defaultCompanyId ?? '');
   const [notes, setNotes] = useState('');

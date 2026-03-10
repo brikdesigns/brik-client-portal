@@ -15,9 +15,10 @@ import { font, color, space, gap } from '@/lib/tokens';
 const iconSize = { width: 14, height: 14 };
 
 const roleOptions = [
-  { label: 'Client', value: 'client' },
-  { label: 'Manager', value: 'manager' },
+  { label: 'Owner', value: 'owner' },
   { label: 'Admin', value: 'admin' },
+  { label: 'Manager', value: 'manager' },
+  { label: 'Team Member', value: 'team_member' },
 ];
 
 interface EditContactFormProps {

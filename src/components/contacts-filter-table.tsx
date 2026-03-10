@@ -5,6 +5,7 @@ import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { font, color, space, gap } from '@/lib/tokens';
+import { formatContactRole } from '@/lib/format';
 import { DataTable } from './data-table';
 
 export interface ContactRow {
@@ -132,7 +133,7 @@ export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
             header: 'Role',
             accessor: (c) => (
               <Tag size="sm" style={{ color: color.text.muted }}>
-                {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
+                {formatContactRole(c.role)}
               </Tag>
             ),
           },

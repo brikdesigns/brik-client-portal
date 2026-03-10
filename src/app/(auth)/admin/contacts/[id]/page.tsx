@@ -6,7 +6,7 @@ import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { font, color, gap } from '@/lib/tokens';
 import { detail } from '@/lib/styles';
-import { formatPhone } from '@/lib/format';
+import { formatPhone, formatContactRole } from '@/lib/format';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -79,7 +79,7 @@ export default async function ContactDetailPage({ params }: Props) {
           <div>
             <p style={fieldLabelStyle}>Role</p>
             <p style={fieldValueStyle}>
-              {contact.role.charAt(0).toUpperCase() + contact.role.slice(1)}
+              {formatContactRole(contact.role)}
             </p>
           </div>
           <div>

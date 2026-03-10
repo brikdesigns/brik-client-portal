@@ -25,6 +25,21 @@ export function formatIndustry(industry: string | null): string {
  * Format a US phone number as (XXX) XXX-XXXX.
  * Accepts any string — strips non-digits, caps at 10 digits.
  */
+/**
+ * Format a contact role for display.
+ * Handles underscored values like 'team_member' → 'Team Member'.
+ */
+const CONTACT_ROLE_LABELS: Record<string, string> = {
+  owner: 'Owner',
+  admin: 'Admin',
+  manager: 'Manager',
+  team_member: 'Team Member',
+};
+
+export function formatContactRole(role: string): string {
+  return CONTACT_ROLE_LABELS[role] ?? role.replace(/[-_]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 export function formatPhone(value: string): string {
   const d = value.replace(/\D/g, '').slice(0, 10);
   if (d.length === 0) return '';

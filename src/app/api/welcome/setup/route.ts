@@ -2,6 +2,19 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 /**
+ * Map contact organizational role → company_users permission role.
+ *
+ * contact.role describes who they are at their company.
+ * company_users.role determines what they can do in the portal.
+ */
+const CONTACT_TO_COMPANY_ROLE: Record<string, string> = {
+  owner: 'owner',
+  admin: 'admin',
+  manager: 'member',
+  team_member: 'viewer',
+};
+
+/**
  * POST /api/welcome/setup
  *
  * Public endpoint — no auth required (token-based).
@@ -58,7 +71,7 @@ export async function POST(request: Request) {
     email_confirm: true, // Auto-confirm since they got the link via verified email
     user_metadata: {
       full_name: contact.full_name,
-      role: contact.role || 'client',
+      role: contact.role || 'team_member',
     },
   });
 
@@ -77,11 +90,12 @@ export async function POST(request: Request) {
   const userId = authData.user.id;
 
   // Update the profile (auto-created by Supabase trigger) with role + company
+  // profiles.role is always 'client' for portal users — only Nick/Abbey are super_admin
   await supabase
     .from('profiles')
     .update({
       full_name: contact.full_name,
-      role: contact.role || 'client',
+      role: 'client',
       company_id: contact.company_id,
     })
     .eq('id', userId);
@@ -97,14 +111,15 @@ export async function POST(request: Request) {
     })
     .eq('id', contact.id);
 
-  // Add to company_users junction table
+  // Add to company_users junction table with mapped permission role
   if (contact.company_id) {
+    const companyRole = CONTACT_TO_COMPANY_ROLE[contact.role] ?? 'viewer';
     await supabase
       .from('company_users')
       .upsert({
         company_id: contact.company_id,
         user_id: userId,
-        role: contact.role || 'client',
+        role: companyRole,
       }, { onConflict: 'company_id,user_id' });
   }
 

@@ -52,57 +52,89 @@ export default function NewCompanyPage() {
     setPhone(formatPhone(raw));
   }
 
+  async function saveCompany(): Promise<{ id: string; slug: string } | null> {
+    setError('');
+
+    const supabase = createClient();
+    const slug = toSlug(name);
+    const defaultStatus = type === 'lead' ? 'needs_qualified' : 'active';
+
+    // If structured fields are empty, extract them from the address string
+    let finalCity = city;
+    let finalState = state;
+    let finalPostalCode = postalCode;
+    if (!city && !state && !postalCode && address) {
+      const parsed = parseAddressString(address);
+      finalCity = parsed.city ?? '';
+      finalState = parsed.state ?? '';
+      finalPostalCode = parsed.postalCode ?? '';
+    }
+
+    const { data, error: insertError } = await supabase
+      .from('companies')
+      .insert({
+        name,
+        slug,
+        type,
+        status: defaultStatus,
+        address: address || null,
+        city: finalCity || null,
+        state: finalState || null,
+        postal_code: finalPostalCode || null,
+        country: country || null,
+        phone: phone || null,
+        industry: industry || null,
+        website_url: websiteUrl || null,
+        notes: notes || null,
+      })
+      .select('id')
+      .single();
+
+    if (insertError) {
+      setError(insertError.message);
+      return null;
+    }
+
+    return { id: data.id, slug };
+  }
+
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
-    setError('');
     setLoading(true);
 
     try {
-      const supabase = createClient();
-      const slug = toSlug(name);
-      const defaultStatus = type === 'lead' ? 'needs_qualified' : 'active';
-
-      // If structured fields are empty, extract them from the address string
-      let finalCity = city;
-      let finalState = state;
-      let finalPostalCode = postalCode;
-      if (!city && !state && !postalCode && address) {
-        const parsed = parseAddressString(address);
-        finalCity = parsed.city ?? '';
-        finalState = parsed.state ?? '';
-        finalPostalCode = parsed.postalCode ?? '';
-      }
-
-      const { error: insertError } = await supabase
-        .from('companies')
-        .insert({
-          name,
-          slug,
-          type,
-          status: defaultStatus,
-          address: address || null,
-          city: finalCity || null,
-          state: finalState || null,
-          postal_code: finalPostalCode || null,
-          country: country || null,
-          phone: phone || null,
-          industry: industry || null,
-          website_url: websiteUrl || null,
-          notes: notes || null,
-        });
-
-      if (insertError) {
-        setError(insertError.message);
-        return;
-      }
+      const result = await saveCompany();
+      if (!result) return;
 
       toastSuccess(`${name} added successfully`);
-      router.push(`/admin/companies/${slug}`);
+      router.push(`/admin/companies/${result.slug}`);
       router.refresh();
     } catch {
       setError('An unexpected error occurred.');
     } finally {
       setLoading(false);
+    }
+  }
+
+  const [addingContact, setAddingContact] = useState(false);
+
+  async function handleAddContact() {
+    if (!name.trim()) {
+      setError('Business name is required before adding a contact.');
+      return;
+    }
+    setAddingContact(true);
+
+    try {
+      const result = await saveCompany();
+      if (!result) return;
+
+      toastSuccess(`${name} added — now add a contact.`);
+      router.push(`/admin/contacts/new?company_id=${result.id}`);
+    } catch {
+      setError('An unexpected error occurred.');
+    } finally {
+      setAddingContact(false);
     }
   }
 
@@ -124,9 +156,7 @@ export default function NewCompanyPage() {
   return (
     <div>
       <div style={{ marginBottom: space.xxl }}>
-        <h1 style={heading.page}>
-          Add {type === 'lead' ? 'Lead' : 'Client'}
-        </h1>
+        <h1 style={heading.page}>Add company</h1>
         <p
           style={{
             fontFamily: font.family.body,
@@ -272,8 +302,11 @@ export default function NewCompanyPage() {
                 Cancel
               </Button>
             </a>
+            <Button type="button" variant="secondary" size="md" onClick={handleAddContact} loading={addingContact}>
+              Add a contact
+            </Button>
             <Button type="submit" variant="primary" size="md" loading={loading}>
-              {type === 'lead' ? 'Add Lead' : 'Begin'}
+              Add company
             </Button>
           </div>
       </form>
