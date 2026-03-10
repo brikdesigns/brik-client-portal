@@ -108,8 +108,8 @@ if [ -f ".env.local" ]; then
     -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" \
     -H "Authorization: Bearer ${SUPABASE_SERVICE_ROLE_KEY}" 2>/dev/null)
 
-  if echo "$ADMIN_CHECK" | grep -q '"admin"'; then
-    pass "Admin user (nick@brikdesigns.com) exists with admin role"
+  if echo "$ADMIN_CHECK" | grep -q '"super_admin"'; then
+    pass "Admin user (nick@brikdesigns.com) exists with super_admin role"
   else
     fail "Admin user missing or wrong role"
   fi
@@ -228,7 +228,89 @@ if [ "$QUICK" = false ]; then
   fi
 fi
 
-# ── 7. Migration sync ──
+# ── 7. Git hygiene ──
+echo ""
+echo "── Git Hygiene ──"
+
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+info "Current branch: $CURRENT_BRANCH"
+
+# Check for unpushed commits
+UPSTREAM=$(git rev-parse --abbrev-ref "@{upstream}" 2>/dev/null || echo "")
+if [ -n "$UPSTREAM" ]; then
+  UNPUSHED=$(git rev-list "$UPSTREAM"..HEAD --count 2>/dev/null || echo "0")
+  if [ "$UNPUSHED" -eq 0 ]; then
+    pass "No unpushed commits"
+  elif [ "$UNPUSHED" -le 3 ]; then
+    warn "$UNPUSHED unpushed commit(s) — push when ready"
+  else
+    fail "$UNPUSHED unpushed commits — push soon to avoid losing work"
+  fi
+else
+  warn "No upstream tracking branch set"
+fi
+
+# Check for uncommitted changes
+if [ -n "$(git status --porcelain 2>/dev/null)" ]; then
+  DIRTY_COUNT=$(git status --porcelain 2>/dev/null | wc -l | tr -d ' ')
+  warn "$DIRTY_COUNT uncommitted change(s) in working tree"
+else
+  pass "Working tree clean"
+fi
+
+# Check staging vs main divergence
+if git rev-parse origin/main &>/dev/null && git rev-parse origin/staging &>/dev/null; then
+  AHEAD_OF_MAIN=$(git rev-list origin/main..origin/staging --count 2>/dev/null || echo "0")
+  if [ "$AHEAD_OF_MAIN" -eq 0 ]; then
+    pass "staging is up-to-date with main"
+  elif [ "$AHEAD_OF_MAIN" -le 10 ]; then
+    info "staging is $AHEAD_OF_MAIN commit(s) ahead of main"
+  elif [ "$AHEAD_OF_MAIN" -le 25 ]; then
+    warn "staging is $AHEAD_OF_MAIN commits ahead of main — consider merging to main"
+  else
+    fail "staging is $AHEAD_OF_MAIN commits ahead of main — merge overdue"
+  fi
+fi
+
+# ── 8. Security audit ──
+echo ""
+echo "── Security Audit ──"
+
+AUDIT_OUTPUT=$(npm audit --json 2>/dev/null; true)
+VULN_TOTAL=$(echo "$AUDIT_OUTPUT" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    meta = d.get('metadata', {}).get('vulnerabilities', {})
+    print(meta.get('high', 0) + meta.get('critical', 0))
+except:
+    print(-1)
+" 2>/dev/null || echo "-1")
+
+VULN_FIXABLE=$(echo "$AUDIT_OUTPUT" | python3 -c "
+import sys, json
+try:
+    d = json.load(sys.stdin)
+    # Count advisories where fixAvailable is true (not a breaking change)
+    count = 0
+    for key, adv in d.get('vulnerabilities', {}).items():
+        fix = adv.get('fixAvailable')
+        if fix is True:
+            count += 1
+    print(count)
+except:
+    print(0)
+" 2>/dev/null || echo "0")
+
+if [ "$VULN_TOTAL" -eq 0 ]; then
+  pass "No high/critical vulnerabilities"
+elif [ "$VULN_TOTAL" -gt 0 ]; then
+  warn "$VULN_TOTAL high/critical vulnerability(ies) — $VULN_FIXABLE fixable with npm audit fix"
+else
+  warn "Could not parse npm audit output"
+fi
+
+# ── 9. Migration sync ──
 echo ""
 echo "── Migration Sync ──"
 
