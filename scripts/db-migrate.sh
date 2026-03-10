@@ -4,12 +4,16 @@ set -euo pipefail
 # Brik Client Portal — Supabase Migration Helper
 # Checks and applies pending migrations to the target environment.
 #
+# Uses Supabase CLI as primary path. If CLI fails (bad DB password, pooler
+# issues), automatically falls back to Management API (db-migrate-api.sh).
+#
 # Usage:
 #   ./scripts/db-migrate.sh                    # Staging: show status + apply pending
 #   ./scripts/db-migrate.sh --prod             # Production: show status + apply pending
 #   ./scripts/db-migrate.sh --status           # Show status only
 #   ./scripts/db-migrate.sh --dry-run          # Preview what would be applied
 #   ./scripts/db-migrate.sh --prod --dry-run   # Preview against production
+#   ./scripts/db-migrate.sh --api              # Skip CLI, use Management API directly
 #
 # Prerequisites:
 #   - supabase CLI installed (brew install supabase/tap/supabase)
@@ -37,6 +41,7 @@ STAGING_REF="${SUPABASE_STAGING_PROJECT_REF:-}"
 STATUS_ONLY=false
 DRY_RUN=false
 TARGET="staging"
+API_ONLY=false
 
 for arg in "$@"; do
   case "$arg" in
@@ -44,14 +49,16 @@ for arg in "$@"; do
     --staging) TARGET="staging" ;;
     --status)  STATUS_ONLY=true ;;
     --dry-run) DRY_RUN=true ;;
+    --api)     API_ONLY=true ;;
     --help|-h)
-      echo "Usage: ./scripts/db-migrate.sh [--prod|--staging] [--status|--dry-run]"
+      echo "Usage: ./scripts/db-migrate.sh [--prod|--staging] [--status|--dry-run|--api]"
       echo ""
       echo "  (default)    Target staging, show status + apply pending"
       echo "  --prod       Target production (requires confirmation)"
       echo "  --staging    Target staging (default)"
       echo "  --status     Show migration status only"
       echo "  --dry-run    Preview what would be applied"
+      echo "  --api        Skip CLI, use Management API directly"
       exit 0
       ;;
     *) echo "Unknown option: $arg"; exit 1 ;;
@@ -98,47 +105,48 @@ echo ""
 
 cd "$PROJECT_ROOT"
 
-# ── Check prerequisites ──
-if ! command -v supabase &> /dev/null; then
-  fail "supabase CLI not found. Install: brew install supabase/tap/supabase"
-  exit 1
+# ── API-only mode: delegate entirely to db-migrate-api.sh ──
+if [ "$API_ONLY" = true ]; then
+  API_ARGS=()
+  [ "$TARGET" = "production" ] && API_ARGS+=(--prod) || API_ARGS+=(--staging)
+  [ "$STATUS_ONLY" = true ] && API_ARGS+=(--status)
+  [ "$DRY_RUN" = true ] && API_ARGS+=(--dry-run)
+  exec "$SCRIPT_DIR/db-migrate-api.sh" "${API_ARGS[@]}"
 fi
 
-info "Linking to $LABEL ($PROJECT_REF)..."
-supabase link --project-ref "$PROJECT_REF" 2>/dev/null || {
-  fail "Failed to link. Run: supabase login"
-  exit 1
-}
+# ── Try CLI first, fall back to API ──
+CLI_AVAILABLE=true
 
-# ── Repair manually-applied migrations (production only) ──
-# Staging gets all migrations via CLI, so no repair needed.
-if [ "$TARGET" = "production" ]; then
-  # Keep this in sync with .github/workflows/migrate.yml
-  APPLIED_MIGRATIONS=(
-    00001 00002 00003 00004 00005
-    00006 00007 00008 00009 00010 00011
-    00012 00013 00014 00015
-    00016 00017 00018 00019 00020 00021 00022
-    00023 00024
-  )
+if ! command -v supabase &> /dev/null; then
+  warn "supabase CLI not found — using Management API"
+  CLI_AVAILABLE=false
+fi
 
-  info "Repairing ${#APPLIED_MIGRATIONS[@]} manually-applied migrations..."
-  for v in "${APPLIED_MIGRATIONS[@]}"; do
-    supabase migration repair --status applied "$v" 2>/dev/null || true
-  done
-  pass "Repair complete"
+if [ "$CLI_AVAILABLE" = true ]; then
+  info "Linking to $LABEL ($PROJECT_REF)..."
+  if ! supabase link --project-ref "$PROJECT_REF" 2>/dev/null; then
+    warn "CLI link failed — will fall back to Management API if needed"
+    CLI_AVAILABLE=false
+  fi
+fi
+
+# ── Show status (try CLI, fall back to API) ──
+if [ "$CLI_AVAILABLE" = true ]; then
+  info "Migration status (via CLI):"
+  echo ""
+  if ! supabase migration list 2>/dev/null; then
+    warn "CLI cannot list migrations (DB password issue?) — falling back to API"
+    CLI_AVAILABLE=false
+    echo ""
+    "$SCRIPT_DIR/db-migrate-api.sh" --status \
+      $([ "$TARGET" = "production" ] && echo "--prod" || echo "--staging")
+  fi
+  echo ""
+else
+  "$SCRIPT_DIR/db-migrate-api.sh" --status \
+    $([ "$TARGET" = "production" ] && echo "--prod" || echo "--staging")
   echo ""
 fi
-
-# ── Show status ──
-info "Migration status:"
-echo ""
-supabase migration list 2>/dev/null || {
-  fail "Could not list migrations. Check DB password and supabase login status."
-  warn "If the pooler password hasn't propagated yet, push to staging branch — CI will apply via access token."
-  exit 1
-}
-echo ""
 
 if [ "$STATUS_ONLY" = true ]; then
   exit 0
@@ -146,17 +154,22 @@ fi
 
 # ── Dry run ──
 if [ "$DRY_RUN" = true ]; then
-  info "Dry run — previewing pending migrations:"
-  echo ""
-  supabase db push --dry-run 2>&1 || true
+  if [ "$CLI_AVAILABLE" = true ]; then
+    info "Dry run (via CLI):"
+    echo ""
+    supabase db push --dry-run 2>&1 || true
+  else
+    "$SCRIPT_DIR/db-migrate-api.sh" --dry-run \
+      $([ "$TARGET" = "production" ] && echo "--prod" || echo "--staging")
+  fi
   echo ""
   exit 0
 fi
 
-# ── Apply ──
+# ── Confirmation ──
 echo ""
 if [ "$TARGET" = "production" ]; then
-  echo -e "  ${RED}⚠  You are about to apply migrations to PRODUCTION${NC}"
+  echo -e "  ${RED}WARNING: Applying to PRODUCTION${NC}"
   read -rp "  Type 'production' to confirm: " confirm
   if [ "$confirm" != "production" ]; then
     echo "  Aborted."
@@ -170,17 +183,37 @@ else
   fi
 fi
 
+# ── Apply ──
 echo ""
-info "Applying migrations to $LABEL..."
-echo ""
+if [ "$CLI_AVAILABLE" = true ]; then
+  info "Applying migrations to $LABEL via CLI..."
+  echo ""
 
-if supabase db push; then
-  echo ""
-  pass "All migrations applied to $LABEL"
+  if supabase db push; then
+    echo ""
+    pass "All migrations applied to $LABEL (via CLI)"
+  else
+    echo ""
+    warn "CLI failed — falling back to Management API..."
+    echo ""
+    if "$SCRIPT_DIR/db-migrate-api.sh" \
+      $([ "$TARGET" = "production" ] && echo "--prod" || echo "--staging") --ci; then
+      pass "All migrations applied to $LABEL (via API fallback)"
+    else
+      fail "Both CLI and Management API failed"
+      exit 1
+    fi
+  fi
 else
+  info "Applying migrations to $LABEL via Management API..."
   echo ""
-  fail "Migration failed — check output above"
-  exit 1
+  if "$SCRIPT_DIR/db-migrate-api.sh" \
+    $([ "$TARGET" = "production" ] && echo "--prod" || echo "--staging") --ci; then
+    pass "All migrations applied to $LABEL (via API)"
+  else
+    fail "Management API migration failed"
+    exit 1
+  fi
 fi
 
 echo ""

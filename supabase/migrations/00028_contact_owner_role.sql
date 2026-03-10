@@ -16,11 +16,13 @@
 --   contact.manager     → company_users.member
 --   contact.team_member → company_users.viewer
 
+-- Drop old constraint first (so UPDATE doesn't violate it)
+ALTER TABLE contacts DROP CONSTRAINT IF EXISTS contacts_role_check;
+
 -- Migrate existing 'client' contacts to 'team_member'
 UPDATE contacts SET role = 'team_member' WHERE role = 'client';
 
--- Replace constraint with new role set
-ALTER TABLE contacts DROP CONSTRAINT IF EXISTS contacts_role_check;
+-- Add new constraint
 ALTER TABLE contacts ADD CONSTRAINT contacts_role_check
   CHECK (role IN ('owner', 'admin', 'manager', 'team_member'));
 

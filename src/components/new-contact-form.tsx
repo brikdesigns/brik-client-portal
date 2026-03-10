@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/components/toast-provider';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
@@ -38,6 +39,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const { toastSuccess } = useToast();
 
   function handlePhoneChange(e: React.ChangeEvent<HTMLInputElement>) {
     const raw = e.target.value.replace(/\D/g, '').slice(0, 10);
@@ -89,6 +91,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
         }
       }
 
+      toastSuccess('Contact added', `${fullName} has been added.`);
       router.push(`/admin/contacts/${data.id}`);
       router.refresh();
     } catch {
