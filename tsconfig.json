@@ -48,7 +48,9 @@
     ".next/types/**/*.ts",
     "brik-bds/**/*.ts",
     "brik-bds/**/*.tsx",
-    ".next/dev/types/**/*.ts"
+    ".next/dev/types/**/*.ts",
+    ".next-prepush/types/**/*.ts",
+    ".next-prepush/dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",
