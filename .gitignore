@@ -54,3 +54,4 @@ updates/
 
 # Deno
 deno.lock
+.next-prepush
