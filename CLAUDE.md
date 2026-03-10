@@ -65,12 +65,14 @@ This catches stale secrets, broken connections, and migration drift before you w
 
 ### GitHub secrets required
 
-| Secret | Scope | Status |
-|--------|-------|--------|
-| `SUPABASE_ACCESS_TOKEN` | Both envs (account-level) | Set |
-| `SUPABASE_DB_PASSWORD` | Production | Needs update (wrong password causing CI failures) |
-| `SUPABASE_STAGING_PROJECT_REF` | Staging | Needs adding (`lmhzpzobdkstzpvsqest`) |
-| `SUPABASE_STAGING_DB_PASSWORD` | Staging | Needs adding |
+| Secret | Required | Purpose | Status |
+|--------|----------|---------|--------|
+| `SUPABASE_ACCESS_TOKEN` | **YES** | Management API — the ONLY secret CI needs for migrations | Set |
+| `SUPABASE_DB_PASSWORD` | No | CLI fallback only (local convenience) | Set |
+| `SUPABASE_STAGING_PROJECT_REF` | No | CLI fallback only | Set |
+| `SUPABASE_STAGING_DB_PASSWORD` | No | CLI fallback only | Set |
+
+CI uses the Management API (`db-migrate-api.sh`) which only needs `SUPABASE_ACCESS_TOKEN`. DB passwords are only needed for the Supabase CLI path, which is a local convenience tool with automatic API fallback.
 
 ### Netlify env vars (branch-scoped)
 
@@ -390,22 +392,62 @@ npm run db:seed    # Reset local DB with seeds (destructive!)
 ./scripts/health-check.sh            # Full infra health check
 ./scripts/health-check.sh --quick    # Fast check (skip build + Netlify)
 ./scripts/health-check.sh --ci       # CI mode (exit code = failure count)
-./scripts/db-migrate.sh              # Apply migrations to staging (default)
+./scripts/db-migrate.sh              # Apply migrations to staging (CLI + API fallback)
 ./scripts/db-migrate.sh --prod       # Apply migrations to production
+./scripts/db-migrate.sh --api        # Skip CLI, use Management API directly
+./scripts/db-migrate-api.sh          # Management API runner (CI uses this)
+./scripts/db-migrate-api.sh --status # Show applied vs pending (no DB password needed)
 ./scripts/bds-sync.sh               # Pull latest BDS submodule
 ```
 
 ## Migration Workflow
 
-Supabase CLI manages database schema via SQL migration files in `supabase/migrations/`.
+### Architecture: Management API-first
+
+CI uses the Supabase Management API (`db-migrate-api.sh`) which needs only `SUPABASE_ACCESS_TOKEN`. This eliminates DB password drift — the #1 cause of pipeline failures. The Supabase CLI is kept for local convenience with automatic API fallback.
+
+```
+                AGENTS (feature branches)
+                ┌──────────┐  ┌──────────┐
+                │ Agent A  │  │ Agent B  │
+                └────┬─────┘  └────┬─────┘
+                     │             │
+                ┌────▼─────────────▼────┐
+                │   pre-push hook       │
+                │   • build check       │
+                │   • migration number  │
+                │     conflict check    │
+                └───────────┬───────────┘
+                            │
+                ┌───────────▼───────────┐
+                │      staging          │
+                └───────────┬───────────┘
+              concurrency: migrate-staging
+              (queues, never cancels)
+                            │
+                ┌───────────▼───────────┐
+                │  GitHub Actions       │
+                │  db-migrate-api.sh    │
+                │  (Management API)     │
+                │  needs: ACCESS_TOKEN  │
+                │  only                 │
+                │                       │
+                │  on failure:          │
+                │  → GitHub Issue       │
+                └───────────┬───────────┘
+                            │
+                ┌───────────▼───────────┐
+                │     main (PR merge)   │
+                │  same pipeline,       │
+                │  target=production    │
+                └───────────────────────┘
+```
 
 ### How migrations flow
 
 ```
-Write SQL → push to staging → CI applies to staging DB → test → merge to main → CI applies to prod DB
+Write SQL → push to staging → CI applies via Management API → test → merge to main → CI applies to prod
 ```
-
-Staging is the default target. You should never need to apply migrations to production manually.
 
 ### Creating migrations
 
@@ -414,38 +456,41 @@ Staging is the default target. You should never need to apply migrations to prod
 3. Test on staging branch deploy
 4. Merge `staging` → `main` — CI auto-applies to production Supabase
 
+### Multi-agent safety
+
+The pre-push hook detects migration number conflicts across branches. If two agents create the same migration number on different branches, the push is blocked with a suggested next number.
+
 ### Applying migrations locally
 
-The helper script defaults to staging. Use `--prod` to target production (requires typing "production" to confirm).
-
 ```bash
-./scripts/db-migrate.sh                    # Staging: show status + apply
-./scripts/db-migrate.sh --prod             # Production: show status + apply (requires confirmation)
+./scripts/db-migrate.sh                    # Staging (CLI first, API fallback)
+./scripts/db-migrate.sh --prod             # Production (requires confirmation)
+./scripts/db-migrate.sh --api              # Skip CLI, use API directly
 ./scripts/db-migrate.sh --status           # Status only
 ./scripts/db-migrate.sh --dry-run          # Preview what would be applied
-./scripts/db-migrate.sh --prod --dry-run   # Preview against production
+./scripts/db-migrate-api.sh --status       # Status via API (no DB password needed)
 ```
 
-Requires `SUPABASE_STAGING_PROJECT_REF` in `.env.local` or exported.
+### Manual Dashboard migrations
 
-### Manual Dashboard migrations (production only)
+If you apply SQL via Supabase Dashboard, record it in schema_migrations:
 
-If you apply SQL via Supabase Dashboard, add the version number to the `APPLIED_MIGRATIONS` list in:
-- `.github/workflows/migrate.yml`
-- `scripts/db-migrate.sh`
+```sql
+INSERT INTO supabase_migrations.schema_migrations (version, name)
+VALUES ('NNNNN', 'description') ON CONFLICT DO NOTHING;
+```
 
-This is only needed for production. Staging gets all migrations via CLI.
+Use `./scripts/db-migrate-api.sh --status` to verify the record was created.
 
 ### GitHub Action (`.github/workflows/migrate.yml`)
 
+- Uses `db-migrate-api.sh` (Management API) — no DB password needed
+- Only requires `SUPABASE_ACCESS_TOKEN` GitHub secret
 - Triggers on push to `main` or `staging` when `supabase/migrations/**` changes
 - Auto-detects environment from branch (`main` → prod, `staging` → staging)
+- Concurrency group per branch — queues (never cancels) simultaneous pushes
+- On failure: auto-creates a GitHub issue for visibility
 - Supports manual dispatch with environment override and dry-run option
-- Production repairs manually-applied migrations; staging skips this step
-
-### Required GitHub secrets
-
-See the Environments section above for the full secrets list.
 
 ## Key Integrations
 

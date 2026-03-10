@@ -120,9 +120,6 @@ echo "── Supabase Staging ──"
 
 if [ -n "${SUPABASE_STAGING_PROJECT_REF:-}" ]; then
   STG_URL="https://${SUPABASE_STAGING_PROJECT_REF}.supabase.co"
-  STG_STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-    "${STG_URL}/rest/v1/" \
-    -H "apikey: ${NEXT_PUBLIC_SUPABASE_ANON_KEY}" 2>/dev/null || echo "000")
 
   # Staging uses different keys — just check the URL resolves
   STG_PING=$(curl -s -o /dev/null -w "%{http_code}" "${STG_URL}" 2>/dev/null || echo "000")
@@ -135,6 +132,33 @@ else
   fail "SUPABASE_STAGING_PROJECT_REF not set in .env.local"
 fi
 
+echo ""
+echo "── Management API (migration path) ──"
+
+if [ -n "${SUPABASE_ACCESS_TOKEN:-}" ]; then
+  # This is the ONLY credential CI needs for migrations.
+  # If this works, migrations will work — regardless of DB password state.
+
+  for ENV_LABEL in "production:rnspxmrkpoukccahggli" "staging:${SUPABASE_STAGING_PROJECT_REF:-lmhzpzobdkstzpvsqest}"; do
+    ELABEL="${ENV_LABEL%%:*}"
+    EREF="${ENV_LABEL#*:}"
+
+    API_TEST=$(curl -s -o /dev/null -w "%{http_code}" -X POST \
+      "https://api.supabase.com/v1/projects/${EREF}/database/query" \
+      -H "Authorization: Bearer $SUPABASE_ACCESS_TOKEN" \
+      -H "Content-Type: application/json" \
+      -d '{"query": "SELECT 1 AS ok"}' 2>/dev/null || echo "000")
+
+    if [ "$API_TEST" = "200" ] || [ "$API_TEST" = "201" ]; then
+      pass "Management API ($ELABEL) — OK"
+    else
+      fail "Management API ($ELABEL) — HTTP $API_TEST (migrations will fail!)"
+    fi
+  done
+else
+  fail "SUPABASE_ACCESS_TOKEN not set — Management API unreachable (migrations will fail!)"
+fi
+
 # ── 3. GitHub secrets ──
 echo ""
 echo "── GitHub Secrets ──"
@@ -142,18 +166,26 @@ echo "── GitHub Secrets ──"
 if command -v gh &> /dev/null; then
   SECRETS=$(gh secret list --repo brikdesigns/brik-client-portal 2>/dev/null || echo "")
 
-  REQUIRED_SECRETS=(
-    SUPABASE_ACCESS_TOKEN
-    SUPABASE_DB_PASSWORD
-    SUPABASE_STAGING_PROJECT_REF
-    SUPABASE_STAGING_DB_PASSWORD
-  )
+  # SUPABASE_ACCESS_TOKEN is the only secret CI needs for migrations.
+  # DB passwords are optional (local CLI convenience only).
+  REQUIRED_SECRETS=(SUPABASE_ACCESS_TOKEN)
+  OPTIONAL_SECRETS=(SUPABASE_DB_PASSWORD SUPABASE_STAGING_PROJECT_REF SUPABASE_STAGING_DB_PASSWORD)
+
   for secret in "${REQUIRED_SECRETS[@]}"; do
+    if echo "$SECRETS" | grep -q "^$secret"; then
+      UPDATED=$(echo "$SECRETS" | grep "^$secret" | awk '{print $2}')
+      pass "$secret (updated $UPDATED) [REQUIRED for CI]"
+    else
+      fail "$secret missing — CI migrations will fail!"
+    fi
+  done
+
+  for secret in "${OPTIONAL_SECRETS[@]}"; do
     if echo "$SECRETS" | grep -q "^$secret"; then
       UPDATED=$(echo "$SECRETS" | grep "^$secret" | awk '{print $2}')
       pass "$secret (updated $UPDATED)"
     else
-      fail "$secret missing"
+      warn "$secret missing (optional — only needed for CLI fallback)"
     fi
   done
 else

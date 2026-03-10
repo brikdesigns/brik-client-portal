@@ -1,10 +1,15 @@
 name: Supabase Migrations
 
+# Applies migrations via the Supabase Management API.
+# Only requires SUPABASE_ACCESS_TOKEN — no DB password needed.
+# This eliminates the #1 cause of CI failures (password drift).
+
 on:
   push:
     branches: [main, staging]
     paths:
       - 'supabase/migrations/**'
+      - 'scripts/db-migrate-api.sh'
       - '.github/workflows/migrate.yml'
   workflow_dispatch:
     inputs:
@@ -21,6 +26,11 @@ on:
           - production
         default: auto
 
+# Only one migration job per branch at a time. Queue, don't cancel.
+concurrency:
+  group: migrate-${{ github.ref_name }}
+  cancel-in-progress: false
+
 jobs:
   migrate:
     runs-on: ubuntu-latest
@@ -29,14 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
-
       - name: Resolve target environment
         id: env
         run: |
-          # Manual dispatch can override; otherwise detect from branch
           INPUT_ENV="${{ inputs.environment || 'auto' }}"
           if [ "$INPUT_ENV" = "auto" ] || [ "$INPUT_ENV" = "" ]; then
             BRANCH="${GITHUB_REF_NAME}"
@@ -47,61 +52,51 @@ jobs:
           case "$BRANCH" in
             main|production)
               echo "name=production" >> "$GITHUB_OUTPUT"
-              echo "project_ref=rnspxmrkpoukccahggli" >> "$GITHUB_OUTPUT"
               echo "label=PRODUCTION" >> "$GITHUB_OUTPUT"
               ;;
             *)
               echo "name=staging" >> "$GITHUB_OUTPUT"
-              echo "project_ref=${{ secrets.SUPABASE_STAGING_PROJECT_REF }}" >> "$GITHUB_OUTPUT"
               echo "label=STAGING" >> "$GITHUB_OUTPUT"
               ;;
           esac
 
-      - name: Set database password
+      - name: Apply migrations (Management API)
         run: |
+          chmod +x ./scripts/db-migrate-api.sh
+
+          TARGET_FLAG="--staging"
           if [ "${{ steps.env.outputs.name }}" = "production" ]; then
-            echo "SUPABASE_DB_PASSWORD=${{ secrets.SUPABASE_DB_PASSWORD }}" >> "$GITHUB_ENV"
-          else
-            echo "SUPABASE_DB_PASSWORD=${{ secrets.SUPABASE_STAGING_DB_PASSWORD }}" >> "$GITHUB_ENV"
+            TARGET_FLAG="--prod"
           fi
 
-      - name: Link Supabase project (${{ steps.env.outputs.label }})
-        run: |
-          echo "::notice::Targeting ${{ steps.env.outputs.label }} (ref: ${{ steps.env.outputs.project_ref }})"
-          supabase link --project-ref "${{ steps.env.outputs.project_ref }}"
+          DRY_RUN_FLAG=""
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
 
-      - name: Repair manually-applied migrations
-        if: steps.env.outputs.name == 'production'
-        run: |
-          # Migrations applied via Dashboard SQL Editor aren't tracked by CLI.
-          # Mark all known-applied migrations so db push only runs truly new ones.
-          # This list is maintained manually — add the version number when you
-          # apply a migration via Dashboard.
-          #
-          # NOTE: Staging doesn't need this — all migrations are applied via CLI.
-          APPLIED_MIGRATIONS=(
-            00001 00002 00003 00004 00005
-            00006 00007 00008 00009 00010 00011
-            00012 00013 00014 00015
-            00016 00017 00018 00019 00020 00021 00022
-            00023 00024
-          )
-          for v in "${APPLIED_MIGRATIONS[@]}"; do
-            supabase migration repair --status applied "$v" 2>/dev/null || true
-          done
-          echo "Repaired ${#APPLIED_MIGRATIONS[@]} manually-applied migrations"
+          ./scripts/db-migrate-api.sh $TARGET_FLAG $DRY_RUN_FLAG --ci
 
-      - name: Show migration status
-        run: supabase migration list
-
-      - name: Preview pending migrations (dry run)
-        if: inputs.dry_run == true
+      - name: Notify on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          echo "=== Dry run — showing what would be applied ==="
-          supabase db push --dry-run
+          LABEL="${{ steps.env.outputs.label }}"
+          RUN_URL="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          COMMIT_MSG=$(git log -1 --pretty=%s)
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
 
-      - name: Apply pending migrations
-        if: inputs.dry_run != true
-        run: |
-          echo "=== Applying to ${{ steps.env.outputs.label }} ==="
-          supabase db push
+          # Create a GitHub issue for visibility
+          gh issue create \
+            --repo "${{ github.repository }}" \
+            --title "Migration failed on $LABEL ($SHORT_SHA)" \
+            --body "**Branch:** \`${{ github.ref_name }}\`
+          **Commit:** \`$SHORT_SHA\` — $COMMIT_MSG
+          **Workflow run:** $RUN_URL
+
+          Check the workflow logs for the exact SQL error.
+
+          ---
+          *Auto-created by CI on migration failure.*" \
+            --label "bug" \
+          || echo "::warning::Could not create GitHub issue (check token permissions)"
