@@ -20,6 +20,8 @@ export default async function UserDetailPage({ params }: Props) {
     .from('profiles')
     .select(`
       id,
+      first_name,
+      last_name,
       full_name,
       email,
       role,

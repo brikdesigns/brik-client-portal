@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const supabase = await createClient();
 
   const body = await request.json();
-  const { report_id, report_type } = body as { report_id: string; report_type: string };
+  const { report_id, report_type, skip_email } = body as { report_id: string; report_type: string; skip_email?: boolean };
 
   if (!report_id || !report_type) {
     return NextResponse.json({ error: 'report_id and report_type are required' }, { status: 400 });
@@ -171,24 +171,27 @@ export async function POST(request: Request) {
   await recalculateReportSetScore(supabase, report.report_set_id);
 
   // Send notification email to the admin who triggered analysis
-  try {
-    const emailData = await sendAnalysisCompleteEmail({
-      to: user.email!,
-      recipientName: auth.profile.full_name ?? undefined,
-      companyName: client.name,
-      companySlug: client.slug,
-    });
+  // skip_email=true when called in batch from RunAnalysisButton (avoids 4 emails)
+  if (!skip_email) {
+    try {
+      const emailData = await sendAnalysisCompleteEmail({
+        to: user.email!,
+        recipientName: auth.profile.first_name ?? undefined,
+        companyName: client.name,
+        companySlug: client.slug,
+      });
 
-    await logEmail(supabase, {
-      to: user.email!,
-      subject: `Marketing analysis is ready for ${client.name}`,
-      template: 'analysis_complete',
-      resendId: emailData?.id,
-      companyId: client.id,
-    });
-  } catch (emailErr) {
-    // Don't fail the analysis response if email fails
-    console.error('Failed to send analysis complete email:', emailErr);
+      await logEmail(supabase, {
+        to: user.email!,
+        subject: `Marketing analysis is ready for ${client.name}`,
+        template: 'analysis_complete',
+        resendId: emailData?.id,
+        companyId: client.id,
+      });
+    } catch (emailErr) {
+      // Don't fail the analysis response if email fails
+      console.error('Failed to send analysis complete email:', emailErr);
+    }
   }
 
   return NextResponse.json({

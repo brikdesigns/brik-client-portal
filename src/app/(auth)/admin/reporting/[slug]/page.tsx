@@ -55,7 +55,7 @@ export default async function ClientReportListPage({ params }: Props) {
           <Breadcrumb
             items={[
               { label: 'Reporting', href: '/admin/reporting' },
-              { label: client.name },
+              { label: client.name, href: `/admin/companies/${slug}?tab=reporting` },
             ]}
           />
         }
@@ -86,7 +86,7 @@ export default async function ClientReportListPage({ params }: Props) {
             header: 'Report',
             accessor: (r) => (
               <a
-                href={`/admin/reporting/${slug}/${r.report_type}`}
+                href={`/admin/companies/${slug}/reporting/${r.report_type}`}
                 style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
               >
                 {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
@@ -108,7 +108,7 @@ export default async function ClientReportListPage({ params }: Props) {
           {
             header: '',
             accessor: (r) => (
-              <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${slug}/${r.report_type}`}>
+              <Button variant="secondary" size="sm" asLink href={`/admin/companies/${slug}/reporting/${r.report_type}`}>
                 View
               </Button>
             ),

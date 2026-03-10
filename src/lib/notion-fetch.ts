@@ -53,8 +53,14 @@ interface NotionSearchResult {
 /**
  * Search Notion for meeting pages by client name in the title.
  * Meeting notes are titled with [client-name] (e.g. "EXAMPLE DISCOVERY - Birdwell & Mutlak Dentistry").
+ * When exactMatch is false, returns all search results so the user can browse and pick.
  */
-export async function searchMeetingByClientName(clientName: string): Promise<NotionSearchResult[]> {
+export async function searchMeetingByClientName(
+  clientName: string,
+  options?: { exactMatch?: boolean }
+): Promise<NotionSearchResult[]> {
+  const exactMatch = options?.exactMatch ?? true;
+
   const res = await fetch(`${NOTION_API}/search`, {
     method: 'POST',
     headers: notionHeaders(),
@@ -62,7 +68,7 @@ export async function searchMeetingByClientName(clientName: string): Promise<Not
       query: clientName,
       filter: { value: 'page', property: 'object' },
       sort: { direction: 'descending', timestamp: 'last_edited_time' },
-      page_size: 10,
+      page_size: 20,
     }),
   });
 
@@ -73,18 +79,20 @@ export async function searchMeetingByClientName(clientName: string): Promise<Not
 
   const data = await res.json();
 
-  return (data.results || [])
-    .filter((page: Record<string, unknown>) => {
-      // Only include pages whose title contains the client name (case-insensitive)
-      const title = extractTitle(page);
-      return title.toLowerCase().includes(clientName.toLowerCase());
-    })
+  const pages = (data.results || [])
     .map((page: Record<string, unknown>) => ({
       id: page.id as string,
       title: extractTitle(page),
       url: (page as Record<string, string>).url || '',
       lastEdited: (page as Record<string, string>).last_edited_time || '',
-    }));
+    }))
+    .filter((p: NotionSearchResult) => p.title.length > 0);
+
+  if (!exactMatch) return pages;
+
+  return pages.filter((p: NotionSearchResult) =>
+    p.title.toLowerCase().includes(clientName.toLowerCase())
+  );
 }
 
 /**

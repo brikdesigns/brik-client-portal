@@ -21,7 +21,7 @@ export default function AnalysisCompleteEmail({
   companySlug,
 }: AnalysisCompleteEmailProps) {
   const greeting = recipientName ? `Hi ${recipientName},` : 'Hi,';
-  const resultsUrl = `${SITE_URL}/admin/reporting/${companySlug}`;
+  const resultsUrl = `${SITE_URL}/admin/companies/${companySlug}?tab=reporting`;
 
   return (
     <BrikEmailLayout

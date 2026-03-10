@@ -73,19 +73,19 @@ export function ProposalSectionEditor({
             {section.title}
           </span>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: gap.sm }}>
           {!isFeeSection && !collapsed && (
             <>
               <Button
                 type="button"
                 variant="ghost"
                 size="sm"
+                iconBefore={<FontAwesomeIcon icon={preview ? faEdit : faEye} style={iconSize} />}
                 onClick={(e) => {
                   e.stopPropagation();
                   setPreview(!preview);
                 }}
               >
-                <FontAwesomeIcon icon={preview ? faEdit : faEye} style={iconSize} />
                 {preview ? 'Edit' : 'Preview'}
               </Button>
               {onRegenerate && (
@@ -93,13 +93,13 @@ export function ProposalSectionEditor({
                   type="button"
                   variant="ghost"
                   size="sm"
+                  iconBefore={<FontAwesomeIcon icon={faRotateRight} style={iconSize} spin={regenerating} />}
                   disabled={regenerating}
                   onClick={(e) => {
                     e.stopPropagation();
                     onRegenerate();
                   }}
                 >
-                  <FontAwesomeIcon icon={faRotateRight} style={iconSize} spin={regenerating} />
                   {regenerating ? 'Regenerating...' : 'Regenerate'}
                 </Button>
               )}

@@ -20,7 +20,7 @@ export async function POST(request: Request) {
 
   const { data: contact, error: contactError } = await serviceClient
     .from('contacts')
-    .select('id, full_name, email, company_id, companies(id, name)')
+    .select('id, first_name, email, company_id, companies(id, name)')
     .eq('id', contact_id)
     .single();
 
@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   }
 
   const company = contact.companies as unknown as { id: string; name: string };
-  const firstName = contact.full_name?.split(' ')[0] || undefined;
+  const firstName = contact.first_name || undefined;
 
   // Generate a setup token (expires in 7 days)
   const setupToken = crypto.randomUUID();

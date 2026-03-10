@@ -14,7 +14,7 @@ export default async function EditUserPage({ params }: Props) {
   // Fetch user data
   const { data: user, error } = await supabase
     .from('profiles')
-    .select('id, full_name, email, role, is_active, company_id')
+    .select('id, first_name, last_name, full_name, email, role, is_active, company_id')
     .eq('id', id)
     .single();
 

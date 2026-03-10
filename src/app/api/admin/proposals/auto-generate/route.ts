@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { requireAdmin, isAuthError } from '@/lib/auth';
-import { getMeetingNotes } from '@/lib/notion-fetch';
+import { getMeetingNotes, fetchMeetingNotes } from '@/lib/notion-fetch';
 import { recommendServices, type CatalogService } from '@/lib/service-recommendation';
 import {
   generateProposalSections,
@@ -14,7 +14,7 @@ import crypto from 'crypto';
  * POST /api/admin/proposals/auto-generate
  * One-click proposal generation pipeline. Admin-only.
  *
- * Input: { company_id }
+ * Input: { company_id, meeting_note_page_id? }
  * Pipeline:
  *   1. Fetch company + primary contact
  *   2. Search Notion for meeting notes by company name
@@ -33,7 +33,10 @@ export async function POST(request: Request) {
   const supabase = await createClient();
 
   const body = await request.json();
-  const { company_id } = body as { company_id: string };
+  const { company_id, meeting_note_page_id } = body as {
+    company_id: string;
+    meeting_note_page_id?: string;
+  };
 
   if (!company_id) {
     return NextResponse.json({ error: 'company_id is required' }, { status: 400 });
@@ -58,13 +61,22 @@ export async function POST(request: Request) {
       .eq('is_primary', true)
       .single();
 
-    // 2. Search Notion for meeting notes by company name
-    const notesResult = await getMeetingNotes({ clientName: company.name });
+    // 2. Fetch meeting notes — use specific page if provided, otherwise search by name
+    let notesResult: { content: string; pageId: string; title: string; url: string };
+
+    if (meeting_note_page_id) {
+      const content = await fetchMeetingNotes(meeting_note_page_id);
+      notesResult = { content, pageId: meeting_note_page_id, title: '', url: '' };
+    } else {
+      notesResult = await getMeetingNotes({ clientName: company.name });
+    }
 
     if (!notesResult.content || notesResult.content.trim().length < 50) {
       return NextResponse.json(
         {
-          error: `No meeting notes found for "${company.name}" in Notion.`,
+          error: meeting_note_page_id
+            ? 'The selected meeting note has insufficient content (less than 50 characters).'
+            : `No meeting notes found for "${company.name}" in Notion.`,
           error_code: 'NO_MEETING_NOTES',
           company_name: company.name,
         },

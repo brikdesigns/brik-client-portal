@@ -10,7 +10,8 @@ import { font, color, space, gap, border } from '@/lib/tokens';
 interface EditUserFormProps {
   user: {
     id: string;
-    full_name: string | null;
+    first_name: string | null;
+    last_name: string | null;
     email: string;
     role: string;
     is_active: boolean;
@@ -25,7 +26,8 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
   const [error, setError] = useState<string | null>(null);
 
   const [formData, setFormData] = useState({
-    full_name: user.full_name || '',
+    first_name: user.first_name || '',
+    last_name: user.last_name || '',
     email: user.email,
     role: user.role,
     is_active: user.is_active,
@@ -61,16 +63,26 @@ export function EditUserForm({ user, clients }: EditUserFormProps) {
   return (
     <form onSubmit={handleSubmit}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
-          <TextInput
-            label="Full Name"
-            id="full_name"
-            type="text"
-            value={formData.full_name}
-            onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
-            placeholder="Enter full name"
-            required
-            fullWidth
-          />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: gap.lg }}>
+            <TextInput
+              label="First Name"
+              type="text"
+              value={formData.first_name}
+              onChange={(e) => setFormData({ ...formData, first_name: e.target.value })}
+              placeholder="First name"
+              required
+              fullWidth
+            />
+            <TextInput
+              label="Last Name"
+              type="text"
+              value={formData.last_name}
+              onChange={(e) => setFormData({ ...formData, last_name: e.target.value })}
+              placeholder="Last name"
+              required
+              fullWidth
+            />
+          </div>
 
           <TextInput
             label="Email"

@@ -24,7 +24,8 @@ const roleOptions = [
 interface EditContactFormProps {
   contact: {
     id: string;
-    full_name: string;
+    first_name: string;
+    last_name: string;
     email: string | null;
     phone: string | null;
     title: string | null;
@@ -37,7 +38,8 @@ interface EditContactFormProps {
 }
 
 export function EditContactForm({ contact, companies }: EditContactFormProps) {
-  const [fullName, setFullName] = useState(contact.full_name);
+  const [firstName, setFirstName] = useState(contact.first_name);
+  const [lastName, setLastName] = useState(contact.last_name);
   const [email, setEmail] = useState(contact.email ?? '');
   const [phone, setPhone] = useState(formatPhone(contact.phone ?? ''));
   const [title, setTitle] = useState(contact.title ?? '');
@@ -64,7 +66,8 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
       const { error: updateError } = await supabase
         .from('contacts')
         .update({
-          full_name: fullName,
+          first_name: firstName,
+          last_name: lastName,
           email: email || null,
           phone: phone || null,
           title: title || null,
@@ -92,14 +95,30 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
-          <TextInput
-            label="Full Name"
-            type="text"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            fullWidth
-          />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: gap.lg,
+            }}
+          >
+            <TextInput
+              label="First Name"
+              type="text"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              fullWidth
+            />
+            <TextInput
+              label="Last Name"
+              type="text"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              fullWidth
+            />
+          </div>
 
           <div
             style={{
@@ -176,7 +195,7 @@ export function EditContactForm({ contact, companies }: EditContactFormProps) {
               htmlFor="is-primary"
               style={{
                 fontFamily: font.family.body,
-                fontSize: font.size.body.sm,
+                fontSize: font.size.body.md,
                 color: color.text.primary,
               }}
             >

@@ -41,6 +41,7 @@ export interface AuthUser {
   profile: {
     id: string;
     role: SystemRole;
+    first_name: string | null;
     full_name: string | null;
     email: string | null;
   };
@@ -58,7 +59,7 @@ export async function getAuthUser(supabase?: SupabaseClient): Promise<AuthUser |
 
   const { data: profile } = await client
     .from('profiles')
-    .select('id, role, full_name, email')
+    .select('id, role, first_name, full_name, email')
     .eq('id', user.id)
     .single();
 

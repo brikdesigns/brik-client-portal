@@ -161,7 +161,7 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
             accessor: (rs) => {
               const client = rs.companies;
               return client ? (
-                <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}`}>
+                <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}?tab=reporting`}>
                   View
                 </Button>
               ) : null;

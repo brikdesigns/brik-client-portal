@@ -1,30 +1,68 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Modal } from '@bds/components/ui/Modal/Modal';
-import { font, color, gap, space } from '@/lib/tokens';
+import { Select } from '@bds/components/ui/Select/Select';
+import { color, space } from '@/lib/tokens';
 import { text } from '@/lib/styles';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faWandMagicSparkles, faArrowUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 
-const NOTION_MEETINGS_URL = 'https://www.notion.so/brikdesigns/';
+interface MeetingNote {
+  id: string;
+  title: string;
+  url: string;
+  lastEdited: string;
+}
 
 interface GenerateProposalButtonProps {
   companyId: string;
   companyName: string;
   slug: string;
-  hideIcon?: boolean;
+  label?: string;
 }
 
-export function GenerateProposalButton({ companyId, companyName, slug, hideIcon }: GenerateProposalButtonProps) {
+export function GenerateProposalButton({ companyId, companyName, slug, label = 'Get started' }: GenerateProposalButtonProps) {
   const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
-  const [showMeetingNotesModal, setShowMeetingNotesModal] = useState(false);
+  const [meetingNotes, setMeetingNotes] = useState<MeetingNote[]>([]);
+  const [selectedNoteId, setSelectedNoteId] = useState('');
+  const [loadingNotes, setLoadingNotes] = useState(false);
+
+  const fetchAndOpen = useCallback(async () => {
+    setLoadingNotes(true);
+    setError('');
+    setSelectedNoteId('');
+    setMeetingNotes([]);
+
+    try {
+      const res = await fetch(
+        `/api/admin/proposals/meeting-notes?company_name=${encodeURIComponent(companyName)}`
+      );
+      if (res.ok) {
+        const data = await res.json();
+        const results = data.results || [];
+        setMeetingNotes(results);
+        if (results.length === 1) {
+          setSelectedNoteId(results[0].id);
+        }
+      }
+    } catch {
+      // Silent fail — modal will show empty state
+    } finally {
+      setLoadingNotes(false);
+      setShowModal(true);
+    }
+  }, [companyName]);
 
   async function handleGenerate() {
+    if (!selectedNoteId) {
+      setError('Select a meeting note to continue.');
+      return;
+    }
+
     setGenerating(true);
     setError('');
 
@@ -32,20 +70,20 @@ export function GenerateProposalButton({ companyId, companyName, slug, hideIcon 
       const res = await fetch('/api/admin/proposals/auto-generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ company_id: companyId }),
+        body: JSON.stringify({
+          company_id: companyId,
+          meeting_note_page_id: selectedNoteId,
+        }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.error_code === 'NO_MEETING_NOTES') {
-          setShowMeetingNotesModal(true);
-          return;
-        }
         setError(data.error || 'Generation failed.');
         return;
       }
 
+      setShowModal(false);
       router.push(`/admin/companies/${slug}/proposals/${data.proposal_id}`);
       router.refresh();
     } catch {
@@ -55,83 +93,81 @@ export function GenerateProposalButton({ companyId, companyName, slug, hideIcon 
     }
   }
 
+  function handleManual() {
+    setShowModal(false);
+    router.push(`/admin/companies/${slug}/proposals/new`);
+  }
+
+  const selectedNote = meetingNotes.find((n) => n.id === selectedNoteId);
+
   return (
     <>
-      <div style={{ display: 'flex', alignItems: 'center', gap: gap.sm }}>
-        {error && (
-          <span
-            style={{
-              fontFamily: font.family.body,
-              fontSize: font.size.body.xs,
-              color: color.system.red,
-              maxWidth: '300px',
-            }}
-          >
-            {error}
-          </span>
-        )}
-        <Button
-          variant="primary"
-          size="sm"
-          loading={generating}
-          onClick={handleGenerate}
-        >
-          {!hideIcon && <FontAwesomeIcon icon={faWandMagicSparkles} style={{ width: 12, height: 12 }} />} Generate
-        </Button>
-      </div>
+      <Button variant="primary" size="sm" onClick={fetchAndOpen} loading={loadingNotes}>
+        {label}
+      </Button>
 
       <Modal
-        isOpen={showMeetingNotesModal}
-        onClose={() => setShowMeetingNotesModal(false)}
-        title="Meeting notes required"
+        isOpen={showModal}
+        onClose={() => setShowModal(false)}
+        title="Begin proposal"
         size="md"
         footer={
           <>
-            <Button
-              variant="outline"
-              size="md"
-              onClick={() => setShowMeetingNotesModal(false)}
-            >
-              Close
+            <Button variant="ghost" size="md" onClick={() => setShowModal(false)}>
+              Cancel
+            </Button>
+            <Button variant="secondary" size="md" onClick={handleManual}>
+              Manual
             </Button>
             <Button
               variant="primary"
               size="md"
-              onClick={() => {
-                window.open(NOTION_MEETINGS_URL, '_blank');
-              }}
+              onClick={handleGenerate}
+              loading={generating}
+              disabled={!selectedNoteId}
             >
-              <FontAwesomeIcon icon={faArrowUpRightFromSquare} style={{ width: 12, height: 12 }} />
-              Open meetings database
+              Begin
             </Button>
           </>
         }
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
           <p style={{ ...text.body, margin: 0 }}>
-            No meeting notes found for <strong>{companyName}</strong> in Notion.
+            Select the discovery call note for <strong>{companyName}</strong>. The AI will
+            analyze the conversation, recommend services, and draft the full proposal.
           </p>
 
-          <div
-            style={{
-              backgroundColor: color.surface.secondary,
-              borderRadius: 'var(--radius-sm)',
-              padding: space.md,
+          <Select
+            label="Meeting note"
+            placeholder={meetingNotes.length === 0
+              ? `No meeting notes found for "${companyName}"`
+              : 'Select a meeting note...'}
+            options={meetingNotes.map((note) => ({
+              label: note.title,
+              value: note.id,
+            }))}
+            value={selectedNoteId}
+            onChange={(e) => {
+              setSelectedNoteId(e.target.value);
+              setError('');
             }}
-          >
-            <p style={{ ...text.body, fontWeight: 600, margin: `0 0 ${space.xs}` }}>
-              Requirements
-            </p>
-            <ul style={{ ...text.body, margin: 0, paddingLeft: space.lg }}>
-              <li>Create a discovery call page in the meetings database</li>
-              <li>Title must include the company name (e.g. &ldquo;Discovery — {companyName}&rdquo;)</li>
-              <li>Add meeting notes or call transcript to the page</li>
-            </ul>
-          </div>
+            helperText={selectedNote
+              ? `Last edited ${new Date(selectedNote.lastEdited).toLocaleDateString()}`
+              : undefined}
+            size="md"
+          />
 
-          <p style={{ ...text.body, color: color.text.muted, margin: 0 }}>
-            After creating the page, close this dialog, refresh the page, and try again. Or use the manual proposal builder.
-          </p>
+          {error && (
+            <p
+              style={{
+                ...text.body,
+                color: color.system.red,
+                margin: 0,
+              }}
+            >
+              {error}
+            </p>
+          )}
         </div>
       </Modal>
     </>

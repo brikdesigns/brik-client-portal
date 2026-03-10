@@ -26,27 +26,29 @@ export default function ProposalSentEmail({
       <EmailHeading>Welcome</EmailHeading>
       <Text style={styles.text}>{greeting}</Text>
       <Text style={styles.text}>
-        Brik Designs has prepared a proposal for <strong>{companyName}</strong>.
-        Inside you&apos;ll find a summary of the project scope, timeline, and
-        investment — everything you need to make an informed decision.
+        Thank you again for your time on our proposal call — we&apos;re
+        excited about what we can build together.
       </Text>
       <Text style={styles.text}>
-        Once accepted, here&apos;s what happens next:
+        Your proposal is ready below. Inside, you&apos;ll be able to review
+        everything we discussed. If everything looks good, simply click
+        Accept to move forward.
+      </Text>
+      <Text style={styles.text}>Once accepted:</Text>
+      <Text style={styles.listItem}>
+        &bull;&nbsp;&nbsp;You&apos;ll automatically receive your agreement and invoice
       </Text>
       <Text style={styles.listItem}>
-        &bull;&nbsp;&nbsp;You&apos;ll receive a welcome email with your next steps
+        &bull;&nbsp;&nbsp;Once completed — we&apos;re officially ready to rock and roll
       </Text>
-      <Text style={styles.listItem}>
-        &bull;&nbsp;&nbsp;We&apos;ll schedule a kickoff call to align on goals and timeline
+      <Text style={styles.text}>
+        If you have any questions while reviewing, just reply directly to
+        this email. :)
       </Text>
-      <Text style={styles.listItem}>
-        &bull;&nbsp;&nbsp;Your dedicated project portal will be set up and ready to go
+      <Text style={styles.text}>
+        Grateful for the opportunity to partner with you.
       </Text>
-      <EmailButton href={proposalUrl}>View proposal</EmailButton>
-      <Text style={styles.muted}>
-        This link is unique to your proposal and does not require a login.
-        If you have questions, just reply to this email.
-      </Text>
+      <EmailButton href={proposalUrl}>Review Proposal</EmailButton>
     </BrikEmailLayout>
   );
 }
@@ -66,12 +68,5 @@ const styles = {
     lineHeight: '1.5',
     margin: '0 0 8px',
     paddingLeft: '8px',
-  } as React.CSSProperties,
-  muted: {
-    color: BRAND.textMuted,
-    fontFamily,
-    fontSize: '13px',
-    lineHeight: '1.5',
-    margin: '24px 0 0',
   } as React.CSSProperties,
 };
