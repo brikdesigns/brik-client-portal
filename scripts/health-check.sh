@@ -272,6 +272,23 @@ if git rev-parse origin/main &>/dev/null && git rev-parse origin/staging &>/dev/
   fi
 fi
 
+# Prune stale remote refs
+PRUNED=$(git fetch --prune origin 2>&1 | grep '\[deleted\]' | wc -l | tr -d ' ')
+if [ "$PRUNED" -gt 0 ]; then
+  info "Pruned $PRUNED stale remote ref(s)"
+else
+  pass "No stale remote refs"
+fi
+
+# Check for stale remote branches (dependabot, old feature branches)
+STALE_BRANCHES=$(git branch -r --merged origin/main 2>/dev/null | grep -v 'origin/main$' | grep -v 'origin/staging$' | grep -v 'origin/HEAD' | wc -l | tr -d ' ')
+if [ "$STALE_BRANCHES" -gt 0 ]; then
+  warn "$STALE_BRANCHES merged remote branch(es) could be deleted"
+  git branch -r --merged origin/main 2>/dev/null | grep -v 'origin/main$' | grep -v 'origin/staging$' | grep -v 'origin/HEAD' | head -5 | while read b; do echo "       $b"; done
+else
+  pass "No stale merged branches"
+fi
+
 # ── 8. Security audit ──
 echo ""
 echo "── Security Audit ──"
