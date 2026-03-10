@@ -1,6 +1,6 @@
-/* BDS Design System — fonts + token definitions */
+/* BDS Design System — fonts + clean React token definitions */
 @import '../../brik-bds/tokens/fonts.css';
-@import '../../brik-bds/tokens/webflow-tokens.css';
+@import '../../brik-bds/tokens/react-tokens.css';
 
 /* Tailwind layers */
 @tailwind base;
@@ -16,31 +16,13 @@ html {
 }
 
 /*
- * Reset Webflow .body class border/radius.
- * In Webflow preview, .body has a visible border. In the app, we want a clean body.
- */
-.body {
-  border: none !important;
-  border-radius: 0 !important;
-  box-shadow: none !important;
-}
-
-/*
  * Brik Designs company brand overrides.
  *
- * The BDS Webflow CSS defines 8 web template themes (theme-1 through theme-8).
- * These are a PRODUCT offering, not the Brik Designs company identity.
- * The actual brand palette comes from brikdesigns.com (the company site).
+ * react-tokens.css provides BDS defaults (blue-green theme, Open Sans).
+ * This .body block overrides with Brik Designs company identity:
+ * poppy red, Poppins font, custom grayscale.
  *
- * Architecture: The portal is decoupled from numbered themes. ThemeProvider
- * has applyToBody={false}, so no theme-X class is added to <body>. This
- * means BDS theme-specific CSS rules (like @media 1440px .body.theme-1
- * spacious spacing) never match. Our .body selector (0,1,0) only competes
- * with the BDS .body defaults (also 0,1,0) and wins by source order since
- * globals.css loads after the BDS CSS import.
- *
- * Brand source: /GitHub/brikdesigns/css/brikdesigns.webflow.css
- * Figma tokens: /GitHub/brik-bds/figma-variables.json → theme.brik
+ * Brand source: brikdesigns.com + figma-variables.json → theme.brik
  */
 .body {
   /* ---- Brik brand color primitives ---- */
@@ -149,14 +131,7 @@ html {
   /* Brand override: labels use medium (500) instead of BDS default semi-bold (600) */
   --font-weight-semi-bold: 500;
 
-  /*
-   * Component-level spacing — overrides BDS .body spacious mode.
-   *
-   * The BDS .body block sets spacious spacing (48px+ padding for sections).
-   * We reset to component-level values (Base mode from :root).
-   *
-   * Primitive scale uses SINGLE dashes: --space-200 (8px), --space-400 (16px).
-   */
+  /* ---- Spacing (Base mode — component-level, not spacious) ---- */
   --padding-none: var(--space-0);
   --padding-tiny: var(--space-200);
   --padding-xs: var(--space-250);
@@ -175,7 +150,7 @@ html {
   --gap-xl: var(--space-600);
   --gap-huge: var(--space-800);
 
-  /* Font size overrides — .body sets same values but we keep explicit for clarity */
+  /* ---- Typography scale ---- */
   --body-tiny: var(--font-size-25);
   --body-xs: var(--font-size-50);
   --body-sm: var(--font-size-75);
@@ -300,14 +275,7 @@ html {
   --services--orange-light: #241008;
 }
 
-/*
- * Bare element overrides.
- *
- * The Webflow export CSS defines bare element selectors (li, h3, h4,
- * blockquote) with hardcoded fonts (IBM Plex Mono, Libre Franklin) and
- * colors (#000). These bleed into rendered markdown and other dynamic
- * content. Override them here so all text inherits the Brik brand tokens.
- */
+/* Bare element overrides — ensure markdown/dynamic content inherits brand tokens */
 li {
   color: var(--text-primary);
   font-family: var(--font-family-body);
