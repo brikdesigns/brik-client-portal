@@ -28,7 +28,8 @@ interface NewContactFormProps {
 }
 
 export function NewContactForm({ companies, defaultCompanyId }: NewContactFormProps) {
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [title, setTitle] = useState('');
@@ -56,7 +57,8 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
       const { data, error: insertError } = await supabase
         .from('contacts')
         .insert({
-          full_name: fullName,
+          first_name: firstName,
+          last_name: lastName,
           email: email || null,
           phone: phone || null,
           title: title || null,
@@ -91,7 +93,7 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
         }
       }
 
-      toastSuccess('Contact added', `${fullName} has been added.`);
+      toastSuccess('Contact added', `${firstName} ${lastName} has been added.`);
       router.push(`/admin/contacts/${data.id}`);
       router.refresh();
     } catch {
@@ -104,15 +106,32 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
   return (
     <form onSubmit={handleSubmit} style={{ maxWidth: '640px' }}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
-          <TextInput
-            label="Full Name"
-            type="text"
-            placeholder="Enter full name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
-            fullWidth
-          />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: gap.lg,
+            }}
+          >
+            <TextInput
+              label="First Name"
+              type="text"
+              placeholder="First name"
+              value={firstName}
+              onChange={(e) => setFirstName(e.target.value)}
+              required
+              fullWidth
+            />
+            <TextInput
+              label="Last Name"
+              type="text"
+              placeholder="Last name"
+              value={lastName}
+              onChange={(e) => setLastName(e.target.value)}
+              required
+              fullWidth
+            />
+          </div>
 
           <div
             style={{

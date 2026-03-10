@@ -40,7 +40,7 @@ export async function POST(request: Request) {
   // Look up contact by setup token
   const { data: contact, error: contactError } = await supabase
     .from('contacts')
-    .select('id, full_name, email, company_id, role, setup_token_expires_at, setup_completed_at')
+    .select('id, first_name, last_name, email, company_id, role, setup_token_expires_at, setup_completed_at')
     .eq('setup_token', token)
     .single();
 
@@ -70,7 +70,7 @@ export async function POST(request: Request) {
     password,
     email_confirm: true, // Auto-confirm since they got the link via verified email
     user_metadata: {
-      full_name: contact.full_name,
+      full_name: [contact.first_name, contact.last_name].filter(Boolean).join(' '),
       role: contact.role || 'team_member',
     },
   });
@@ -94,7 +94,8 @@ export async function POST(request: Request) {
   await supabase
     .from('profiles')
     .update({
-      full_name: contact.full_name,
+      first_name: contact.first_name,
+      last_name: contact.last_name,
       role: 'client',
       company_id: contact.company_id,
     })

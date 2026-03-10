@@ -4,7 +4,8 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
-import { font, color, gap, space } from '@/lib/tokens';
+import { DeleteProjectButton } from '@/components/delete-project-button';
+import { color, gap, space, font } from '@/lib/tokens';
 import { detail } from '@/lib/styles';
 
 interface Props {
@@ -90,15 +91,19 @@ export default async function ProjectDetailPage({ params }: Props) {
         }
         subtitle={project.description || undefined}
         actions={
-          <Button variant="secondary" size="sm" asLink href={`/admin/projects/${project.slug}/edit`}>
-            Edit
-          </Button>
+          <div style={{ display: 'flex', gap: '8px' }}>
+            <DeleteProjectButton projectId={project.id} projectName={project.name} />
+            <Button variant="secondary" size="sm" asLink href={`/admin/projects/${project.slug}/edit`}>
+              Edit
+            </Button>
+          </div>
         }
         metadata={metadataItems}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-        {/* Details */}
+        {/* Project details */}
+        <h2 style={detail.sectionHeading}>Project details</h2>
         <div style={detail.grid}>
           <div>
             <p style={detail.label}>Status</p>
@@ -159,7 +164,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                     color: color.text.primary,
                   }}
                 >
-                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={20} />
+                  <ServiceBadge category={svc.category_slug} size={12} />
                   {svc.name}
                 </div>
               ))}
@@ -170,7 +175,7 @@ export default async function ProjectDetailPage({ params }: Props) {
         {/* ClickUp */}
         {(project.clickup_task_id || hasClickupDetails) && (
           <div>
-            <h2 style={detail.sectionHeading}>ClickUp</h2>
+            <h2 style={detail.sectionHeading}>ClickUp details</h2>
             <div style={{ ...detail.grid, paddingTop: space.md }}>
               <div>
                 <p style={detail.label}>Task</p>

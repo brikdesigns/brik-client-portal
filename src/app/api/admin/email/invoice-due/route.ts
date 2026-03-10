@@ -33,7 +33,7 @@ export async function POST(request: Request) {
   // Find primary contact with email
   const { data: contact } = await serviceClient
     .from('contacts')
-    .select('full_name, email')
+    .select('first_name, email')
     .eq('company_id', invoice.company_id)
     .eq('is_primary', true)
     .not('email', 'is', null)
@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   try {
     const result = await sendInvoiceDueEmail({
       to: contact.email,
-      recipientName: contact.full_name,
+      recipientName: contact.first_name,
       companyName: company.name,
       invoiceDescription: invoice.description || 'Invoice',
       amountCents: invoice.amount_cents,

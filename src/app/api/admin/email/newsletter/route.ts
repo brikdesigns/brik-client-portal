@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   // Resolve recipients: primary contacts for specified companies (or all active clients)
   let query = serviceClient
     .from('contacts')
-    .select('full_name, email, company_id, companies(id, name)')
+    .select('first_name, email, company_id, companies(id, name)')
     .eq('is_primary', true)
     .not('email', 'is', null);
 
@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     try {
       const result = await sendNewsletterEmail({
         to: contact.email!,
-        recipientName: contact.full_name,
+        recipientName: contact.first_name,
         subject,
         bodyHtml: body_html,
         ctaLabel: cta_label,

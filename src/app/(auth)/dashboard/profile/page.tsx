@@ -17,7 +17,7 @@ export default async function ClientProfilePage() {
   const { data: profile } = await supabase
     .from('profiles')
     .select(`
-      id, full_name, email, role, is_active,
+      id, first_name, last_name, full_name, email, role, is_active,
       created_at, last_login_at,
       companies(id, name, slug)
     `)

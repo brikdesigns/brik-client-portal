@@ -13,7 +13,8 @@ interface InviteUserFormProps {
 
 export function InviteUserForm({ clients }: InviteUserFormProps) {
   const [email, setEmail] = useState('');
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [role, setRole] = useState<'super_admin' | 'client'>('client');
   const [clientId, setClientId] = useState('');
   const [error, setError] = useState('');
@@ -39,7 +40,8 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           email,
-          full_name: fullName,
+          first_name: firstName,
+          last_name: lastName,
           role,
           company_id: role === 'client' ? clientId : null,
         }),
@@ -54,7 +56,8 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
 
       setSuccess(`Invitation sent to ${email}`);
       setEmail('');
-      setFullName('');
+      setFirstName('');
+      setLastName('');
       setRole('client');
       setClientId('');
       router.refresh();
@@ -70,7 +73,7 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: '1fr 1fr 1fr',
           gap: gap.lg,
           marginBottom: space.md,
         }}
@@ -85,11 +88,19 @@ export function InviteUserForm({ clients }: InviteUserFormProps) {
           fullWidth
         />
         <TextInput
-          label="Full name"
+          label="First name"
           type="text"
-          placeholder="Jane Smith"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Jane"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          fullWidth
+        />
+        <TextInput
+          label="Last name"
+          type="text"
+          placeholder="Smith"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
           fullWidth
         />
       </div>

@@ -11,7 +11,7 @@ export async function POST(request: Request) {
 
   // Parse request body
   const body = await request.json();
-  const { email, full_name, role, company_id } = body;
+  const { email, first_name, last_name, role, company_id } = body;
 
   if (!email) {
     return NextResponse.json({ error: 'Email is required' }, { status: 400 });
@@ -29,7 +29,7 @@ export async function POST(request: Request) {
 
   const { data, error } = await serviceClient.auth.admin.inviteUserByEmail(email, {
     data: {
-      full_name: full_name || '',
+      full_name: [first_name, last_name].filter(Boolean).join(' ') || '',
       role: role || 'client',
     },
     redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/auth/callback?next=/reset-password`,
@@ -55,8 +55,8 @@ export async function POST(request: Request) {
   try {
     const emailResult = await sendInviteEmail({
       to: email,
-      inviteeName: full_name,
-      inviterName: profile?.full_name || undefined,
+      inviteeName: [first_name, last_name].filter(Boolean).join(' ') || undefined,
+      inviterName: profile?.first_name || undefined,
     });
 
     // Log the email

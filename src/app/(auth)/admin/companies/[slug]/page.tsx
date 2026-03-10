@@ -28,7 +28,7 @@ import { GHLSyncButton } from '@/components/ghl-sync-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
-import { font, color, gap, space, border } from '@/lib/tokens';
+import { font, color, gap, space, border, shadow } from '@/lib/tokens';
 import { heading, detail } from '@/lib/styles';
 
 interface Props {
@@ -143,14 +143,14 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const displayCountry = rawCountry || '—';
 
   // Tab configuration by type
-  const allTabs: { key: string; label: string; types: string[] }[] = [
+  const allTabs: { key: string; label: string; types: string[]; dot?: boolean }[] = [
     { key: 'overview', label: 'Overview', types: ['lead', 'prospect', 'client'] },
-    { key: 'reporting', label: 'Reporting', types: ['prospect'] },
-    { key: 'onboarding', label: 'Onboarding', types: ['prospect'] },
-    { key: 'services', label: 'Services', types: ['client'] },
-    { key: 'projects', label: 'Projects', types: ['client'] },
-    { key: 'invoices', label: 'Invoices', types: ['client'] },
-    { key: 'contacts', label: 'Contacts', types: ['lead', 'prospect', 'client'] },
+    { key: 'reporting', label: 'Reporting', types: ['lead', 'prospect', 'client'], dot: !reportSet },
+    { key: 'onboarding', label: 'Billing', types: ['prospect'], dot: !latestProposal },
+    { key: 'services', label: 'Services', types: ['client'], dot: clientServices.length === 0 },
+    { key: 'projects', label: 'Projects', types: ['client'], dot: projects.some((p) => p.status === 'in_progress') },
+    { key: 'invoices', label: 'Invoices', types: ['client'], dot: invoices.some((i) => i.status === 'open') },
+    { key: 'contacts', label: 'Contacts', types: ['lead', 'prospect', 'client'], dot: !contacts?.length },
   ];
   const tabs = allTabs.filter((t) => t.types.includes(companyType));
   const activeTab = tab && tabs.some((t) => t.key === tab) ? tab : 'overview';
@@ -163,8 +163,18 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     textDecoration: 'none' as const,
     padding: `${gap.sm} 0`,
     borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
-    display: 'inline-block' as const,
+    display: 'inline-flex' as const,
+    alignItems: 'center' as const,
+    gap: '6px',
   });
+
+  const notificationDotStyle: React.CSSProperties = {
+    width: '6px',
+    height: '6px',
+    borderRadius: '50%',
+    backgroundColor: color.background.brandPrimary,
+    flexShrink: 0,
+  };
 
   const sectionHeadingStyle = heading.section;
 
@@ -191,10 +201,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               Edit
             </Button>
             {companyType === 'lead' && <QualifyLeadButton companyId={client.id} />}
-            {companyType === 'prospect' && (
-              <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}?tab=onboarding`}>
-                Onboard Prospect
-              </Button>
+            {companyType === 'prospect' && !latestProposal && (
+              <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} label="Send Proposal" />
             )}
           </div>
         }
@@ -234,6 +242,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         {tabs.map((t) => (
           <a key={t.key} href={`/admin/companies/${client.slug}?tab=${t.key}`} style={tabStyle(activeTab === t.key)}>
             {t.label}
+            {t.dot && <span style={notificationDotStyle} />}
           </a>
         ))}
       </div>
@@ -277,7 +286,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Contact */}
-          <h2 style={detail.sectionHeading}>Contact</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={detail.sectionHeading}>Contact</h2>
+            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
+              Edit
+            </Button>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Website</p>
@@ -311,7 +325,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Opportunities */}
-          <h2 style={detail.sectionHeading}>Opportunities</h2>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h2 style={detail.sectionHeading}>Opportunities</h2>
+            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/opportunities/edit`}>
+              Edit
+            </Button>
+          </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Pipeline</p>
@@ -423,6 +442,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               title="Marketing Analysis"
               description="Evaluate the prospect's current marketing presence, competitors, and opportunities for growth."
               action={<RunAnalysisButton clientId={client.id} slug={client.slug} />}
+              style={{ boxShadow: shadow.sm }}
             />
           ) : (
             <DataTable
@@ -434,7 +454,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   header: 'Report',
                   accessor: (r) => (
                     <a
-                      href={`/admin/reporting/${client.slug}/${r.report_type}`}
+                      href={`/admin/companies/${client.slug}/reporting/${r.report_type}`}
                       style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
                     >
                       {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
@@ -460,7 +480,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 {
                   header: '',
                   accessor: (r) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/reporting/${client.slug}/${r.report_type}`}>
+                    <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/reporting/${r.report_type}`}>
                       View
                     </Button>
                   ),
@@ -490,15 +510,11 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     View
                   </Button>
                 ) : (
-                  <>
-                    <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} hideIcon />
-                    <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/new`}>
-                      Manual
-                    </Button>
-                  </>
+                  <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} />
                 )}
               </div>
             }
+            style={{ boxShadow: shadow.sm }}
           />
           {latestBaa && (
             <CardControl
@@ -512,13 +528,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   </Button>
                 </div>
               }
+              style={{ boxShadow: shadow.sm }}
             />
           )}
-          <CardControl
-            title="Welcome to Brik"
-            description="Send the welcome package, onboard the client, and transition from prospect to active."
-            action={<Button variant="primary" size="sm">Start</Button>}
-          />
         </div>
       )}
 

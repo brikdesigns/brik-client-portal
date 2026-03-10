@@ -13,7 +13,7 @@ export default async function EditContactPage({ params }: Props) {
 
   const { data: contact, error } = await supabase
     .from('contacts')
-    .select('id, full_name, email, phone, title, role, is_primary, notes, company_id')
+    .select('id, first_name, last_name, full_name, email, phone, title, role, is_primary, notes, company_id')
     .eq('id', id)
     .single();
 

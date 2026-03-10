@@ -74,6 +74,7 @@ export function ReportContent({ report, items, reportType, reportSetId }: Report
               height: '40px',
               backgroundColor: color.background.secondary,
               borderRadius: border.radius.sm,
+              border: 'none',
             }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>

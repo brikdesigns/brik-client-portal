@@ -19,7 +19,8 @@ export async function PATCH(
     const { data, error } = await supabase
       .from('profiles')
       .update({
-        full_name: body.full_name,
+        first_name: body.first_name,
+        last_name: body.last_name,
         email: body.email,
         role: body.role,
         is_active: body.is_active,

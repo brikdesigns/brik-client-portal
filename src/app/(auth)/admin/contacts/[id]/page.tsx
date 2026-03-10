@@ -20,6 +20,8 @@ export default async function ContactDetailPage({ params }: Props) {
     .from('contacts')
     .select(`
       id,
+      first_name,
+      last_name,
       full_name,
       email,
       phone,
@@ -63,14 +65,7 @@ export default async function ContactDetailPage({ params }: Props) {
             </Button>
           </div>
         }
-        metadata={[
-          ...(contact.is_primary ? [{
-            label: '',
-            value: (
-              <Tag size="sm" style={{ color: color.text.muted }}>Primary</Tag>
-            ),
-          }] : []),
-        ]}
+        metadata={[]}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
@@ -78,8 +73,9 @@ export default async function ContactDetailPage({ params }: Props) {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Role</p>
-            <p style={fieldValueStyle}>
+            <p style={{ ...fieldValueStyle, display: 'flex', alignItems: 'center', gap: gap.sm }}>
               {formatContactRole(contact.role)}
+              {contact.is_primary && <Tag size="sm">Primary</Tag>}
             </p>
           </div>
           <div>

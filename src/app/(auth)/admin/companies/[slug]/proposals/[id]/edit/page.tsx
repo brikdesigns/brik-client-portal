@@ -333,10 +333,22 @@ export default function EditProposalPage() {
             items={[
               { label: 'Companies', href: '/admin/companies' },
               { label: companyName, href: `/admin/companies/${slug}` },
-              { label: title, href: `/admin/companies/${slug}/proposals/${proposalId}` },
+              { label: 'Proposal', href: `/admin/companies/${slug}/proposals/${proposalId}` },
               { label: 'Edit' },
             ]}
           />
+        }
+        actions={
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            iconBefore={<FontAwesomeIcon icon={faWandMagicSparkles} style={iconSize} />}
+            onClick={handleGenerateSections}
+            disabled={generating}
+          >
+            {generating ? 'Generating...' : 'Rewrite Proposal'}
+          </Button>
         }
       />
 
@@ -364,25 +376,7 @@ export default function EditProposalPage() {
 
         {/* Sections */}
         <div style={{ marginBottom: space.lg }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
-            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Proposal Sections</h2>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={handleGenerateSections}
-              disabled={generating}
-            >
-              {generating ? (
-                'Generating...'
-              ) : (
-                <>
-                  <FontAwesomeIcon icon={faWandMagicSparkles} style={iconSize} />
-                  {hasSections ? ' Regenerate All' : ' Generate Sections'}
-                </>
-              )}
-            </Button>
-          </div>
+          <h2 style={{ ...sectionHeadingStyle, margin: 0, marginBottom: space.md }}>Proposal Sections</h2>
 
           {hasSections ? (
             sections.map((section, index) => (
@@ -417,8 +411,8 @@ export default function EditProposalPage() {
         <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Line Items</h2>
-            <Button type="button" variant="secondary" size="sm" onClick={addItem}>
-              <FontAwesomeIcon icon={faPlus} style={iconSize} /> Add Item
+            <Button type="button" variant="secondary" size="sm" iconBefore={<FontAwesomeIcon icon={faPlus} style={iconSize} />} onClick={addItem}>
+              Add Item
             </Button>
           </div>
 

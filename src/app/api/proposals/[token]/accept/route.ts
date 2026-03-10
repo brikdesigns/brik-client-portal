@@ -97,7 +97,7 @@ export async function POST(
   // Look up the contact name for the accepting email
   const { data: contact } = await supabase
     .from('contacts')
-    .select('full_name')
+    .select('first_name')
     .eq('company_id', proposal.company_id)
     .eq('email', email)
     .single();
@@ -129,7 +129,7 @@ export async function POST(
     if (company) {
       const result = await sendWelcomeToBrikEmail({
         to: email,
-        recipientName: contact?.full_name ?? undefined,
+        recipientName: contact?.first_name ?? undefined,
         companyName: company.name,
       });
 

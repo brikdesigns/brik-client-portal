@@ -4,6 +4,37 @@ import { requireAdmin, isAuthError } from '@/lib/auth';
 import { type Industry, getReportConfigs } from '@/lib/analysis/report-config';
 
 /**
+ * GET /api/admin/reporting?report_set_id=xxx
+ *
+ * Returns report IDs and types for a given report set.
+ * Used by RunAnalysisButton to fire off parallel analyses.
+ */
+export async function GET(request: Request) {
+  const auth = await requireAdmin();
+  if (isAuthError(auth)) return auth;
+
+  const { searchParams } = new URL(request.url);
+  const reportSetId = searchParams.get('report_set_id');
+
+  if (!reportSetId) {
+    return NextResponse.json({ error: 'report_set_id is required' }, { status: 400 });
+  }
+
+  const supabase = await createClient();
+  const { data: reports, error } = await supabase
+    .from('reports')
+    .select('id, report_type')
+    .eq('report_set_id', reportSetId)
+    .order('created_at', { ascending: true });
+
+  if (error) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+
+  return NextResponse.json({ reports: reports ?? [] });
+}
+
+/**
  * POST /api/admin/reporting
  *
  * Creates a report set with empty template items for each report type.

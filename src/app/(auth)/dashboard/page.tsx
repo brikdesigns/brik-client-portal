@@ -14,7 +14,7 @@ export default async function DashboardPage() {
 
   const { data: profile } = await supabase
     .from('profiles')
-    .select('full_name')
+    .select('first_name, full_name')
     .eq('id', user!.id)
     .single();
 
@@ -26,7 +26,7 @@ export default async function DashboardPage() {
     return (
       <div>
         <PageHeader
-          title={`Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`}
+          title={`Welcome${profile?.first_name ? `, ${profile.first_name}` : ''}`}
           subtitle="Select a client to view your dashboard."
         />
         <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
@@ -64,7 +64,7 @@ export default async function DashboardPage() {
   return (
     <div>
       <PageHeader
-        title={`Welcome${profile?.full_name ? `, ${profile.full_name}` : ''}`}
+        title={`Welcome${profile?.first_name ? `, ${profile.first_name}` : ''}`}
         subtitle="Here's a snapshot of your account."
       />
 

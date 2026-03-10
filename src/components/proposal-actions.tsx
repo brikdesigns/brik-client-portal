@@ -92,14 +92,17 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug,
           <Button variant="secondary" size="sm" loading={deleting} onClick={handleDelete}>
             Delete
           </Button>
+          <Button variant="secondary" size="sm" onClick={handleCopyLink}>
+            {copied ? 'Copied!' : 'Share'}
+          </Button>
           <Button variant="primary" size="sm" loading={sending} onClick={handleSend}>
-            Send & Copy Link
+            Send Proposal
           </Button>
         </>
       )}
       {(status === 'sent' || status === 'viewed') && (
         <Button variant="secondary" size="sm" onClick={handleCopyLink}>
-          {copied ? 'Copied!' : 'Copy Link'}
+          {copied ? 'Copied!' : 'Share'}
         </Button>
       )}
     </div>

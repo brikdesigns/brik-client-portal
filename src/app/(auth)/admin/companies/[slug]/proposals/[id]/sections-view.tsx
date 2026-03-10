@@ -2,7 +2,6 @@
 
 import { Accordion, type AccordionItemData } from '@bds/components/ui/Accordion/Accordion';
 import { AlertBanner } from '@bds/components/ui/AlertBanner/AlertBanner';
-import { Card } from '@bds/components/ui/Card/Card';
 import { Button } from '@bds/components/ui/Button/Button';
 import {
   ScopeOfProjectContent,
@@ -102,31 +101,29 @@ export function ProposalSectionsView({
         />
       )}
 
-      {/* Collapsible section cards */}
-      <Card variant="elevated" padding="lg">
-        <Accordion
-          allowMultiple
-          items={[
-            ...sortedSections.map((section, index): AccordionItemData => ({
-              id: section.type,
-              title: `${index + 1}. ${section.title}`,
-              content: renderSectionContent(section, feeSummaryItems, totalAmountCents),
-            })),
-            ...(!sortedSections.some(s => s.type === 'fee_summary') && feeSummaryItems.length > 0
-              ? [{
-                  id: 'fee_summary',
-                  title: `${sortedSections.length + 1}. Fee Summary`,
-                  content: (
-                    <FeeSummaryContent
-                      items={feeSummaryItems}
-                      totalAmountCents={totalAmountCents}
-                    />
-                  ),
-                }]
-              : []),
-          ]}
-        />
-      </Card>
+      {/* Collapsible sections */}
+      <Accordion
+        allowMultiple
+        items={[
+          ...sortedSections.map((section, index): AccordionItemData => ({
+            id: section.type,
+            title: `${index + 1}. ${section.title}`,
+            content: renderSectionContent(section, feeSummaryItems, totalAmountCents),
+          })),
+          ...(!sortedSections.some(s => s.type === 'fee_summary') && feeSummaryItems.length > 0
+            ? [{
+                id: 'fee_summary',
+                title: `${sortedSections.length + 1}. Fee Summary`,
+                content: (
+                  <FeeSummaryContent
+                    items={feeSummaryItems}
+                    totalAmountCents={totalAmountCents}
+                  />
+                ),
+              }]
+            : []),
+        ]}
+      />
     </div>
   );
 }
