@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { formatIndustry, formatPhone } from '@/lib/format';
+import { formatIndustry, formatPhone, formatContactRole } from '@/lib/format';
 import { parseAddressString, extractStreet } from '@/lib/address';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
@@ -704,7 +704,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 header: 'Role',
                 accessor: (c) => (
                   <Tag size="sm" style={{ color: color.text.muted }}>
-                    {c.role.charAt(0).toUpperCase() + c.role.slice(1)}
+                    {formatContactRole(c.role)}
                   </Tag>
                 ),
               },
