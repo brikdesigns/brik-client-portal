@@ -5,6 +5,7 @@ import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
 import { font, color, gap, space } from '@/lib/tokens';
+import { detail } from '@/lib/styles';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -50,37 +51,13 @@ export default async function ProjectDetailPage({ params }: Props) {
     })
     .filter(Boolean) as { id: string; name: string; category_slug: string }[];
 
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
-
-  const sectionLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.lg,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-    paddingTop: space.xl,
-  };
-
   const metadataItems = [
     {
       label: 'Client',
       value: client ? (
         <a
           href={`/admin/companies/${client.slug}`}
-          style={{ color: color.system.link, textDecoration: 'none' }}
+          style={detail.link}
         >
           {client.name}
         </a>
@@ -122,31 +99,31 @@ export default async function ProjectDetailPage({ params }: Props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
         {/* Details */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={detail.grid}>
           <div>
-            <p style={fieldLabelStyle}>Status</p>
-            <p style={fieldValueStyle}><ProjectStatusBadge status={project.status} /></p>
+            <p style={detail.label}>Status</p>
+            <p style={detail.value}><ProjectStatusBadge status={project.status} /></p>
           </div>
           <div>
-            <p style={fieldLabelStyle}>Created</p>
-            <p style={fieldValueStyle}>
+            <p style={detail.label}>Created</p>
+            <p style={detail.value}>
               {new Date(project.created_at).toLocaleDateString()}
             </p>
           </div>
           <div>
-            <p style={fieldLabelStyle}>Notion</p>
-            <p style={fieldValueStyle}>
+            <p style={detail.label}>Notion</p>
+            <p style={detail.value}>
               {project.notion_page_id ? (
                 <a
                   href={`https://notion.so/${project.notion_page_id.replace(/-/g, '')}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  style={{ color: color.system.link, textDecoration: 'none' }}
+                  style={detail.link}
                 >
                   Open in Notion &#x2197;
                 </a>
               ) : (
-                <span style={{ color: color.text.muted }}>—</span>
+                <span style={detail.empty}>—</span>
               )}
             </p>
           </div>
@@ -155,11 +132,8 @@ export default async function ProjectDetailPage({ params }: Props) {
         {/* Description */}
         {project.description && (
           <div>
-            <p style={fieldLabelStyle}>Description</p>
-            <p style={{
-              ...fieldValueStyle,
-              lineHeight: font.lineHeight.normal,
-            }}>
+            <p style={detail.label}>Description</p>
+            <p style={detail.value}>
               {project.description}
             </p>
           </div>
@@ -168,7 +142,7 @@ export default async function ProjectDetailPage({ params }: Props) {
         {/* Services */}
         {services.length > 0 && (
           <div>
-            <p style={sectionLabelStyle}>Services</p>
+            <h2 style={detail.sectionHeading}>Services</h2>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: gap.sm, paddingTop: space.md }}>
               {services.map((svc) => (
                 <div
@@ -181,7 +155,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                     borderRadius: space.sm,
                     border: `1px solid ${color.border.secondary}`,
                     fontFamily: font.family.body,
-                    fontSize: font.size.body.sm,
+                    fontSize: font.size.body.md,
                     color: color.text.primary,
                   }}
                 >
@@ -196,44 +170,44 @@ export default async function ProjectDetailPage({ params }: Props) {
         {/* ClickUp */}
         {(project.clickup_task_id || hasClickupDetails) && (
           <div>
-            <p style={sectionLabelStyle}>ClickUp</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, paddingTop: space.md }}>
+            <h2 style={detail.sectionHeading}>ClickUp</h2>
+            <div style={{ ...detail.grid, paddingTop: space.md }}>
               <div>
-                <p style={fieldLabelStyle}>Task</p>
-                <p style={fieldValueStyle}>
+                <p style={detail.label}>Task</p>
+                <p style={detail.value}>
                   {project.clickup_task_id ? (
                     <a
                       href={`https://app.clickup.com/t/${project.clickup_task_id}`}
                       target="_blank"
                       rel="noopener noreferrer"
-                      style={{ color: color.system.link, textDecoration: 'none' }}
+                      style={detail.link}
                     >
                       {project.clickup_task_id} &#x2197;
                     </a>
                   ) : (
-                    <span style={{ color: color.text.muted }}>—</span>
+                    <span style={detail.empty}>—</span>
                   )}
                 </p>
               </div>
               <div>
-                <p style={fieldLabelStyle}>Folder</p>
-                <p style={fieldValueStyle}>{project.clickup_folder_id || <span style={{ color: color.text.muted }}>—</span>}</p>
+                <p style={detail.label}>Folder</p>
+                <p style={detail.value}>{project.clickup_folder_id || <span style={detail.empty}>—</span>}</p>
               </div>
               <div>
-                <p style={fieldLabelStyle}>List</p>
-                <p style={fieldValueStyle}>{project.clickup_list_id || <span style={{ color: color.text.muted }}>—</span>}</p>
+                <p style={detail.label}>List</p>
+                <p style={detail.value}>{project.clickup_list_id || <span style={detail.empty}>—</span>}</p>
               </div>
               <div>
-                <p style={fieldLabelStyle}>Assignee</p>
-                <p style={fieldValueStyle}>{project.clickup_assignee || <span style={{ color: color.text.muted }}>—</span>}</p>
+                <p style={detail.label}>Assignee</p>
+                <p style={detail.value}>{project.clickup_assignee || <span style={detail.empty}>—</span>}</p>
               </div>
               <div>
-                <p style={fieldLabelStyle}>Type</p>
-                <p style={fieldValueStyle}>{project.clickup_type || <span style={{ color: color.text.muted }}>—</span>}</p>
+                <p style={detail.label}>Type</p>
+                <p style={detail.value}>{project.clickup_type || <span style={detail.empty}>—</span>}</p>
               </div>
               <div>
-                <p style={fieldLabelStyle}>Status</p>
-                <p style={fieldValueStyle}>{project.clickup_status || <span style={{ color: color.text.muted }}>—</span>}</p>
+                <p style={detail.label}>Status</p>
+                <p style={detail.value}>{project.clickup_status || <span style={detail.empty}>—</span>}</p>
               </div>
             </div>
           </div>

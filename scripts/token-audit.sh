@@ -16,7 +16,9 @@ NC='\033[0m'
 VIOLATIONS=0
 
 section() { echo -e "\n${YELLOW}── $1 ──${NC}"; }
-count_matches() { echo "$1" | grep -c "." 2>/dev/null || echo 0; }
+count_matches() {
+  if [ -z "$1" ]; then echo 0; else echo "$1" | grep -c "." 2>/dev/null || echo 0; fi
+}
 
 # ── 1. Hardcoded colors ─────────────────────────────────────────────
 section "Hardcoded colors (hex outside var() fallbacks)"
@@ -165,6 +167,74 @@ else
   echo -e "  ${GREEN}Clean${NC}"
 fi
 
+# ── 9. Alias→alias token violations (CSS) ─────────────────────────────
+section "Alias→alias token references in CSS"
+
+# Rule: Alias tokens must reference primitives only.
+# Component-tier tokens (--_color---*) MAY reference aliases.
+# Component-tier CSS (.bds-* selectors) MAY reference aliases.
+#
+# Primitive prefixes (values that aliases are ALLOWED to reference):
+#   --font-size-*, --space-*, --border-radius-*, --border-width-*,
+#   --box-shadow-*, --font-line-height-*, --grayscale--*, --poppy--*,
+#   --tan--*, --brand--*, --services--* (raw colors only)
+#
+# Anything else inside var() on the RHS of an alias assignment = violation.
+
+ALIAS_CSS_HITS=$(grep -rn --include="*.css" \
+  -E '^\s*--[a-z].*:\s*var\(--' "$SRC" \
+  | grep -v '\-\-_color---' \
+  | grep -v '\.bds-' \
+  | grep -v 'var(--font-size-' \
+  | grep -v 'var(--space-' \
+  | grep -v 'var(--border-radius-' \
+  | grep -v 'var(--border-width-' \
+  | grep -v 'var(--box-shadow-' \
+  | grep -v 'var(--font-line-height-' \
+  | grep -v 'var(--grayscale--' \
+  | grep -v 'var(--poppy--' \
+  | grep -v 'var(--tan--' \
+  | grep -v 'var(--brand--' \
+  | grep -v '// ' \
+  || true)
+
+ALIAS_CSS_COUNT=$(count_matches "$ALIAS_CSS_HITS")
+if [ "$ALIAS_CSS_COUNT" -gt 0 ]; then
+  echo -e "  ${RED}${ALIAS_CSS_COUNT} alias→alias references in CSS${NC}"
+  echo "$ALIAS_CSS_HITS" | head -10
+  [ "$ALIAS_CSS_COUNT" -gt 10 ] && echo -e "  ${DIM}... and $((ALIAS_CSS_COUNT - 10)) more${NC}"
+  VIOLATIONS=$((VIOLATIONS + ALIAS_CSS_COUNT))
+else
+  echo -e "  ${GREEN}Clean${NC}"
+fi
+
+# ── 10. Inline CSS variable overrides in TSX ──────────────────────────
+section "Inline CSS custom property overrides in TSX"
+
+# Inline '--variable-name': value patterns in style objects are almost always
+# token architecture violations (alias overriding alias). Each should use a
+# component-tier CSS rule in globals.css instead.
+# Excludes: comments, test files
+
+INLINE_VAR_HITS=$(grep -rn --include="*.tsx" --include="*.ts" \
+  -E "'--[a-z][a-z0-9-]+'" "$SRC" \
+  | grep -v "\.test\." \
+  | grep -v "// " \
+  | grep -v "globals\.css" \
+  | grep -v "fonts\.ts" \
+  || true)
+
+INLINE_VAR_COUNT=$(count_matches "$INLINE_VAR_HITS")
+if [ "$INLINE_VAR_COUNT" -gt 0 ]; then
+  echo -e "  ${RED}${INLINE_VAR_COUNT} inline CSS variable overrides${NC}"
+  echo -e "  ${DIM}(Move to component-tier CSS in globals.css)${NC}"
+  echo "$INLINE_VAR_HITS" | head -10
+  [ "$INLINE_VAR_COUNT" -gt 10 ] && echo -e "  ${DIM}... and $((INLINE_VAR_COUNT - 10)) more${NC}"
+  VIOLATIONS=$((VIOLATIONS + INLINE_VAR_COUNT))
+else
+  echo -e "  ${GREEN}Clean${NC}"
+fi
+
 # ── Summary ──────────────────────────────────────────────────────────
 echo ""
 echo "========================================="
@@ -178,10 +248,12 @@ else
   echo -e "  ${YELLOW}Total violations: ${VIOLATIONS}${NC}"
   echo ""
   echo "  Priority:"
-  echo "  1. Fix hardcoded colors (breaks dark mode / theming)"
-  echo "  2. Replace native <button> with BDS Button"
-  echo "  3. Tokenize border-radius values"
-  echo "  4. Migrate px spacing to tokens (do file-by-file)"
+  echo "  1. Alias→alias violations (breaks token architecture)"
+  echo "  2. Inline CSS variable overrides (move to globals.css)"
+  echo "  3. Fix hardcoded colors (breaks dark mode / theming)"
+  echo "  4. Replace native <button> with BDS Button"
+  echo "  5. Tokenize border-radius values"
+  echo "  6. Migrate px spacing to tokens (do file-by-file)"
 fi
 
 echo ""

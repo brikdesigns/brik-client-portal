@@ -29,7 +29,7 @@ import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
 import { font, color, gap, space, border } from '@/lib/tokens';
-import { heading } from '@/lib/styles';
+import { heading, detail } from '@/lib/styles';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -168,36 +168,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const sectionHeadingStyle = heading.section;
 
-  const sectionLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.lg,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-    paddingTop: space.xl,
-  };
-
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
-
-  const linkStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.xs,
-    color: color.system.link,
-    textDecoration: 'none' as const,
-  };
+  const fieldLabelStyle = detail.label;
+  const fieldValueStyle = detail.value;
 
   return (
     <div>
@@ -270,15 +242,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Overview</h2>
+            <h2 style={detail.sectionHeading}>Location</h2>
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
               Edit
             </Button>
           </div>
-
-          {/* Location */}
-          <p style={sectionLabelStyle}>Location</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Business Name</p>
               <p style={fieldValueStyle}>{client.name || '—'}</p>
@@ -292,7 +261,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{displayCountry}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Address</p>
               <p style={fieldValueStyle}>{client.address ? extractStreet(client.address) : '—'}</p>
@@ -308,13 +277,13 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Contact */}
-          <p style={sectionLabelStyle}>Contact</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <h2 style={detail.sectionHeading}>Contact</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Website</p>
               <p style={fieldValueStyle}>
                 {client.website_url ? (
-                  <a href={client.website_url} target="_blank" rel="noopener noreferrer" style={{ color: color.system.link, textDecoration: 'none' }}>
+                  <a href={client.website_url} target="_blank" rel="noopener noreferrer" style={detail.link}>
                     {client.website_url}
                   </a>
                 ) : '—'}
@@ -329,7 +298,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).domain_hosted || '—'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Referred By</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).referred_by || '—'}</p>
@@ -342,8 +311,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Opportunities */}
-          <p style={sectionLabelStyle}>Opportunities</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <h2 style={detail.sectionHeading}>Opportunities</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Pipeline</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).pipeline || '—'}</p>
@@ -357,7 +326,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).opportunity_owner || '—'}</p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Followers</p>
               <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).followers || '—'}</p>
@@ -378,7 +347,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     href={`https://app.gohighlevel.com/v2/location/IZPqVFfrhjIQrXkmHChN/contacts/detail/${(client as unknown as Record<string, string>).ghl_contact_id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={linkStyle}
+                    style={detail.link}
                   >
                     View in GoHighLevel &#x2197;
                   </a>
@@ -390,8 +359,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {/* GoHighLevel */}
           {(client as unknown as Record<string, string>).ghl_contact_id && (
             <>
-              <p style={sectionLabelStyle}>GoHighLevel</p>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+              <h2 style={detail.sectionHeading}>GoHighLevel</h2>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
                 <div>
                   <p style={fieldLabelStyle}>Source</p>
                   <p style={fieldValueStyle}>{(client as unknown as Record<string, string>).ghl_source || '—'}</p>
@@ -413,7 +382,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   </p>
                 </div>
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
                 <div style={{ gridColumn: '1 / -1' }}>
                   <p style={fieldLabelStyle}>Tags</p>
                   <div style={{ display: 'flex', gap: gap.sm, flexWrap: 'wrap', marginTop: gap.xs }}>
@@ -431,13 +400,10 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {/* Notes */}
           {client.notes && (
             <>
-              <p style={sectionLabelStyle}>Notes</p>
+              <h2 style={detail.sectionHeading}>Notes</h2>
               <p
                 style={{
-                  fontFamily: font.family.body,
-                  fontSize: font.size.body.sm,
-                  color: color.text.secondary,
-                  margin: 0,
+                  ...fieldValueStyle,
                   lineHeight: font.lineHeight.relaxed,
                   whiteSpace: 'pre-wrap',
                 }}

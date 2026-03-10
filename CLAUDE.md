@@ -174,18 +174,60 @@ This project follows the BDS token consumption standard. See `brik-bds/CONSUMING
 
 ```tsx
 import { font, color, space, gap, border } from '@/lib/tokens';  // Individual values
-import { text, heading, label, meta, list } from '@/lib/styles';  // Composed presets
+import { text, heading, label, meta, detail } from '@/lib/styles';  // Composed presets
 import { Prose } from '@/components/prose';                        // Markdown rendering
 ```
 
 **Key files:**
 
 - `src/lib/tokens.ts` — Figma style name to CSS var() mapping
-- `src/lib/styles.ts` — Composed CSSProperties presets
+- `src/lib/styles.ts` — Composed CSSProperties presets (includes `detail` for read-only pages)
 - `src/components/prose.tsx` — Shared ReactMarkdown renderer
 - `.husky/pre-commit` — Blocks hardcoded px font sizes and numeric line heights
 
 **Pre-commit enforcement:** The husky hook checks staged `.ts`/`.tsx` files for `fontSize: '[0-9]` and `lineHeight: [0-9]` patterns and blocks the commit if found.
+
+### Read-only vs Edit-mode convention (CRITICAL)
+
+Data in this portal has two presentation modes that share the same data points but render differently. Inspired by [Carbon's read-only states pattern](https://carbondesignsystem.com/patterns/read-only-states-pattern/).
+
+| | Read mode (detail/view pages) | Edit mode (form pages) |
+|---|---|---|
+| **Labels** | `detail.label` — label/md, text-muted | BDS TextInput/Select built-in label |
+| **Values** | `detail.value` — body/md, text-primary | BDS form component (interactive input) |
+| **Layout** | `detail.grid` — 3-col grid, left-aligned | Single-column form, maxWidth 600px |
+| **Links** | `detail.link` — body/md, system-link color | N/A (edit mode uses inputs) |
+| **Empty** | `detail.empty` — text-muted dash (—) | Empty input placeholder |
+| **Sections** | `detail.sectionLabel` — label/md, muted, top padding | `heading.section` for form groups |
+
+**Always use `detail.*` presets on view pages.** Never define local `fieldLabelStyle` / `fieldValueStyle` variables — import from `@/lib/styles` instead.
+
+```tsx
+import { detail } from '@/lib/styles';
+
+// Read-only field pair
+<p style={detail.label}>Status</p>
+<p style={detail.value}><ProjectStatusBadge status={project.status} /></p>
+
+// 3-column grid
+<div style={detail.grid}>
+  <div>
+    <p style={detail.label}>Field</p>
+    <p style={detail.value}>Value</p>
+  </div>
+</div>
+
+// Empty values
+<span style={detail.empty}>—</span>
+
+// Links inside values
+<a style={detail.link} href="...">Open in Notion ↗</a>
+
+// Section dividers
+<p style={detail.sectionLabel}>ClickUp</p>
+```
+
+**Reference implementation:** `src/app/(auth)/admin/projects/[slug]/page.tsx`
 
 ### BDS Components Used
 | Component | Import Path | Usage |

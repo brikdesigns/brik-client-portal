@@ -5,8 +5,8 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { RoleTag } from '@/components/status-badges';
-import { heading } from '@/lib/styles';
-import { font, color, gap } from '@/lib/tokens';
+import { heading, detail } from '@/lib/styles';
+import { color, gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -52,19 +52,8 @@ export default async function UserDetailPage({ params }: Props) {
     invitedByName = inviter?.full_name || inviter?.email || null;
   }
 
-  const fieldStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.md,
-    color: color.text.primary,
-    margin: 0,
-  };
-
-  const labelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    color: color.text.muted,
-    margin: '0 0 4px',
-  };
+  const fieldStyle = detail.value;
+  const labelStyle = detail.label;
 
   const sectionHeadingStyle = heading.section;
 
@@ -122,7 +111,7 @@ export default async function UserDetailPage({ params }: Props) {
       {/* Activity */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
         <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Activity</h2>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={labelStyle}>Last login</p>
             <p style={fieldStyle}>{formatDateTime(user.last_login_at)}</p>
@@ -136,7 +125,7 @@ export default async function UserDetailPage({ params }: Props) {
             <p style={fieldStyle}>{invitedByName || '—'}</p>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={labelStyle}>Account created</p>
             <p style={fieldStyle}>{formatDate(user.created_at)}</p>

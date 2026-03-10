@@ -135,6 +135,94 @@ export const meta = {
   } satisfies CSSProperties,
 } as const;
 
+// ─── Detail (read-only field pairs) ──────────────────────────────────
+//
+// Convention for read-only detail/view pages (inspired by Carbon's
+// read-only states pattern). Read mode and edit mode share the same
+// data points (labels + values) but present them differently:
+//
+//   READ MODE (detail pages)            EDIT MODE (form pages)
+//   ─────────────────────────           ──────────────────────
+//   label.md · text-muted               BDS TextInput/Select label (built-in)
+//   body/md  · text-primary             BDS form component value (interactive)
+//   3-col grid, left-aligned            Single-col form, maxWidth 600px
+//   Static text, badges, links          Inputs, selects, textareas
+//
+// USAGE:
+//   import { detail } from '@/lib/styles';
+//
+//   <p style={detail.label}>Status</p>
+//   <p style={detail.value}>Active</p>
+//
+//   <p style={detail.sectionLabel}>ClickUp</p>
+//
+//   <div style={detail.grid}>
+//     <div>
+//       <p style={detail.label}>Field</p>
+//       <p style={detail.value}>Value</p>
+//     </div>
+//   </div>
+//
+//   {/* Empty/null values */}
+//   <span style={detail.empty}>—</span>
+//
+//   {/* Links inside values */}
+//   <a style={detail.link} href="...">Open ↗</a>
+
+export const detail = {
+  /** Field label — label/md, muted, no margin */
+  label: {
+    ...label.md,
+    color: color.text.muted,
+    margin: 0,
+  } satisfies CSSProperties,
+
+  /** Field value — body/md, primary, no margin */
+  value: {
+    ...text.body,
+    margin: 0,
+  } satisfies CSSProperties,
+
+  /** Section heading — heading/md, primary, top padding (e.g. "Location", "Contact") */
+  sectionHeading: {
+    fontFamily: font.family.heading,
+    fontSize: font.size.heading.medium,
+    fontWeight: font.weight.semibold,
+    lineHeight: font.lineHeight.snug,
+    color: color.text.primary,
+    margin: 0,
+    paddingTop: space.xl,
+  } satisfies CSSProperties,
+
+  /** Section divider label — label/md, muted, top padding (minor groupings) */
+  sectionLabel: {
+    ...label.md,
+    color: color.text.muted,
+    margin: 0,
+    paddingTop: space.xl,
+  } satisfies CSSProperties,
+
+  /** 3-column grid for field pairs */
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr 1fr',
+    gap: gap.xl,
+    textAlign: 'left',
+  } satisfies CSSProperties as CSSProperties,
+
+  /** Empty/null placeholder */
+  empty: {
+    color: color.text.muted,
+  } satisfies CSSProperties,
+
+  /** Link inside a value */
+  link: {
+    ...text.body,
+    color: color.system.link,
+    textDecoration: 'none' as const,
+  } satisfies CSSProperties,
+} as const;
+
 // ─── Lists ───────────────────────────────────────────────────────────
 
 export const list = {

@@ -298,11 +298,21 @@ blockquote {
 }
 
 /*
+ * Portal PageHeader — BDS default is heading-lg (32px).
+ * Portal uses heading-md (~25px) for tighter page scale.
+ * Component-tier rule referencing alias token (correct architecture).
+ */
+.bds-page-header .bds-page-header-title {
+  font-size: var(--heading-md);
+}
+
+/*
  * Portal dropdown density — BDS defaults to padding-xl (24px) inside
  * dropdown panels. Override to padding-md (16px) for a tighter feel.
+ * Scoped variable override uses primitive (--space-400), not alias.
  */
 .bds-filter-button-dropdown {
-  --padding-xl: var(--padding-md);
+  --padding-xl: var(--space-400);
 }
 
 /*

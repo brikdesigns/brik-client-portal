@@ -5,6 +5,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { font, color, gap } from '@/lib/tokens';
+import { detail } from '@/lib/styles';
 import { formatPhone } from '@/lib/format';
 
 interface Props {
@@ -40,20 +41,8 @@ export default async function ContactDetailPage({ params }: Props) {
 
   const company = contact.companies as unknown as { id: string; name: string; slug: string } | null;
 
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
+  const fieldLabelStyle = detail.label;
+  const fieldValueStyle = detail.value;
 
   return (
     <div>
@@ -86,7 +75,7 @@ export default async function ContactDetailPage({ params }: Props) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
         {/* Role + dates row */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Role</p>
             <p style={fieldValueStyle}>
@@ -120,7 +109,7 @@ export default async function ContactDetailPage({ params }: Props) {
         </div>
 
         {/* Contact info grid */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Email</p>
             <p style={fieldValueStyle}>

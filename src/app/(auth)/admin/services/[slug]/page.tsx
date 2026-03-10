@@ -9,6 +9,7 @@ import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { font, color, space, gap, border } from '@/lib/tokens';
+import { detail } from '@/lib/styles';
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -71,36 +72,9 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
     display: 'inline-block' as const,
   });
 
-  const sectionLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.lg,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-    paddingTop: space.xl,
-  };
-
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
-
-  const linkStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.system.link,
-    textDecoration: 'none' as const,
-  };
+  const fieldLabelStyle = detail.label;
+  const fieldValueStyle = detail.value;
+  const linkStyle = detail.link;
 
   const complexityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' };
   const offeringLabels: Record<string, string> = { single_service: 'Standalone', bundled: 'Bundled' };
@@ -191,8 +165,8 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
           )}
 
           {/* Stripe */}
-          <p style={sectionLabelStyle}>Stripe</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <h2 style={detail.sectionHeading}>Stripe</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Stripe Product</p>
               <p style={fieldValueStyle}>
@@ -239,7 +213,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
               </p>
             </div>
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Stripe Last Sync</p>
               <p style={fieldValueStyle}>
@@ -253,8 +227,8 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
           </div>
 
           {/* Operations */}
-          <p style={sectionLabelStyle}>Operations</p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+          <h2 style={detail.sectionHeading}>Operations</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
               <p style={fieldLabelStyle}>Operations Cost</p>
               <p style={fieldValueStyle}>

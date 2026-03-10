@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader } from '@/components/page-header';
 import { RoleTag } from '@/components/status-badges';
-import { font, color, gap } from '@/lib/tokens';
+import { gap } from '@/lib/tokens';
+import { detail } from '@/lib/styles';
 
 export default async function ClientProfilePage() {
   const supabase = createClient();
@@ -29,20 +30,8 @@ export default async function ClientProfilePage() {
 
   const company = profile.companies as unknown as { id: string; name: string; slug: string } | null;
 
-  const fieldLabelStyle = {
-    fontFamily: font.family.label,
-    fontSize: font.size.body.sm,
-    fontWeight: font.weight.medium,
-    color: color.text.muted,
-    margin: 0,
-  };
-
-  const fieldValueStyle = {
-    fontFamily: font.family.body,
-    fontSize: font.size.body.sm,
-    color: color.text.primary,
-    margin: 0,
-  };
+  const fieldLabelStyle = detail.label;
+  const fieldValueStyle = detail.value;
 
   const formatDateTime = (date: string | null) =>
     date ? new Date(date).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : 'Never';
@@ -67,7 +56,7 @@ export default async function ClientProfilePage() {
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Email</p>
             <p style={fieldValueStyle}>{profile.email}</p>
@@ -81,7 +70,7 @@ export default async function ClientProfilePage() {
             <p style={fieldValueStyle}>{formatDateTime(profile.last_login_at)}</p>
           </div>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Account created</p>
             <p style={fieldValueStyle}>
