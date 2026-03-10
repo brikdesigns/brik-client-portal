@@ -4,7 +4,7 @@ import { PageHeader } from '@/components/page-header';
 import { ContactsFilterTable, type ContactRow } from '@/components/contacts-filter-table';
 
 export default async function AdminContactsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: contacts } = await supabase
     .from('contacts')

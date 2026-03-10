@@ -39,7 +39,7 @@ interface Props {
 export default async function CompanyDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tab } = await searchParams;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: client, error } = await supabase
     .from('companies')

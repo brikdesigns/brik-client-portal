@@ -6,7 +6,7 @@ import { EmptyState } from '@/components/empty-state';
 import { font, color, gap, space } from '@/lib/tokens';
 
 export default async function ProjectsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: projects } = await supabase
     .from('projects')

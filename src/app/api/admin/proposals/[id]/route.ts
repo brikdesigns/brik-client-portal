@@ -20,7 +20,7 @@ export async function PATCH(
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const body = await request.json();
   const {

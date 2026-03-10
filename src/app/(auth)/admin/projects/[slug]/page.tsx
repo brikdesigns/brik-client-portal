@@ -13,7 +13,7 @@ interface Props {
 
 export default async function ProjectDetailPage({ params }: Props) {
   const { slug } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: project, error } = await supabase
     .from('projects')

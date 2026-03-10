@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const body = await request.json();
   const { company_id } = body;

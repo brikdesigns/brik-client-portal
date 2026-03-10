@@ -7,7 +7,7 @@ import { gap } from '@/lib/tokens';
 import { detail } from '@/lib/styles';
 
 export default async function ClientProfilePage() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
   if (!user) {

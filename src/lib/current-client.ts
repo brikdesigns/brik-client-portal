@@ -8,7 +8,7 @@ const COOKIE_MAX_AGE = 60 * 60 * 24 * 30; // 30 days
  * Check if user is a super_admin (Brik platform operator)
  */
 async function isSuperAdmin(userId: string): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data: profile } = await supabase
     .from('profiles')
     .select('role')
@@ -22,13 +22,13 @@ async function isSuperAdmin(userId: string): Promise<boolean> {
  * Super admins can view any company. Regular users need company_users access.
  */
 export async function getCurrentClientId(userId: string): Promise<string | null> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   const currentClientId = cookieStore.get(COOKIE_NAME)?.value;
   const admin = await isSuperAdmin(userId);
 
   // If cookie exists, verify access
   if (currentClientId) {
-    const supabase = createClient();
+    const supabase = await createClient();
 
     if (admin) {
       // Super admins: just verify company exists
@@ -61,7 +61,7 @@ export async function getCurrentClientId(userId: string): Promise<string | null>
  * Set the current client ID cookie
  */
 export async function setCurrentClientId(clientId: string): Promise<void> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.set(COOKIE_NAME, clientId, {
     maxAge: COOKIE_MAX_AGE,
     httpOnly: false, // Needs client-side access for switcher
@@ -74,7 +74,7 @@ export async function setCurrentClientId(clientId: string): Promise<void> {
  * Clear the current client ID cookie
  */
 export async function clearCurrentClientId(): Promise<void> {
-  const cookieStore = cookies();
+  const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
 }
 
@@ -83,7 +83,7 @@ export async function clearCurrentClientId(): Promise<void> {
  * Super admins see all companies. Regular users see only their company_users memberships.
  */
 export async function getUserClients(userId: string): Promise<Array<{ id: string; name: string }>> {
-  const supabase = createClient();
+  const supabase = await createClient();
   const admin = await isSuperAdmin(userId);
 
   if (admin) {

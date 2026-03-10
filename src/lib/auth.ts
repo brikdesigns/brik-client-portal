@@ -51,7 +51,7 @@ export interface AuthUser {
  * Returns null if not authenticated or profile not found.
  */
 export async function getAuthUser(supabase?: SupabaseClient): Promise<AuthUser | null> {
-  const client = supabase ?? createClient();
+  const client = supabase ?? await createClient();
   const { data: { user } } = await client.auth.getUser();
 
   if (!user) return null;

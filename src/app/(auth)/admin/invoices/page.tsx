@@ -14,7 +14,7 @@ interface Props {
 
 export default async function AdminInvoicesPage({ searchParams }: Props) {
   const { tab: tabFilter } = await searchParams;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: invoices } = await supabase
     .from('invoices')

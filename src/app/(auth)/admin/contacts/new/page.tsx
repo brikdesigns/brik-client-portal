@@ -8,7 +8,7 @@ interface Props {
 
 export default async function NewContactPage({ searchParams }: Props) {
   const { company_id } = await searchParams;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: companies } = await supabase
     .from('companies')

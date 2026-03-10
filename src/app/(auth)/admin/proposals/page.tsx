@@ -8,7 +8,7 @@ import { formatCurrency } from '@/lib/format';
 import { font, color, gap, space } from '@/lib/tokens';
 
 export default async function ProposalsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: proposals } = await supabase
     .from('proposals')

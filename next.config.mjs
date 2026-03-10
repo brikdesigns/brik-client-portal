@@ -11,6 +11,12 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
   },
+  turbopack: {
+    resolveAlias: {
+      '@bds/components': path.resolve(__dirname, 'brik-bds/components'),
+      '@bds/tokens': path.resolve(__dirname, 'brik-bds/tokens'),
+    },
+  },
   webpack: (config) => {
     config.resolve.alias = {
       ...config.resolve.alias,

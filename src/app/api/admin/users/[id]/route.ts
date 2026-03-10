@@ -13,7 +13,7 @@ export async function PATCH(
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
 
-    const supabase = createClient();
+    const supabase = await createClient();
 
     // Update user profile
     const { data, error } = await supabase

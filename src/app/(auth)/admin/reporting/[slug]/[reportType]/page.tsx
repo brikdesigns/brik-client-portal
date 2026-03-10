@@ -14,7 +14,7 @@ interface Props {
 export default async function ReportDetailPage({ params }: Props) {
   const { slug, reportType } = await params;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // Fetch client
   const { data: client, error: clientError } = await supabase

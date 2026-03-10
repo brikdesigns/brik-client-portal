@@ -14,7 +14,7 @@ interface Props {
 
 export default async function AgreementDetailPage({ params }: Props) {
   const { slug, id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: agreement, error } = await supabase
     .from('agreements')

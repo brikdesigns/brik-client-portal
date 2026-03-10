@@ -19,7 +19,7 @@ interface Props {
 export default async function ServiceDetailPage({ params, searchParams }: Props) {
   const { slug } = await params;
   const { tab } = await searchParams;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: service, error } = await supabase
     .from('services')

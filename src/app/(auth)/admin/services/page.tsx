@@ -6,7 +6,7 @@ import { ServicesFilterTable } from '@/components/services-filter-table';
 import { gap, space } from '@/lib/tokens';
 
 export default async function AdminServicesPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: services } = await supabase
     .from('services')

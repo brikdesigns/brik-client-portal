@@ -11,7 +11,7 @@ import { heading } from '@/lib/styles';
 import { font, color, space } from '@/lib/tokens';
 
 export default async function AdminAgreementsPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: agreements } = await supabase
     .from('agreements')

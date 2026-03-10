@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const body = await request.json();
   const { company_id, meeting_notes_url, service_ids } = body as {
@@ -149,7 +149,7 @@ export async function GET(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const url = new URL(request.url);
   const companyId = url.searchParams.get('company_id');

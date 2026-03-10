@@ -14,7 +14,7 @@ interface Props {
 
 export default async function ContactDetailPage({ params }: Props) {
   const { id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: contact, error } = await supabase
     .from('contacts')

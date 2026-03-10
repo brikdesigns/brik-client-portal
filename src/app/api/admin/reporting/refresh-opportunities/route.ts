@@ -13,7 +13,7 @@ export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { report_id } = await request.json() as { report_id: string };
 

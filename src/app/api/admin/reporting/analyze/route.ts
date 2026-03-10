@@ -17,7 +17,7 @@ export async function POST(request: Request) {
   if (isAuthError(auth)) return auth;
   const { user } = auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const body = await request.json();
   const { report_id, report_type } = body as { report_id: string; report_type: string };

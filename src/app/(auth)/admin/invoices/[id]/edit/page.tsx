@@ -9,7 +9,7 @@ interface Props {
 
 export default async function EditInvoicePage({ params }: Props) {
   const { id } = await params;
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: invoice, error } = await supabase
     .from('invoices')

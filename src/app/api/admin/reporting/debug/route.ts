@@ -13,7 +13,7 @@ export async function GET(request: Request) {
   if (isAuthError(auth)) return auth;
   const { user } = auth;
 
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const url = new URL(request.url);
   const reportId = url.searchParams.get('report_id');

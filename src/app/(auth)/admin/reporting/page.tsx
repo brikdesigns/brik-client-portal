@@ -5,7 +5,7 @@ import { ReportingFilterTable, type ReportSetRow } from '@/components/reporting-
 import { space } from '@/lib/tokens';
 
 export default async function AdminReportingPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data: reportSets } = await supabase
     .from('report_sets')

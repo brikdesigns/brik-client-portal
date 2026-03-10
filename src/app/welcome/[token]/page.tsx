@@ -4,7 +4,7 @@ import { font, color, space, gap, border, shadow } from '@/lib/tokens';
 import { WelcomeSetupForm } from '@/components/welcome-setup-form';
 
 interface WelcomePageProps {
-  params: { token: string };
+  params: Promise<{ token: string }>;
 }
 
 async function getContactByToken(token: string) {
@@ -22,7 +22,8 @@ async function getContactByToken(token: string) {
   return contact;
 }
 
-export default async function WelcomePage({ params }: WelcomePageProps) {
+export default async function WelcomePage(props: WelcomePageProps) {
+  const params = await props.params;
   const contact = await getContactByToken(params.token);
 
   // Token not found
