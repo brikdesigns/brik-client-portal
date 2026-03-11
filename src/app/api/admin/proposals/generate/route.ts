@@ -18,7 +18,10 @@ import {
  */
 export async function POST(request: Request) {
   const auth = await requireAdmin();
-  if (isAuthError(auth)) return auth;
+  if (isAuthError(auth)) {
+    console.error('Proposal generate: auth failed');
+    return auth;
+  }
 
   const supabase = await createClient();
 

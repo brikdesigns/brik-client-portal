@@ -166,8 +166,9 @@ export default function EditProposalPage() {
       setSections(data.sections);
       if (data.meeting_notes_content) setMeetingNotesContent(data.meeting_notes_content);
       if (data.meeting_notes_url) setMeetingNotesUrl(data.meeting_notes_url);
-    } catch {
-      setError('An unexpected error occurred during generation.');
+    } catch (err) {
+      console.error('Generation failed:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during generation.');
     } finally {
       setGenerating(false);
     }

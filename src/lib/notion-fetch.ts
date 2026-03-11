@@ -66,13 +66,16 @@ export async function searchMeetingByClientName(
   const exactMatch = options?.exactMatch ?? true;
 
   // Query the Meetings database filtered by title containing company name
+  // and Meeting Type = Discovery (proposals only need discovery call notes)
   const res = await fetch(`${NOTION_API}/databases/${MEETINGS_DATABASE_ID}/query`, {
     method: 'POST',
     headers: notionHeaders(),
     body: JSON.stringify({
       filter: {
-        property: 'Title',
-        title: { contains: clientName },
+        and: [
+          { property: 'Title', title: { contains: clientName } },
+          { property: 'Meeting Type', select: { equals: 'Discovery' } },
+        ],
       },
       sorts: [{ property: 'Meeting Date', direction: 'descending' }],
       page_size: 20,
@@ -101,6 +104,10 @@ export async function searchMeetingByClientName(
       method: 'POST',
       headers: notionHeaders(),
       body: JSON.stringify({
+        filter: {
+          property: 'Meeting Type',
+          select: { equals: 'Discovery' },
+        },
         sorts: [{ property: 'Meeting Date', direction: 'descending' }],
         page_size: 15,
       }),

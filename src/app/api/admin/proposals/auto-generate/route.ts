@@ -28,7 +28,10 @@ import crypto from 'crypto';
  */
 export async function POST(request: Request) {
   const auth = await requireAdmin();
-  if (isAuthError(auth)) return auth;
+  if (isAuthError(auth)) {
+    console.error('Auto-generate: auth failed');
+    return auth;
+  }
 
   const supabase = await createClient();
 
