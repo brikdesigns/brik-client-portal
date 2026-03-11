@@ -150,6 +150,7 @@ export const color = {
     yellow: 'var(--color-system-yellow)',
     blue: 'var(--color-system-blue)',
     orange: 'var(--color-system-orange)',
+    purple: 'var(--color-system-purple)',
   },
 } as const;
 

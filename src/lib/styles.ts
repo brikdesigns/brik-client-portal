@@ -143,7 +143,7 @@ export const meta = {
 //
 //   READ MODE (detail pages)            EDIT MODE (form pages)
 //   ─────────────────────────           ──────────────────────
-//   label.md · text-muted               BDS TextInput/Select label (built-in)
+//   body/md  · text-muted               BDS TextInput/Select label (built-in)
 //   body/md  · text-primary             BDS form component value (interactive)
 //   3-col grid, left-aligned            Single-col form, maxWidth 600px
 //   Static text, badges, links          Inputs, selects, textareas
@@ -170,9 +170,11 @@ export const meta = {
 //   <a style={detail.link} href="...">Open ↗</a>
 
 export const detail = {
-  /** Field label — label/md, muted, no margin */
+  /** Field label — body/md, muted, no margin */
   label: {
-    ...label.md,
+    fontFamily: font.family.body,
+    fontSize: font.size.body.md,
+    lineHeight: font.lineHeight.normal,
     color: color.text.muted,
     margin: 0,
   } satisfies CSSProperties,

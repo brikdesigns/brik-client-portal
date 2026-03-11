@@ -58,3 +58,6 @@ tmp/
 # Deno
 deno.lock
 .next-prepush
+
+# Agent coordination (local only)
+.claude/workstreams.json

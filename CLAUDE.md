@@ -12,14 +12,20 @@ Brik Designs client portal — secure web app where agency clients track project
 
 ## Session Startup
 
-**Run the health check at the start of every work session:**
+**Run these at the start of every work session:**
 
 ```bash
-./scripts/health-check.sh --quick    # Fast check (skip build + Netlify)
-./scripts/health-check.sh            # Full check (includes build + Netlify API)
+./scripts/health-check.sh --quick    # Verify environment is healthy
+./scripts/agent-preflight.sh         # Check for active workstreams + conflicts
 ```
 
-This catches stale secrets, broken connections, and migration drift before you waste time debugging. A weekly GitHub Action also runs automatically (Mondays 9am CT).
+If multiple agents are active, claim your workstream before starting:
+
+```bash
+./scripts/agent-preflight.sh --claim "Your task" --files "src/app/(auth)/admin/area/*"
+```
+
+This catches stale secrets, broken connections, migration drift, and multi-agent conflicts before you waste time debugging.
 
 ## Tech Stack
 
@@ -491,6 +497,80 @@ Use `./scripts/db-migrate-api.sh --status` to verify the record was created.
 - Concurrency group per branch — queues (never cancels) simultaneous pushes
 - On failure: auto-creates a GitHub issue for visibility
 - Supports manual dispatch with environment override and dry-run option
+
+## Multi-Agent Coordination
+
+Multiple Claude Code agents can work on this portal simultaneously. Follow these rules to avoid collisions.
+
+### Before starting work (MANDATORY)
+
+```bash
+./scripts/agent-preflight.sh                                              # Check status
+./scripts/agent-preflight.sh --claim "Add invoice PDF" --files "src/app/(auth)/admin/invoices/*"  # Claim your area
+```
+
+### The coordination protocol
+
+1. **Run preflight** — see who's working on what, check for conflicts
+2. **Claim your workstream** — declare what you're building and which files you own
+3. **Use a feature branch** for anything non-trivial: `feat/description`, `fix/description`
+4. **Never touch another agent's claimed files** without coordinating first
+5. **Release your claim** when done: `./scripts/agent-preflight.sh --release`
+
+### File ownership zones (natural boundaries)
+
+| Zone | Path | Safe for parallel work? |
+|------|------|------------------------|
+| Companies CRUD | `src/app/(auth)/admin/companies/` | Yes (isolated route) |
+| Projects CRUD | `src/app/(auth)/admin/projects/` | Yes (isolated route) |
+| Invoices/Billing | `src/app/(auth)/admin/invoices/` | Yes (isolated route) |
+| Reporting | `src/app/(auth)/admin/reporting/` | Yes (isolated route) |
+| Services | `src/app/(auth)/admin/services/` | Yes (isolated route) |
+| Client dashboard | `src/app/(auth)/dashboard/` | Yes (isolated route) |
+| Shared components | `src/components/` | **ONE AGENT AT A TIME** |
+| Shared lib | `src/lib/` | **ONE AGENT AT A TIME** |
+| Migrations | `supabase/migrations/` | **CLAIM YOUR NUMBER FIRST** |
+| Styles/tokens | `src/lib/tokens.ts`, `src/lib/styles.ts` | **ONE AGENT AT A TIME** |
+| BDS submodule | `brik-bds/` | **NEVER EDIT** (read-only) |
+
+### Migration coordination
+
+The most dangerous multi-agent scenario. Before creating a migration:
+
+1. Check the latest number: `ls supabase/migrations/ | tail -1`
+2. Create the file immediately (even if empty) to claim the number
+3. Commit before the other agent creates theirs
+4. The pre-push hook blocks migration number collisions as a safety net
+
+### Shared file protocol
+
+For files in the "ONE AGENT AT A TIME" zones:
+
+1. Check if another agent has claimed the file: `./scripts/agent-preflight.sh --list`
+2. If claimed, either wait or coordinate to take turns
+3. If unclaimed, claim it: `--claim "Update tokens" --files "src/lib/tokens.ts"`
+4. Make your changes, commit, and release the claim
+
+### Branch strategy for parallel agents
+
+```
+Agent A: feat/invoice-pdf-export     → merges to staging
+Agent B: feat/property-hierarchy     → merges to staging
+Agent C: (small fix)                 → commits directly to staging
+```
+
+Feature branches give maximum isolation. Use them when:
+- Two agents need to touch overlapping files
+- Work will span multiple sessions
+- You want a PR review before merging
+
+### What NOT to do
+
+- Don't have two agents edit `globals.css`, `tokens.ts`, or `styles.ts` at the same time
+- Don't have two agents running `./scripts/bds-sync.sh` simultaneously
+- Don't push to the same branch within 3 minutes of each other (let Netlify build finish)
+- Don't create a migration while another agent is modifying the same table
+- Don't skip the preflight check
 
 ## Key Integrations
 
