@@ -96,7 +96,8 @@ export function AgreementsFilterTable({
       <DataTable
         data={filtered}
         rowKey={(a) => a.id}
-        emptyMessage="No agreements match your filters."
+        emptyMessage="No agreements match your filters"
+        emptyDescription="Try adjusting your filters to see more results."
         columns={[
           {
             header: 'Client',

@@ -1,7 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@bds/components/ui/Button/Button';
-import { PageHeader } from '@/components/page-header';
-import { ContactsFilterTable, type ContactRow } from '@/components/contacts-filter-table';
+import { ContactsPageContent, type ContactRow } from '@/components/contacts-page-content';
 
 export default async function AdminContactsPage() {
   const supabase = await createClient();
@@ -21,19 +19,5 @@ export default async function AdminContactsPage() {
     `)
     .order('created_at', { ascending: false });
 
-  return (
-    <div>
-      <PageHeader
-        title="Contacts"
-        subtitle="People at your companies — clients, managers, and admins."
-        actions={
-          <Button variant="primary" size="sm" asLink href="/admin/contacts/new">
-            Add Contact
-          </Button>
-        }
-      />
-
-      <ContactsFilterTable contacts={(contacts ?? []) as unknown as ContactRow[]} />
-    </div>
-  );
+  return <ContactsPageContent contacts={(contacts ?? []) as unknown as ContactRow[]} />;
 }

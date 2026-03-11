@@ -173,7 +173,6 @@ export function ServiceBadge({ category, serviceName, size = 28 }: ServiceBadgeP
           width: `${size}px`,
           height: `${size}px`,
           borderRadius: '6px',
-          backgroundColor: `var(--services--${config.token})`,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

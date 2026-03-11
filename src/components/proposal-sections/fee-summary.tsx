@@ -20,7 +20,8 @@ export function FeeSummaryContent({ items, totalAmountCents }: FeeSummaryContent
       <DataTable
         data={sorted}
         rowKey={(item) => item.id}
-        emptyMessage="No line items."
+        emptyMessage="No line items"
+        emptyDescription="Add services to this proposal to see pricing."
         columns={[
           {
             header: '',

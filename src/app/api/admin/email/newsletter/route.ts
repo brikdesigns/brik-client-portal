@@ -1,16 +1,25 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendNewsletterEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, nonEmptyString } from '@/lib/validation';
+
+const newsletterSchema = z.object({
+  company_ids: z.array(z.string().uuid()).optional(),
+  subject: nonEmptyString,
+  body_html: nonEmptyString,
+  cta_label: z.string().optional(),
+  cta_url: z.string().url().optional(),
+});
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const { company_ids, subject, body_html, cta_label, cta_url } = await request.json();
-  if (!subject || !body_html) {
-    return NextResponse.json({ error: 'subject and body_html are required' }, { status: 400 });
-  }
+  const body = await parseBody(request, newsletterSchema);
+  if (isValidationError(body)) return body;
+  const { company_ids, subject, body_html, cta_label, cta_url } = body;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

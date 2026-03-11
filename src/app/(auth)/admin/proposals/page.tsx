@@ -54,7 +54,9 @@ export default async function ProposalsPage() {
       <DataTable
           data={allProposals}
           rowKey={(p) => p.id}
-          emptyMessage="No proposals yet."
+          emptyMessage="No proposals yet"
+          emptyDescription="Proposals are created from a company's detail page."
+          emptyAction={{ label: 'View Companies', href: '/admin/companies' }}
           columns={[
             {
               header: 'Client',

@@ -4,7 +4,8 @@ import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Tag } from '@bds/components/ui/Tag/Tag';
-import { font, color, space, gap } from '@/lib/tokens';
+import { PageHeader, type MetadataItem } from '@/components/page-header';
+import { font, color, gap, space } from '@/lib/tokens';
 import { formatContactRole } from '@/lib/format';
 import { DataTable } from './data-table';
 
@@ -20,9 +21,35 @@ export interface ContactRow {
   companies: { name: string; slug: string } | null;
 }
 
-export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
+function getUserType(c: ContactRow): string {
+  return c.user_id ? 'Portal User' : 'Contact Only';
+}
+
+function getUserStatus(c: ContactRow): string {
+  return c.is_primary ? 'Primary' : 'Standard';
+}
+
+export function ContactsPageContent({ contacts }: { contacts: ContactRow[] }) {
+  const [userTypeFilter, setUserTypeFilter] = useState<string | undefined>();
+  const [userStatusFilter, setUserStatusFilter] = useState<string | undefined>();
+  const [roleFilter, setRoleFilter] = useState<string | undefined>();
   const [companyFilter, setCompanyFilter] = useState<string | undefined>();
-  const [titleFilter, setTitleFilter] = useState<string | undefined>();
+
+  const userTypeOptions = [
+    { id: 'Portal User', label: 'Portal User' },
+    { id: 'Contact Only', label: 'Contact Only' },
+  ];
+
+  const userStatusOptions = [
+    { id: 'Primary', label: 'Primary' },
+    { id: 'Standard', label: 'Standard' },
+  ];
+
+  const roleOptions = useMemo(() => {
+    const unique = Array.from(new Set(contacts.map((c) => c.role)));
+    unique.sort((a, b) => a.localeCompare(b));
+    return unique.map((r) => ({ id: r, label: formatContactRole(r) }));
+  }, [contacts]);
 
   const companyOptions = useMemo(() => {
     const unique = Array.from(
@@ -32,24 +59,80 @@ export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
     return unique.map((name) => ({ id: name, label: name }));
   }, [contacts]);
 
-  const titleOptions = useMemo(() => {
-    const unique = Array.from(
-      new Set(contacts.map((c) => c.title).filter(Boolean) as string[])
-    );
-    unique.sort((a, b) => a.localeCompare(b));
-    return unique.map((t) => ({ id: t, label: t }));
-  }, [contacts]);
-
   const filtered = useMemo(() => {
     return contacts.filter((c) => {
+      if (userTypeFilter && getUserType(c) !== userTypeFilter) return false;
+      if (userStatusFilter && getUserStatus(c) !== userStatusFilter) return false;
+      if (roleFilter && c.role !== roleFilter) return false;
       if (companyFilter && c.companies?.name !== companyFilter) return false;
-      if (titleFilter && c.title !== titleFilter) return false;
       return true;
     });
-  }, [contacts, companyFilter, titleFilter]);
+  }, [contacts, userTypeFilter, userStatusFilter, roleFilter, companyFilter]);
+
+  const metadata: MetadataItem[] = [
+    {
+      label: 'User Type',
+      value: (
+        <FilterButton
+          size="sm"
+          label="All"
+          value={userTypeFilter}
+          onChange={setUserTypeFilter}
+          options={userTypeOptions}
+        />
+      ),
+    },
+    {
+      label: 'User Status',
+      value: (
+        <FilterButton
+          size="sm"
+          label="All"
+          value={userStatusFilter}
+          onChange={setUserStatusFilter}
+          options={userStatusOptions}
+        />
+      ),
+    },
+    {
+      label: 'Role',
+      value: (
+        <FilterButton
+          size="sm"
+          label="All"
+          value={roleFilter}
+          onChange={setRoleFilter}
+          options={roleOptions}
+        />
+      ),
+    },
+    {
+      label: 'Company',
+      value: (
+        <FilterButton
+          size="sm"
+          label="All"
+          value={companyFilter}
+          onChange={setCompanyFilter}
+          options={companyOptions}
+        />
+      ),
+    },
+  ];
 
   return (
     <div>
+      <PageHeader
+        title="Contacts"
+        subtitle="People at your companies — clients, managers, and admins."
+        actions={
+          <Button variant="primary" size="sm" asLink href="/admin/contacts/new">
+            Add Contact
+          </Button>
+        }
+        metadata={metadata}
+      />
+
       {/* Filter bar */}
       <div
         style={{
@@ -70,26 +153,8 @@ export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
         >
           Showing {filtered.length} of {contacts.length}
         </span>
-
-        <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
-          <FilterButton
-            size="sm"
-            label="Company"
-            value={companyFilter}
-            onChange={setCompanyFilter}
-            options={companyOptions}
-          />
-          <FilterButton
-            size="sm"
-            label="Job Title"
-            value={titleFilter}
-            onChange={setTitleFilter}
-            options={titleOptions}
-          />
-        </div>
       </div>
 
-      {/* Table */}
       <DataTable
         data={filtered}
         rowKey={(c) => c.id}

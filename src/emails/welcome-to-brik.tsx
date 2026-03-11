@@ -43,7 +43,7 @@ export default function WelcomeToBrikEmail({
       {setupUrl ? (
         <EmailButton href={setupUrl}>Set up your account</EmailButton>
       ) : (
-        <EmailButton href={`${SITE_URL}/welcome`}>Get started</EmailButton>
+        <EmailButton href={`${SITE_URL}/login`}>Sign in to your portal</EmailButton>
       )}
     </BrikEmailLayout>
   );

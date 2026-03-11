@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getMeetingNotes, searchMeetingByClientName } from '@/lib/notion-fetch';
 import {
@@ -7,6 +8,13 @@ import {
   type ServiceDetail,
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+
+const generateSchema = z.object({
+  company_id: uuidSchema,
+  meeting_notes_url: z.string().url().optional(),
+  service_ids: z.array(z.string().uuid()).min(1, 'At least one service_id is required'),
+});
 
 /**
  * POST /api/admin/proposals/generate
@@ -25,19 +33,9 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const body = await request.json();
-  const { company_id, meeting_notes_url, service_ids } = body as {
-    company_id: string;
-    meeting_notes_url?: string;
-    service_ids: string[];
-  };
-
-  if (!company_id || !service_ids || service_ids.length === 0) {
-    return NextResponse.json(
-      { error: 'company_id and at least one service_id are required' },
-      { status: 400 }
-    );
-  }
+  const body = await parseBody(request, generateSchema);
+  if (isValidationError(body)) return body;
+  const { company_id, meeting_notes_url, service_ids } = body;
 
   try {
     // 1. Fetch company + primary contact

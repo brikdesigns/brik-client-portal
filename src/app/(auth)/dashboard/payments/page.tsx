@@ -21,7 +21,11 @@ export default async function PaymentsPage() {
     return (
       <div>
         <PageHeader title="Payments" subtitle="Select a client to view payments." />
-        <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
+        <EmptyState
+          title="No client selected"
+          description="Use the client switcher above to select a client."
+          inline={false}
+        />
       </div>
     );
   }
@@ -62,7 +66,8 @@ export default async function PaymentsPage() {
       <DataTable
           data={invoices ?? []}
           rowKey={(inv) => inv.id}
-          emptyMessage="No invoices yet."
+          emptyMessage="No invoices yet"
+          emptyDescription="Your invoices will appear here once billing begins."
           columns={[
             {
               header: 'Description',

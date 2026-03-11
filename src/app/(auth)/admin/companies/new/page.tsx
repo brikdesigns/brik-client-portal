@@ -254,7 +254,7 @@ export default function NewCompanyPage() {
                 placeholder="Select industry"
                 options={[
                   { label: 'Dental', value: 'dental' },
-                  { label: 'Real Estate', value: 'real-estate' },
+                  { label: 'Commercial Real Estate', value: 'commercial-real-estate' },
                 ]}
                 fullWidth
               />

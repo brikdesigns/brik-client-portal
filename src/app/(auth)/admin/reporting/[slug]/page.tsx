@@ -80,7 +80,8 @@ export default async function ClientReportListPage({ params }: Props) {
       <DataTable
         data={allReports}
         rowKey={(r) => r.id}
-        emptyMessage="No reports generated yet."
+        emptyMessage="No reports generated yet"
+        emptyDescription="Run a marketing analysis from the company detail page to generate reports."
         columns={[
           {
             header: 'Report',

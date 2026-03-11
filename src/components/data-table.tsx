@@ -19,7 +19,12 @@ interface DataTableProps<T> {
   columns: Column<T>[];
   data: T[];
   rowKey: (row: T) => string;
+  /** Empty state heading (required) */
   emptyMessage?: string;
+  /** Optional supporting text below the heading */
+  emptyDescription?: string;
+  /** Optional CTA button */
+  emptyAction?: { label: string; href: string };
   onRowClick?: (row: T) => void;
 }
 
@@ -28,10 +33,18 @@ export function DataTable<T>({
   data,
   rowKey,
   emptyMessage = 'No data yet.',
+  emptyDescription,
+  emptyAction,
   onRowClick,
 }: DataTableProps<T>) {
   if (data.length === 0) {
-    return <EmptyState>{emptyMessage}</EmptyState>;
+    return (
+      <EmptyState
+        title={emptyMessage}
+        description={emptyDescription}
+        action={emptyAction}
+      />
+    );
   }
 
   return (

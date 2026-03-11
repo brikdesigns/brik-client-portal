@@ -250,7 +250,8 @@ export default async function ContactDetailPage({ params, searchParams }: Props)
           <DataTable
             data={connectedCompanies}
             rowKey={(c) => c.id}
-            emptyMessage="No companies connected."
+            emptyMessage="No companies connected"
+            emptyDescription="Link this contact to a company from their detail page."
             columns={[
               {
                 header: 'Company',
@@ -298,7 +299,8 @@ export default async function ContactDetailPage({ params, searchParams }: Props)
             <DataTable
               data={activity}
               rowKey={(a) => a.id}
-              emptyMessage="No activity recorded yet."
+              emptyMessage="No activity recorded yet"
+              emptyDescription="Activity events will appear here as the user interacts with the portal."
               columns={[
                 {
                   header: 'Event',

@@ -95,7 +95,8 @@ export function InvoicesFilterTable({
       <DataTable
         data={filtered}
         rowKey={(inv) => inv.id}
-        emptyMessage="No invoices match your filters."
+        emptyMessage="No invoices match your filters"
+        emptyDescription="Try adjusting your filters to see more results."
         columns={[
           {
             header: 'Client',

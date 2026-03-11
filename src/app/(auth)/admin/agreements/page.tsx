@@ -120,7 +120,9 @@ export default async function AdminAgreementsPage() {
         <DataTable<AgreementRow>
           data={all}
           rowKey={(a) => a.id}
-          emptyMessage="No agreements yet."
+          emptyMessage="No agreements yet"
+          emptyDescription="Agreements are created from a company's detail page."
+          emptyAction={{ label: 'View Companies', href: '/admin/companies' }}
           columns={[
             {
               header: 'Client',

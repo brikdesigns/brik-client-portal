@@ -233,7 +233,9 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
         <DataTable
           data={assignments}
           rowKey={(a) => a.id}
-          emptyMessage="No clients have been assigned this service yet."
+          emptyMessage="No clients assigned yet"
+          emptyDescription="Assign this service to a company from their detail page."
+          emptyAction={{ label: 'View Companies', href: '/admin/companies' }}
           columns={[
             {
               header: 'Client',
@@ -264,6 +266,16 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
               header: 'Notes',
               accessor: (a) => a.notes || '—',
               style: { color: color.text.muted },
+            },
+            {
+              header: '',
+              accessor: (a) =>
+                a.companies ? (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${a.companies.slug}`}>
+                    View
+                  </Button>
+                ) : null,
+              style: { textAlign: 'right' as const },
             },
           ]}
         />

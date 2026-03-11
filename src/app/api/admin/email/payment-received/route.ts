@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendPaymentReceivedEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+
+const paymentReceivedSchema = z.object({ invoice_id: uuidSchema });
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const { invoice_id } = await request.json();
-  if (!invoice_id) {
-    return NextResponse.json({ error: 'invoice_id is required' }, { status: 400 });
-  }
+  const body = await parseBody(request, paymentReceivedSchema);
+  if (isValidationError(body)) return body;
+  const { invoice_id } = body;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

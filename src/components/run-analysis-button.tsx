@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
-import { font, color, gap } from '@/lib/tokens';
+import { AlertBanner } from '@bds/components/ui/AlertBanner/AlertBanner';
+import { space, shadow } from '@/lib/tokens';
 
 interface RunAnalysisButtonProps {
   clientId: string;
@@ -12,13 +13,49 @@ interface RunAnalysisButtonProps {
 
 const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
 
+const spinnerKeyframes = `
+@keyframes bds-toast-spin {
+  to { transform: rotate(360deg); }
+}
+`;
+
+function Spinner() {
+  return (
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 16 16"
+      fill="none"
+      style={{ animation: 'bds-toast-spin 0.8s linear infinite', flexShrink: 0 }}
+    >
+      <circle cx="8" cy="8" r="6.5" stroke="var(--border-muted)" strokeWidth="2.5" />
+      <path
+        d="M14.5 8a6.5 6.5 0 0 0-6.5-6.5"
+        stroke="var(--text-primary)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState('');
+  const [toastVisible, setToastVisible] = useState(false);
+
+  // Auto-dismiss toast after completion
+  useEffect(() => {
+    if (progress === 'Complete!') {
+      const timer = setTimeout(() => setToastVisible(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [progress]);
 
   async function handleClick() {
     setLoading(true);
+    setToastVisible(true);
     setProgress('Creating report set...');
 
     try {
@@ -32,13 +69,13 @@ export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
       let reportSetId: string;
 
       if (createRes.status === 409) {
-        // Already exists — use existing
         const data = await createRes.json();
         reportSetId = data.report_set_id;
       } else if (!createRes.ok) {
         const data = await createRes.json();
         console.error('Failed to create report set:', data.error);
         setProgress('');
+        setToastVisible(false);
         return;
       } else {
         const data = await createRes.json();
@@ -91,14 +128,15 @@ export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
       router.refresh();
     } catch (err) {
       console.error('Analysis request failed:', err);
+      setToastVisible(false);
     } finally {
       setLoading(false);
-      setProgress('');
     }
   }
 
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
+    <>
+      <style dangerouslySetInnerHTML={{ __html: spinnerKeyframes }} />
       <Button
         variant="primary"
         size="sm"
@@ -107,15 +145,31 @@ export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
       >
         {loading ? 'Running...' : 'Start'}
       </Button>
-      {progress && (
-        <span style={{
-          fontFamily: font.family.body,
-          fontSize: font.size.body.sm,
-          color: color.text.muted,
-        }}>
-          {progress}
-        </span>
+
+      {toastVisible && progress && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: space.xl,
+            right: space.xl,
+            zIndex: 9999,
+            maxWidth: '400px',
+            boxShadow: shadow.lg,
+            borderRadius: 'var(--border-radius-sm)',
+          }}
+        >
+          <AlertBanner
+            variant="information"
+            title={
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--gap-sm)' }}>
+                {progress !== 'Complete!' && <Spinner />}
+                {progress}
+              </span>
+            }
+            description="Marketing analysis is running in the background."
+          />
+        </div>
       )}
-    </div>
+    </>
   );
 }

@@ -343,6 +343,29 @@ export default function PublicProposalPage() {
 
       {/* Main content */}
       <main style={isMobile ? mainMobileStyle : mainStyle}>
+        {/* Success banner when signed */}
+        {accepted && (
+          <div
+            role="alert"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: gap.md,
+              backgroundColor: 'rgba(121, 215, 153, 0.12)',
+              border: `${border.width.sm} solid rgba(121, 215, 153, 0.3)`,
+              borderRadius: border.radius.sm,
+              padding: `${space.sm} ${space.md}`,
+              marginBottom: space.lg,
+              fontFamily: font.family.body,
+              fontSize: font.size.body.sm,
+              color: color.system.green,
+            }}
+          >
+            <i className="fa-solid fa-circle-check" style={{ fontSize: font.size.body.md, flexShrink: 0 }} />
+            <span>Proposal successfully signed. Thank you!</span>
+          </div>
+        )}
+
         {/* Page dots — linear: only visited dots are clickable */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: gap.md, marginBottom: isMobile ? space.lg : space.xl }}>
           {sections.map((_, index) => {
@@ -422,8 +445,10 @@ export default function PublicProposalPage() {
               <Button variant="primary" size="md" onClick={() => goToSection(activeSection + 1)}>
                 Next
               </Button>
-            ) : accepted ? (
-              <Badge status="positive">Signed</Badge>
+            ) : !accepted && !isExpired ? (
+              <Button variant="primary" size="md" loading={accepting} onClick={handleAccept}>
+                Sign Proposal
+              </Button>
             ) : null}
           </div>
         </div>
@@ -508,22 +533,13 @@ function FeeSummaryContent({ items, total, accepted, isExpired, email, setEmail,
               {error}
             </p>
           )}
-          <div style={{ marginTop: space.md }}>
-            <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.secondary, margin: `0 0 ${space.sm}` }}>
-              By clicking Sign, you agree to the scope and pricing outlined in this proposal.
-            </p>
-            <Button variant="primary" size="md" loading={accepting} onClick={onAccept}>
-              Sign Proposal
-            </Button>
-          </div>
+          <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.secondary, marginTop: space.md }}>
+            By clicking Sign, you agree to the scope and pricing outlined in this proposal.
+          </p>
         </div>
       )}
 
-      {accepted && (
-        <div style={{ borderTop: `${border.width.sm} solid ${color.border.secondary}`, marginTop: space.lg, paddingTop: space.lg }}>
-          <Badge status="positive">Signed</Badge>
-        </div>
-      )}
+      {/* Signed state handled by page-level banner */}
 
       {isExpired && !accepted && (
         <div style={{ borderTop: `${border.width.sm} solid ${color.border.secondary}`, marginTop: space.lg, paddingTop: space.lg }}>
@@ -633,14 +649,25 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
           textAlign: 'center',
         }}>
           {accepted ? (
-            <>
-              <Badge status="positive">Signed</Badge>
-              <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: space.sm }}>
-                {proposal.accepted_by_email
-                  ? `Signed by ${proposal.accepted_by_email} on ${proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString() : 'today'}`
-                  : 'This proposal has been signed. Thank you!'}
-              </p>
-            </>
+            <div
+              role="alert"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: gap.md,
+                backgroundColor: 'rgba(121, 215, 153, 0.12)',
+                border: `${border.width.sm} solid rgba(121, 215, 153, 0.3)`,
+                borderRadius: border.radius.sm,
+                padding: `${space.sm} ${space.md}`,
+                fontFamily: font.family.body,
+                fontSize: font.size.body.sm,
+                color: color.system.green,
+                justifyContent: 'center',
+              }}
+            >
+              <i className="fa-solid fa-circle-check" style={{ fontSize: font.size.body.md, flexShrink: 0 }} />
+              <span>Proposal successfully signed. Thank you!</span>
+            </div>
           ) : isExpired ? (
             <>
               <Badge status="warning">Expired</Badge>

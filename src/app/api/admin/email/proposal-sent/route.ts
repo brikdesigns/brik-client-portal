@@ -1,16 +1,19 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendProposalEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+
+const proposalSentSchema = z.object({ proposal_id: uuidSchema });
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const { proposal_id } = await request.json();
-  if (!proposal_id) {
-    return NextResponse.json({ error: 'proposal_id is required' }, { status: 400 });
-  }
+  const body = await parseBody(request, proposalSentSchema);
+  if (isValidationError(body)) return body;
+  const { proposal_id } = body;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

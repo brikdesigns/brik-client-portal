@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { type Industry, getReportConfigs } from '@/lib/analysis/report-config';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+
+const createReportSetSchema = z.object({
+  company_id: uuidSchema,
+});
 
 /**
  * GET /api/admin/reporting?report_set_id=xxx
@@ -47,12 +53,9 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const body = await request.json();
-  const { company_id } = body as { company_id: string };
-
-  if (!company_id) {
-    return NextResponse.json({ error: 'company_id is required' }, { status: 400 });
-  }
+  const body = await parseBody(request, createReportSetSchema);
+  if (isValidationError(body)) return body;
+  const { company_id } = body;
 
   // Fetch client data
   const { data: client, error: clientError } = await supabase

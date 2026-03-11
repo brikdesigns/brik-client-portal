@@ -29,7 +29,11 @@ export default async function DashboardPage() {
           title={`Welcome${profile?.first_name ? `, ${profile.first_name}` : ''}`}
           subtitle="Select a client to view your dashboard."
         />
-        <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
+        <EmptyState
+          title="No client selected"
+          description="Use the client switcher above to select a client."
+          inline={false}
+        />
       </div>
     );
   }
@@ -112,7 +116,11 @@ export default async function DashboardPage() {
           })}
         </div>
       ) : (
-        <EmptyState>No active services. Contact us to get started.</EmptyState>
+        <EmptyState
+          title="No active services"
+          description="Contact us to get started with your first service."
+          inline={false}
+        />
       )}
     </div>
   );

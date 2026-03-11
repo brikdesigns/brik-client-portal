@@ -1,13 +1,13 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@bds/components/ui/Button/Button';
-import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
-import { text, heading, meta } from '@/lib/styles';
+import { text, heading, detail } from '@/lib/styles';
 import { font, space, gap } from '@/lib/tokens';
 import { ProposalActions } from '@/components/proposal-actions';
+import { ProposalTabs } from '@/components/proposal-tabs';
 import { ProposalSectionsView } from './sections-view';
 import type {
   ProposalSectionBase,
@@ -16,12 +16,67 @@ import type {
   FeeSummaryItem,
 } from '@/lib/proposal-types';
 
-interface Props {
-  params: Promise<{ slug: string; id: string }>;
+function parseUserAgent(ua: string) {
+  if (!ua) return { browser: '—', os: '—', device: '—' };
+
+  // Browser
+  let browser = '—';
+  if (ua.includes('Edg/')) {
+    const v = ua.match(/Edg\/([\d.]+)/);
+    browser = `Microsoft Edge ${v?.[1] ?? ''}`.trim();
+  } else if (ua.includes('Chrome/') && !ua.includes('Chromium/')) {
+    const v = ua.match(/Chrome\/([\d.]+)/);
+    browser = `Google Chrome ${v?.[1] ?? ''}`.trim();
+  } else if (ua.includes('Firefox/')) {
+    const v = ua.match(/Firefox\/([\d.]+)/);
+    browser = `Mozilla Firefox ${v?.[1] ?? ''}`.trim();
+  } else if (ua.includes('Safari/') && !ua.includes('Chrome/')) {
+    const v = ua.match(/Version\/([\d.]+)/);
+    browser = `Safari ${v?.[1] ?? ''}`.trim();
+  }
+
+  // OS
+  let os = '—';
+  const macMatch = ua.match(/Mac OS X ([\d_]+)/);
+  const winMatch = ua.match(/Windows NT ([\d.]+)/);
+  const linuxMatch = ua.includes('Linux');
+  const iosMatch = ua.match(/iPhone OS ([\d_]+)/);
+  const androidMatch = ua.match(/Android ([\d.]+)/);
+
+  if (iosMatch) {
+    os = `iOS ${iosMatch[1].replace(/_/g, '.')}`;
+  } else if (androidMatch) {
+    os = `Android ${androidMatch[1]}`;
+  } else if (macMatch) {
+    os = `macOS ${macMatch[1].replace(/_/g, '.')}`;
+  } else if (winMatch) {
+    const winVersions: Record<string, string> = { '10.0': '10/11', '6.3': '8.1', '6.2': '8', '6.1': '7' };
+    os = `Windows ${winVersions[winMatch[1]] ?? winMatch[1]}`;
+  } else if (linuxMatch) {
+    os = 'Linux';
+  }
+
+  // Device
+  let device = '—';
+  if (ua.includes('iPhone')) device = 'iPhone';
+  else if (ua.includes('iPad')) device = 'iPad';
+  else if (ua.includes('Android') && ua.includes('Mobile')) device = 'Android Phone';
+  else if (ua.includes('Android')) device = 'Android Tablet';
+  else if (ua.includes('Macintosh')) device = 'Mac';
+  else if (ua.includes('Windows')) device = 'Windows PC';
+  else if (linuxMatch) device = 'Linux PC';
+
+  return { browser, os, device };
 }
 
-export default async function ProposalDetailPage({ params }: Props) {
+interface Props {
+  params: Promise<{ slug: string; id: string }>;
+  searchParams: Promise<{ tab?: string }>;
+}
+
+export default async function ProposalDetailPage({ params, searchParams }: Props) {
   const { slug, id } = await params;
+  const { tab } = await searchParams;
   const supabase = await createClient();
 
   // Fetch proposal with company, line items, and service categories
@@ -81,9 +136,8 @@ export default async function ProposalDetailPage({ params }: Props) {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.brikdesigns.com';
   const shareableLink = `${siteUrl}/proposals/${proposal.token}`;
 
-  const metaLabelStyle = meta.label;
-  const metaValueStyle = meta.value;
-  const sectionHeadingStyle = heading.section;
+  const isSigned = proposal.status === 'signed';
+  const activeTab = isSigned && tab === 'signature' ? 'signature' : 'proposal';
 
   return (
     <div>
@@ -127,58 +181,83 @@ export default async function ProposalDetailPage({ params }: Props) {
         ]}
       />
 
-      {/* Proposal sections — collapsible cards with structured content */}
-      <ProposalSectionsView
-        sections={sections as (ScopeOfProjectSection | ProjectTimelineSection | ProposalSectionBase)[]}
-        feeSummaryItems={feeSummaryItems}
-        totalAmountCents={proposal.total_amount_cents}
-        meetingNotesUrl={proposal.meeting_notes_url}
-        hasSections={hasSections}
-      />
+      {/* Tabs — only shown for signed proposals */}
+      {isSigned && (
+        <div style={{ marginBottom: space.lg }}>
+          <ProposalTabs companySlug={slug} proposalId={id} />
+        </div>
+      )}
 
-      {/* Signature audit trail */}
-      {proposal.status === 'signed' && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
-          <h2 style={sectionHeadingStyle}>Signature Record</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
+      {/* ── Proposal Tab ──────────────────────────────────────── */}
+      {activeTab === 'proposal' && (
+        <>
+          <ProposalSectionsView
+            sections={sections as (ScopeOfProjectSection | ProjectTimelineSection | ProposalSectionBase)[]}
+            feeSummaryItems={feeSummaryItems}
+            totalAmountCents={proposal.total_amount_cents}
+            meetingNotesUrl={proposal.meeting_notes_url}
+            hasSections={hasSections}
+          />
+
+          {/* Internal notes */}
+          {proposal.notes && (
+            <div style={{ marginTop: space.lg }}>
+              <h2 style={heading.section}>Internal notes</h2>
+              <p
+                style={{
+                  ...text.muted,
+                  margin: 0,
+                  whiteSpace: 'pre-wrap',
+                }}
+              >
+                {proposal.notes}
+              </p>
+            </div>
+          )}
+        </>
+      )}
+
+      {/* ── Signature Tab ─────────────────────────────────────── */}
+      {activeTab === 'signature' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+          <div style={detail.grid}>
             <div>
-              <p style={metaLabelStyle}>Signed By</p>
-              <p style={metaValueStyle}>{proposal.accepted_by_email}</p>
+              <p style={detail.label}>Signed by</p>
+              <p style={detail.value}>{proposal.accepted_by_email || '—'}</p>
             </div>
             <div>
-              <p style={metaLabelStyle}>Signed At</p>
-              <p style={metaValueStyle}>
+              <p style={detail.label}>Signed at</p>
+              <p style={detail.value}>
                 {proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleString() : '—'}
               </p>
             </div>
             <div>
-              <p style={metaLabelStyle}>IP Address</p>
-              <p style={metaValueStyle}>{proposal.accepted_by_ip || '—'}</p>
-            </div>
-            <div>
-              <p style={metaLabelStyle}>User Agent</p>
-              <p style={{ ...metaValueStyle, fontSize: font.size.body.xs, wordBreak: 'break-all' }}>
-                {proposal.accepted_by_user_agent || '—'}
-              </p>
+              <p style={detail.label}>IP address</p>
+              <p style={detail.value}>{proposal.accepted_by_ip || '—'}</p>
             </div>
           </div>
-        </Card>
-      )}
 
-      {/* Internal notes */}
-      {proposal.notes && (
-        <Card variant="outlined" padding="lg">
-          <h2 style={sectionHeadingStyle}>Internal Notes</h2>
-          <p
-            style={{
-              ...text.muted,
-              margin: 0,
-              whiteSpace: 'pre-wrap',
-            }}
-          >
-            {proposal.notes}
-          </p>
-        </Card>
+          {(() => {
+            const ua = proposal.accepted_by_user_agent || '';
+            const parsed = parseUserAgent(ua);
+            return (
+              <div style={detail.grid}>
+                <div>
+                  <p style={detail.label}>Browser</p>
+                  <p style={detail.value}>{parsed.browser}</p>
+                </div>
+                <div>
+                  <p style={detail.label}>Operating system</p>
+                  <p style={detail.value}>{parsed.os}</p>
+                </div>
+                <div>
+                  <p style={detail.label}>Device</p>
+                  <p style={detail.value}>{parsed.device}</p>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
       )}
     </div>
   );

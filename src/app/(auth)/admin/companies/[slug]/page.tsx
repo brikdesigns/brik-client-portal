@@ -66,47 +66,49 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     notFound();
   }
 
-  // Fetch contacts for this company
-  const { data: contacts } = await supabase
-    .from('contacts')
-    .select('id, full_name, email, phone, title, role, is_primary, user_id')
-    .eq('company_id', client.id)
-    .order('is_primary', { ascending: false });
-
-  // Fetch proposals for this client
-  const { data: proposals } = await supabase
-    .from('proposals')
-    .select('id, title, status, total_amount_cents, created_at')
-    .eq('company_id', client.id)
-    .order('created_at', { ascending: false });
+  // Fetch all secondary data in parallel (contacts, proposals, reportSet, agreements)
+  const [
+    { data: contacts },
+    { data: proposals },
+    { data: reportSet },
+    { data: agreements },
+  ] = await Promise.all([
+    supabase
+      .from('contacts')
+      .select('id, full_name, email, phone, title, role, is_primary, user_id')
+      .eq('company_id', client.id)
+      .order('is_primary', { ascending: false }),
+    supabase
+      .from('proposals')
+      .select('id, title, status, total_amount_cents, created_at')
+      .eq('company_id', client.id)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('report_sets')
+      .select('id, status, overall_tier')
+      .eq('company_id', client.id)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from('agreements')
+      .select('id, type, title, status, created_at')
+      .eq('company_id', client.id)
+      .order('created_at', { ascending: false }),
+  ]);
 
   const latestProposal = proposals?.[0] || null;
 
-  // Fetch report set and individual reports for the Reporting tab
-  const { data: reportSet } = await supabase
-    .from('report_sets')
-    .select('id, status, overall_tier')
-    .eq('company_id', client.id)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
-
+  // Reports depend on reportSet — sequential
   const { data: reports } = reportSet
     ? await supabase
         .from('reports')
-        .select('id, report_type, status, score, max_score, tier, created_at')
+        .select('id, report_type, status, score, max_score, tier, created_at, updated_at')
         .eq('report_set_id', reportSet.id)
         .order('created_at', { ascending: true })
     : { data: null };
 
   const allReports = reports ?? [];
-
-  // Fetch agreements for this client (onboarding cards)
-  const { data: agreements } = await supabase
-    .from('agreements')
-    .select('id, type, title, status, created_at')
-    .eq('company_id', client.id)
-    .order('created_at', { ascending: false });
 
   const latestBaa = agreements?.find((a) => a.type === 'baa') || null;
 
@@ -147,7 +149,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     { key: 'overview', label: 'Overview', types: ['lead', 'prospect', 'client'] },
     { key: 'reporting', label: 'Reporting', types: ['lead', 'prospect', 'client'], dot: !reportSet },
     { key: 'billing', label: 'Billing', types: ['prospect', 'client'], dot: !latestProposal || invoices.some((i) => i.status === 'open') },
-    { key: 'services', label: 'Services', types: ['prospect', 'client'], dot: clientServices.length === 0 },
+    { key: 'services', label: 'Services', types: ['prospect', 'client'] },
     { key: 'projects', label: 'Projects', types: ['client'], dot: projects.some((p) => p.status === 'in_progress') },
     { key: 'contacts', label: 'Contacts', types: ['lead', 'prospect', 'client'], dot: !contacts?.length },
   ];
@@ -200,7 +202,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               Edit
             </Button>
             {companyType === 'lead' && <QualifyLeadButton companyId={client.id} />}
-            {companyType === 'prospect' && !latestProposal && (
+            {companyType === 'prospect' && (!latestProposal || latestProposal.status === 'draft') && (
               <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} label="Send Proposal" />
             )}
           </div>
@@ -447,7 +449,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             <DataTable
               data={allReports}
               rowKey={(r) => r.id}
-              emptyMessage="No reports generated yet."
+              emptyMessage="No reports generated yet"
+              emptyDescription="Run a marketing analysis to generate reports for this company."
               columns={[
                 {
                   header: 'Report',
@@ -461,19 +464,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   ),
                 },
                 {
-                  header: 'Status',
-                  accessor: (r) => <ReportStatusBadge status={r.status} />,
-                },
-                {
-                  header: 'Tier',
-                  accessor: (r) => r.tier ? <ScoreTierBadge tier={r.tier} /> : '—',
-                },
-                {
                   header: 'Score',
-                  accessor: (r) =>
-                    r.score !== null && r.max_score !== null
-                      ? `${r.score} / ${r.max_score}`
-                      : '—',
+                  accessor: (r) => r.tier ? <ScoreTierBadge tier={r.tier} /> : <ReportStatusBadge status={r.status} />,
+                },
+                {
+                  header: 'Last Updated',
+                  accessor: (r) => r.updated_at ? new Date(r.updated_at).toLocaleDateString() : '—',
                   style: { color: color.text.secondary },
                 },
                 {
@@ -494,8 +490,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Billing Tab (prospects + clients) ────────────────────── */}
       {activeTab === 'billing' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-          {/* Agreements section — proposals + BAA */}
-          {(latestProposal || companyType === 'prospect') && (
+          {/* Prospect view — CardControl cards */}
+          {companyType === 'prospect' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
               <CardControl
                 title="Proposal"
@@ -536,52 +532,89 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             </div>
           )}
 
-          {/* Invoices section — clients only */}
-          {companyType === 'client' && (
-            <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
-                <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
-                <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
+          {/* Client view — unified billing table */}
+          {companyType === 'client' && (() => {
+            const billingRows: { id: string; name: string; type: string; status: React.ReactNode; href: string }[] = [];
+
+            // Add proposals as Marketing Analysis
+            if (proposals?.length) {
+              for (const p of proposals) {
+                billingRows.push({
+                  id: `proposal-${p.id}`,
+                  name: p.title || 'Proposal',
+                  type: 'Marketing Analysis',
+                  status: <ProposalStatusBadge status={p.status} />,
+                  href: `/admin/companies/${client.slug}/proposals/${p.id}`,
+                });
+              }
+            }
+
+            // Add BAAs as Marketing Analysis
+            if (agreements?.length) {
+              for (const a of agreements.filter((ag) => ag.type === 'baa')) {
+                billingRows.push({
+                  id: `agreement-${a.id}`,
+                  name: a.title || 'Business Associate Agreement',
+                  type: 'Marketing Analysis',
+                  status: <AgreementStatusBadge status={a.status} />,
+                  href: `/admin/companies/${client.slug}/agreements/${a.id}`,
+                });
+              }
+            }
+
+            // Add invoices
+            for (const inv of invoices) {
+              billingRows.push({
+                id: `invoice-${inv.id}`,
+                name: inv.description || 'Invoice',
+                type: 'Invoice',
+                status: <InvoiceStatusBadge status={inv.status} />,
+                href: inv.invoice_url || '#',
+              });
+            }
+
+            return (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
+                  <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Billing</h2>
+                  <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
+                </div>
+                <DataTable
+                  data={billingRows}
+                  rowKey={(r) => r.id}
+                  emptyMessage="No billing records yet"
+                  emptyDescription="Add an invoice or create a proposal to start tracking billing."
+                  emptyAction={{ label: 'Add Invoice', href: `/admin/companies/${client.slug}/invoices/new` }}
+                  columns={[
+                    {
+                      header: 'Name',
+                      accessor: (r) => r.name,
+                      style: { fontWeight: font.weight.medium, color: color.text.primary },
+                    },
+                    {
+                      header: 'Type',
+                      accessor: (r) => (
+                        <Tag size="sm" style={{ color: color.text.muted }}>{r.type}</Tag>
+                      ),
+                    },
+                    {
+                      header: 'Status',
+                      accessor: (r) => r.status,
+                    },
+                    {
+                      header: '',
+                      accessor: (r) => (
+                        <Button variant="secondary" size="sm" asLink href={r.href}>
+                          View
+                        </Button>
+                      ),
+                      style: { textAlign: 'right' },
+                    },
+                  ]}
+                />
               </div>
-              <DataTable
-                data={invoices}
-                rowKey={(inv) => inv.id}
-                emptyMessage="No invoices yet."
-                columns={[
-                  {
-                    header: 'Description',
-                    accessor: (inv) => inv.description || 'Invoice',
-                    style: { fontWeight: font.weight.medium, color: color.text.primary },
-                  },
-                  {
-                    header: 'Amount',
-                    accessor: (inv) => formatCurrency(inv.amount_cents),
-                  },
-                  {
-                    header: 'Due',
-                    accessor: (inv) => inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                    style: { color: color.text.secondary },
-                  },
-                  {
-                    header: 'Status',
-                    accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
-                  },
-                  {
-                    header: '',
-                    accessor: (inv) =>
-                      inv.invoice_url ? (
-                        <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                          <Button variant="secondary" size="sm">
-                            View
-                          </Button>
-                        </a>
-                      ) : null,
-                    style: { textAlign: 'right' },
-                  },
-                ]}
-              />
-            </div>
-          )}
+            );
+          })()}
         </div>
       )}
 
@@ -595,7 +628,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           <DataTable
             data={clientServices}
             rowKey={(cs) => cs.id}
-            emptyMessage="No services assigned yet."
+            emptyMessage="No services assigned yet"
+            emptyDescription="Assign a service from the catalog to this company."
+            emptyAction={{ label: 'Assign Service', href: `/admin/companies/${client.slug}/services/new` }}
             columns={[
               {
                 header: '',
@@ -646,6 +681,16 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 accessor: (cs) => cs.notes || '—',
                 style: { color: color.text.muted },
               },
+              {
+                header: '',
+                accessor: (cs) =>
+                  cs.services ? (
+                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${cs.services.slug}`}>
+                      View
+                    </Button>
+                  ) : null,
+                style: { textAlign: 'right' as const },
+              },
             ]}
           />
         </div>
@@ -661,7 +706,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           <DataTable
             data={projects}
             rowKey={(p) => p.id}
-            emptyMessage="No projects yet."
+            emptyMessage="No projects yet"
+            emptyDescription="Create a project to track work for this company."
+            emptyAction={{ label: 'Add Project', href: `/admin/companies/${client.slug}/projects/new` }}
             columns={[
               {
                 header: 'Name',
@@ -699,7 +746,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           <DataTable
             data={contacts ?? []}
             rowKey={(c) => c.id}
-            emptyMessage="No contacts yet."
+            emptyMessage="No contacts yet"
+            emptyDescription="Add a contact to keep track of people at this company."
+            emptyAction={{ label: 'Add Contact', href: `/admin/contacts/new?company_id=${client.id}` }}
             columns={[
               {
                 header: 'Name',
@@ -734,6 +783,15 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     {formatContactRole(c.role)}
                   </Tag>
                 ),
+              },
+              {
+                header: '',
+                accessor: (c) => (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
+                    View
+                  </Button>
+                ),
+                style: { textAlign: 'right' },
               },
             ]}
           />

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { type Industry, getReportConfigs, type ReportType } from '@/lib/analysis/report-config';
 import { analyzeWebsite, type WebsiteCheckResult } from '@/lib/analysis/website';
@@ -9,8 +10,15 @@ import { analyzeCompetitors } from '@/lib/analysis/competitors';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
 import { sendAnalysisCompleteEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 
-const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'];
+const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'] as const;
+
+const analyzeSchema = z.object({
+  report_id: uuidSchema,
+  report_type: z.enum(ANALYZABLE_TYPES),
+  skip_email: z.boolean().optional(),
+});
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
@@ -19,16 +27,9 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const body = await request.json();
-  const { report_id, report_type, skip_email } = body as { report_id: string; report_type: string; skip_email?: boolean };
-
-  if (!report_id || !report_type) {
-    return NextResponse.json({ error: 'report_id and report_type are required' }, { status: 400 });
-  }
-
-  if (!ANALYZABLE_TYPES.includes(report_type)) {
-    return NextResponse.json({ error: `Report type "${report_type}" does not support auto-analysis` }, { status: 400 });
-  }
+  const body = await parseBody(request, analyzeSchema);
+  if (isValidationError(body)) return body;
+  const { report_id, report_type, skip_email } = body;
 
   // Fetch report → report_set → client chain
   const { data: report } = await supabase

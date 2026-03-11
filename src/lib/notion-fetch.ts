@@ -8,7 +8,7 @@ const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
 /** Notion Meetings database ID — single source of truth for discovery calls */
-const MEETINGS_DATABASE_ID = '2e197d34-ed28-811e-b0f8-e13779bf48d8';
+const MEETINGS_DATABASE_ID = process.env.NOTION_MEETINGS_DB_ID || '2e197d34-ed28-811e-b0f8-e13779bf48d8';
 
 function getNotionToken(): string {
   const token = process.env.NOTION_TOKEN;

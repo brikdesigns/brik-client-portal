@@ -76,9 +76,11 @@ export default async function ProjectsPage() {
           ))}
         </div>
       ) : (
-        <Card variant="elevated" padding="lg">
-          <EmptyState>No projects yet.</EmptyState>
-        </Card>
+        <EmptyState
+          title="No projects yet"
+          description="Your projects with Brik Designs will appear here."
+          inline={false}
+        />
       )}
     </div>
   );

@@ -99,7 +99,9 @@ export function ProjectsFilterTable({
       <DataTable
         data={filtered}
         rowKey={(p) => p.id}
-        emptyMessage="No projects match your filters."
+        emptyMessage="No projects match your filters"
+        emptyDescription="Try adjusting your filters or add a new project."
+        emptyAction={{ label: 'Add Project', href: '/admin/projects/new' }}
         columns={[
           {
             header: 'Services',

@@ -16,7 +16,7 @@ export type ReportType =
   | 'guest'
   | 'guest_comms';
 
-export type Industry = 'dental' | 'real-estate' | null;
+export type Industry = 'dental' | 'commercial-real-estate' | null;
 
 export interface CategoryTemplate {
   category: string;
@@ -69,13 +69,13 @@ const STATUS_OPTIONS = [
 // Score: 1 (listed) or 0 (not listed), Rating + Total Reviews as data
 
 const ONLINE_REVIEWS_PLATFORMS_DENTAL = [
-  'Google', 'Healthgrades', 'WebMD', 'Vitals', 'Yelp',
+  'Google', 'WebMD', 'Yelp',
   'Facebook', 'Apple Maps',
 ];
 
-const ONLINE_REVIEWS_PLATFORMS_REALESTATE = [
-  'Google', 'Zillow', 'Realtor.com', 'TripAdvisor',
-  'Airbnb', 'Vrbo', 'Facebook', 'Booking.com',
+const ONLINE_REVIEWS_PLATFORMS_CRE = [
+  'Google', 'LoopNet', 'LinkedIn', 'CREXi',
+  'Facebook', 'CoStar', 'Yelp',
 ];
 
 const ONLINE_REVIEWS_PLATFORMS_DEFAULT = [
@@ -340,15 +340,15 @@ export const BRAND_LOGO_CONFIG: ReportTypeConfig = {
 
 // ── Competitors Analysis ─────────────────────────────────────────
 // Notion DB: "Competitors Analysis" — one row per competitor, variable count
-// Two scores per competitor: Website Score (/50), Listings Score (/7)
+// Two scores per competitor: Website Score (/50), Listings Score (/5)
 
 export const COMPETITORS_CONFIG: ReportTypeConfig = {
   type: 'competitors',
   label: 'Competitor Analysis',
   categories: [
-    { category: 'Competitor 1', maxScore: 57, defaultMetadata: { competitor_name: '', distance: '', services_offered: '', website_score: null, website_score_explanation: '', listings_reviews_score: null, listings_review_score_explanation: '' } },
-    { category: 'Competitor 2', maxScore: 57, defaultMetadata: { competitor_name: '', distance: '', services_offered: '', website_score: null, website_score_explanation: '', listings_reviews_score: null, listings_review_score_explanation: '' } },
-    { category: 'Competitor 3', maxScore: 57, defaultMetadata: { competitor_name: '', distance: '', services_offered: '', website_score: null, website_score_explanation: '', listings_reviews_score: null, listings_review_score_explanation: '' } },
+    { category: 'Competitor 1', maxScore: 55, defaultMetadata: { competitor_name: '', distance: '', services_offered: '', website_score: null, website_score_explanation: '', listings_reviews_score: null, listings_review_score_explanation: '' } },
+    { category: 'Competitor 2', maxScore: 55, defaultMetadata: { competitor_name: '', distance: '', services_offered: '', website_score: null, website_score_explanation: '', listings_reviews_score: null, listings_review_score_explanation: '' } },
+    { category: 'Competitor 3', maxScore: 55, defaultMetadata: { competitor_name: '', distance: '', services_offered: '', website_score: null, website_score_explanation: '', listings_reviews_score: null, listings_review_score_explanation: '' } },
   ],
 };
 
@@ -390,7 +390,7 @@ export const PATIENT_COMMS_CONFIG: ReportTypeConfig = {
   ],
 };
 
-// ── Guest Experience (real estate) ───────────────────────────────
+// ── Guest Experience (commercial real estate) ───────────────────────────────
 // Notion DB: "Guest Report"
 
 export const GUEST_CONFIG: ReportTypeConfig = {
@@ -408,7 +408,7 @@ export const GUEST_CONFIG: ReportTypeConfig = {
   ],
 };
 
-// ── Guest Communications (real estate) ───────────────────────────
+// ── Guest Communications (commercial real estate) ───────────────────────────
 // Notion DB: "Guest Communications Report"
 
 export const GUEST_COMMS_CONFIG: ReportTypeConfig = {
@@ -439,9 +439,9 @@ export function getReportConfigs(industry: Industry): ReportTypeConfig[] {
         PATIENT_CONFIG,
         PATIENT_COMMS_CONFIG,
       ];
-    case 'real-estate':
+    case 'commercial-real-estate':
       return [
-        makeOnlineReviewsConfig(ONLINE_REVIEWS_PLATFORMS_REALESTATE),
+        makeOnlineReviewsConfig(ONLINE_REVIEWS_PLATFORMS_CRE),
         WEBSITE_CONFIG,
         BRAND_LOGO_CONFIG,
         COMPETITORS_CONFIG,
@@ -554,13 +554,12 @@ export function getColumnConfig(reportType: ReportType): ColumnConfig[] {
 
     case 'competitors':
       return [
-        { ...categoryCol, header: 'Slot' },
         { key: 'competitor_name', header: 'Competitor', field: 'competitor_name', isMetadata: true, inputType: 'text', width: '160px' },
         statusCol,
         { key: 'distance', header: 'Distance', field: 'distance', isMetadata: true, inputType: 'text', width: '80px' },
         { key: 'services_offered', header: 'Services', field: 'services_offered', isMetadata: true, inputType: 'textarea', width: '160px' },
         { key: 'website_score', header: 'Website (/50)', field: 'website_score', isMetadata: true, inputType: 'number', min: 0, max: 50, step: 1, width: '100px' },
-        { key: 'listings_reviews_score', header: 'Listings (/7)', field: 'listings_reviews_score', isMetadata: true, inputType: 'number', min: 0, max: 7, step: 1, width: '100px' },
+        { key: 'listings_reviews_score', header: 'Listings (/5)', field: 'listings_reviews_score', isMetadata: true, inputType: 'number', min: 0, max: 5, step: 1, width: '100px' },
         notesCol,
       ];
 

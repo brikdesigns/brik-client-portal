@@ -117,7 +117,9 @@ export function ServicesFilterTable({
       <DataTable
           data={filtered}
           rowKey={(s) => s.id}
-          emptyMessage="No services match your filters."
+          emptyMessage="No services match your filters"
+          emptyDescription="Try adjusting your filters or add a new service."
+          emptyAction={{ label: 'Add Service', href: '/admin/services/new' }}
           columns={[
             {
               header: '',

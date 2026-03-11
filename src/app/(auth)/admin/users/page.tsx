@@ -42,7 +42,9 @@ export default async function AdminUsersPage() {
       <DataTable
         data={users ?? []}
         rowKey={(u) => u.id}
-        emptyMessage="No users yet."
+        emptyMessage="No users yet"
+        emptyDescription="Invite your first user to grant portal access."
+        emptyAction={{ label: 'Invite User', href: '/admin/users/invite' }}
         columns={[
           {
             header: 'Name',
