@@ -569,7 +569,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 name: inv.description || 'Invoice',
                 type: 'Invoice',
                 status: <InvoiceStatusBadge status={inv.status} />,
-                href: inv.invoice_url || '#',
+                href: `/admin/invoices/${inv.id}/edit`,
               });
             }
 

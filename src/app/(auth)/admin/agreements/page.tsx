@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -70,9 +69,9 @@ export default async function AdminAgreementsPage() {
                 accessor: (a) => {
                   const client = a.companies as unknown as { id: string; name: string; slug: string } | null;
                   return client ? (
-                    <TextLink href={`/admin/companies/${client.slug}`} size="small">
+                    <a className="cell-link" href={`/admin/companies/${client.slug}`}>
                       {client.name}
-                    </TextLink>
+                    </a>
                   ) : '—';
                 },
                 style: { fontWeight: font.weight.medium },
@@ -129,9 +128,9 @@ export default async function AdminAgreementsPage() {
               accessor: (a) => {
                 const client = a.companies as unknown as { id: string; name: string; slug: string } | null;
                 return client ? (
-                  <TextLink href={`/admin/companies/${client.slug}`} size="small">
+                  <a className="cell-link" href={`/admin/companies/${client.slug}`}>
                     {client.name}
-                  </TextLink>
+                  </a>
                 ) : '—';
               },
               style: { fontWeight: font.weight.medium },

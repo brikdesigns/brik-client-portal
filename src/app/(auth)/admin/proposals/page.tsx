@@ -62,8 +62,9 @@ export default async function ProposalsPage() {
               header: 'Client',
               accessor: (p) => (
                 <a
+                  className="cell-link"
                   href={`/admin/companies/${p.companies.slug}`}
-                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
+                  style={{ fontWeight: font.weight.medium }}
                 >
                   {p.companies.name}
                 </a>
@@ -73,8 +74,8 @@ export default async function ProposalsPage() {
               header: 'Title',
               accessor: (p) => (
                 <a
+                  className="cell-link"
                   href={`/admin/companies/${p.companies.slug}/proposals/${p.id}`}
-                  style={{ color: color.system.link, textDecoration: 'none' }}
                 >
                   {p.title}
                 </a>

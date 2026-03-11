@@ -1,0 +1,53 @@
+name: Uptime Monitor
+
+on:
+  schedule:
+    # Every 15 minutes
+    - cron: '*/15 * * * *'
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check portal health
+        id: health
+        run: |
+          RESPONSE=$(curl -sf --max-time 10 "https://portal.brikdesigns.com/api/health" 2>/dev/null || echo '{"status":"unreachable"}')
+          STATUS=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('status','unknown'))" 2>/dev/null || echo "unknown")
+          LATENCY=$(echo "$RESPONSE" | python3 -c "import sys,json; print(json.load(sys.stdin).get('latency_ms','N/A'))" 2>/dev/null || echo "N/A")
+
+          echo "status=$STATUS" >> "$GITHUB_OUTPUT"
+          echo "latency=$LATENCY" >> "$GITHUB_OUTPUT"
+          echo "Portal status: $STATUS (${LATENCY}ms)"
+
+      - name: Create issue on failure
+        if: steps.health.outputs.status != 'ok'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const status = '${{ steps.health.outputs.status }}';
+            const title = `Portal down: /api/health returned "${status}"`;
+
+            // Don't create duplicate issues
+            const { data: issues } = await github.rest.issues.listForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              state: 'open',
+              labels: 'uptime',
+              per_page: 5,
+            });
+
+            const duplicate = issues.find(i => i.title.startsWith('Portal down:'));
+            if (duplicate) {
+              console.log(`Issue #${duplicate.number} already open — skipping`);
+              return;
+            }
+
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body: `## Uptime alert\n\n- **Status:** ${status}\n- **Time:** ${new Date().toISOString()}\n- **Endpoint:** https://portal.brikdesigns.com/api/health\n\nCheck Netlify deploy status and Supabase dashboard.`,
+              labels: ['uptime', 'bug'],
+            });

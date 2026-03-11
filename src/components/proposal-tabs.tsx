@@ -23,7 +23,7 @@ export function ProposalTabs({ companySlug, proposalId }: { companySlug: string;
     background: 'none',
     border: 'none',
     borderBottom: active ? `${border.width.lg} solid ${color.text.brand}` : `${border.width.lg} solid transparent`,
-    marginBottom: `calc(-1 * ${border.width.lg})`,
+    marginBottom: `calc(-1 * ${border.width.md})`,
     cursor: 'pointer' as const,
   });
 
@@ -32,7 +32,7 @@ export function ProposalTabs({ companySlug, proposalId }: { companySlug: string;
       style={{
         display: 'flex',
         gap: gap.xl,
-        borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+        borderBottom: `${border.width.md} solid ${color.border.muted}`,
         marginBottom: '0',
       }}
     >

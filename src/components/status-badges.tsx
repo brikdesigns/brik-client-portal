@@ -9,6 +9,7 @@ import {
   faCircleXmark,
   faPencil,
   faEye,
+  faReceipt,
   faPaperPlane,
   faClock,
   faStop,
@@ -131,7 +132,7 @@ const invoiceStatusMap: Record<string, StatusConfig> = {
   open: {
     label: 'Open',
     variant: 'info',
-    icon: <FontAwesomeIcon icon={faEye} style={iconSize} />,
+    icon: <FontAwesomeIcon icon={faReceipt} style={iconSize} />,
   },
   paid: {
     label: 'Paid',

@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
@@ -103,9 +102,9 @@ export function AgreementsFilterTable({
             header: 'Client',
             accessor: (a) =>
               a.company ? (
-                <TextLink href={`/admin/companies/${a.company.slug}`} size="small">
+                <a className="cell-link" href={`/admin/companies/${a.company.slug}`}>
                   {a.company.name}
-                </TextLink>
+                </a>
               ) : (
                 '—'
               ),

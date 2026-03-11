@@ -319,10 +319,10 @@ blockquote {
  * border on the wrapper, overlap tab borders onto it via negative margin.
  */
 .bds-page-header-tabs {
-  border-bottom: var(--border-width-lg) solid var(--border-secondary);
+  border-bottom: var(--border-width-md) solid var(--border-secondary);
 }
 .bds-page-header-tabs .bds-tab-bar--tab .bds-tab-bar-item {
-  margin-bottom: calc(-1 * var(--border-width-lg));
+  margin-bottom: calc(-1 * var(--border-width-md));
 }
 
 /*
