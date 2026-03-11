@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { z } from 'zod';
 import { parseBody, isValidationError, emailSchema, passwordSchema } from '@/lib/validation';
-import { checkRateLimit, getClientIp, SETUP_LIMIT } from '@/lib/rate-limit';
+import { rateLimitOrNull, getClientIp, SETUP_LIMIT } from '@/lib/rate-limit';
 
 /**
  * Map contact organizational role → company_users permission role.
@@ -34,11 +34,10 @@ const setupSchema = z.object({
  */
 export async function POST(request: Request) {
   // Rate limit — stricter for account creation
+  const limited = rateLimitOrNull(request, 'welcome-setup', SETUP_LIMIT);
+  if (limited) return limited;
+
   const ip = getClientIp(request);
-  const rl = checkRateLimit(`welcome-setup:${ip}`, SETUP_LIMIT);
-  if (!rl.success) {
-    return NextResponse.json({ error: 'Too many attempts. Please try again later.' }, { status: 429 });
-  }
 
   try {
     // Validate input

@@ -1,7 +1,14 @@
+import type { Metadata } from 'next';
 import { createClient } from '@supabase/supabase-js';
 import Image from 'next/image';
 import { font, color, space, gap, border, shadow } from '@/lib/tokens';
 import { WelcomeSetupForm } from '@/components/welcome-setup-form';
+
+export const metadata: Metadata = {
+  title: 'Welcome to Brik — Set Up Your Account',
+  description: 'Complete your account setup to access the Brik Designs client portal.',
+  robots: { index: false, follow: false },
+};
 
 interface WelcomePageProps {
   params: Promise<{ token: string }>;

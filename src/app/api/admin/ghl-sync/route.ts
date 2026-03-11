@@ -20,6 +20,9 @@ const ghlSyncSchema = z.object({
  * Pulls: contact info, tags, source, opportunity value, pipeline/stage.
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'ghl-sync', EXTERNAL_SYNC_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 

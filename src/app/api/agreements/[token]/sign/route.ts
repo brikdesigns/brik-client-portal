@@ -5,7 +5,7 @@ import { tryPromoteCompany } from '@/lib/agreements/promote';
 import { sendAgreementSignedEmail, logEmail } from '@/lib/email';
 import { getPrimaryAdminEmail } from '@/lib/admin-notifications';
 import { parseBody, isValidationError, emailSchema, nonEmptyString } from '@/lib/validation';
-import { checkRateLimit, getClientIp, PUBLIC_TOKEN_LIMIT } from '@/lib/rate-limit';
+import { rateLimitOrNull, getClientIp, PUBLIC_TOKEN_LIMIT } from '@/lib/rate-limit';
 
 const signSchema = z.object({
   name: nonEmptyString.describe('Full legal name'),
@@ -24,11 +24,8 @@ export async function POST(
   { params }: { params: Promise<{ token: string }> }
 ) {
   // Rate limit
-  const ip = getClientIp(request);
-  const rl = checkRateLimit(`agreement-sign:${ip}`, PUBLIC_TOKEN_LIMIT);
-  if (!rl.success) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
-  }
+  const limited = rateLimitOrNull(request, 'agreement-sign', PUBLIC_TOKEN_LIMIT);
+  if (limited) return limited;
 
   const { token } = await params;
   const supabase = getServiceClient();
@@ -75,6 +72,7 @@ export async function POST(
   }
 
   // Capture ESIGN audit trail
+  const ip = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   const { error: updateError } = await supabase

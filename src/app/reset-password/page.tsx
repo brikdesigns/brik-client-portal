@@ -1,6 +1,11 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ResetPasswordForm } from '@/components/reset-password-form';
 import { font, color, space, gap, border, shadow } from '@/lib/tokens';
+
+export const metadata: Metadata = {
+  title: 'Reset Password — Brik Client Portal',
+};
 
 export default function ResetPasswordPage() {
   return (

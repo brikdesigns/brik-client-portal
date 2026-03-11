@@ -4,6 +4,7 @@ import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendProjectUpdateEmail, logEmail } from '@/lib/email';
 import { parseBody, isValidationError, uuidSchema, nonEmptyString } from '@/lib/validation';
+import { rateLimitOrNull, ADMIN_EMAIL_LIMIT } from '@/lib/rate-limit';
 
 const projectUpdateSchema = z.object({
   project_id: uuidSchema,
@@ -11,6 +12,9 @@ const projectUpdateSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'email-project-update', ADMIN_EMAIL_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 

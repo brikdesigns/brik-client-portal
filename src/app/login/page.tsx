@@ -1,7 +1,12 @@
+import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import Image from 'next/image';
 import { LoginForm } from '@/components/login-form';
 import { font, color, space, border, shadow } from '@/lib/tokens';
+
+export const metadata: Metadata = {
+  title: 'Sign In — Brik Client Portal',
+};
 
 export default function LoginPage() {
   return (

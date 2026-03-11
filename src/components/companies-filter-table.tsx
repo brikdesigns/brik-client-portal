@@ -121,7 +121,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             },
             {
               header: 'Contact',
-              accessor: (c) => c.contact_email || '—',
+              accessor: (c) => c.contact_name || '—',
               style: { color: color.text.secondary },
             },
             {
