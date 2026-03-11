@@ -125,6 +125,7 @@ export const color = {
     inverse: 'var(--background-inverse)',
     elevated: 'var(--background-elevated)',
     input: 'var(--background-input)',
+    onColorDark: 'var(--background-on-color-dark)',
   },
   border: {
     primary: 'var(--border-primary)',

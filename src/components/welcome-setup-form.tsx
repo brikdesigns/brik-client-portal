@@ -10,10 +10,14 @@ import { font, color, space, gap } from '@/lib/tokens';
 interface WelcomeSetupFormProps {
   token: string;
   contactEmail: string;
-  contactName: string;
+  contactFirstName: string;
+  contactLastName: string;
 }
 
-export function WelcomeSetupForm({ token, contactEmail, contactName }: WelcomeSetupFormProps) {
+export function WelcomeSetupForm({ token, contactEmail, contactFirstName, contactLastName }: WelcomeSetupFormProps) {
+  const [email, setEmail] = useState(contactEmail);
+  const [firstName, setFirstName] = useState(contactFirstName);
+  const [lastName, setLastName] = useState(contactLastName);
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
@@ -24,6 +28,16 @@ export function WelcomeSetupForm({ token, contactEmail, contactName }: WelcomeSe
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     setError('');
+
+    if (!email.trim()) {
+      setError('Email is required.');
+      return;
+    }
+
+    if (!firstName.trim()) {
+      setError('First name is required.');
+      return;
+    }
 
     if (password.length < 8) {
       setError('Password must be at least 8 characters.');
@@ -41,7 +55,7 @@ export function WelcomeSetupForm({ token, contactEmail, contactName }: WelcomeSe
       const res = await fetch('/api/welcome/setup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, password }),
+        body: JSON.stringify({ token, password, email: email.trim(), first_name: firstName.trim(), last_name: lastName.trim() }),
       });
 
       const body = await res.json();
@@ -95,20 +109,32 @@ export function WelcomeSetupForm({ token, contactEmail, contactName }: WelcomeSe
     <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
       <div style={{ marginBottom: space.md }}>
         <TextInput
-          label="Email"
-          type="email"
-          value={contactEmail}
-          disabled
+          label="First name"
+          type="text"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          required
           fullWidth
         />
       </div>
 
       <div style={{ marginBottom: space.md }}>
         <TextInput
-          label="Name"
+          label="Last name"
           type="text"
-          value={contactName}
-          disabled
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          fullWidth
+        />
+      </div>
+
+      <div style={{ marginBottom: space.md }}>
+        <TextInput
+          label="Email"
+          type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          required
           fullWidth
         />
       </div>

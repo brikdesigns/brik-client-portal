@@ -1,19 +1,27 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Select } from '@bds/components/ui/Select/Select';
 import { ServiceBadge } from '@/components/service-badge';
 import { heading } from '@/lib/styles';
 import { font, color, space, gap } from '@/lib/tokens';
+
+interface ServiceLineOption {
+  id: string;
+  name: string;
+  slug: string;
+}
 
 interface ServiceOption {
   id: string;
   name: string;
   category_slug: string;
+  category_id: string;
 }
 
 const sectionHeadingStyle = {
@@ -40,7 +48,9 @@ export default function NewProjectPage() {
   const [clickupType, setClickupType] = useState('');
   const [clickupStatus, setClickupStatus] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+  const [serviceLines, setServiceLines] = useState<ServiceLineOption[]>([]);
   const [availableServices, setAvailableServices] = useState<ServiceOption[]>([]);
+  const [serviceLineFilter, setServiceLineFilter] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -52,9 +62,15 @@ export default function NewProjectPage() {
       const { data: company } = await supabase.from('companies').select('id').eq('slug', clientSlug).single();
       if (company) setClientId(company.id);
 
+      const { data: categories } = await supabase
+        .from('service_categories')
+        .select('id, name, slug')
+        .order('name');
+      setServiceLines((categories ?? []).map((c) => ({ id: c.id, name: c.name, slug: c.slug })));
+
       const { data: services } = await supabase
         .from('services')
-        .select('id, name, service_categories(slug)')
+        .select('id, name, category_id, service_categories(slug)')
         .eq('active', true)
         .order('name');
 
@@ -63,11 +79,17 @@ export default function NewProjectPage() {
           id: s.id,
           name: s.name,
           category_slug: (s.service_categories as unknown as { slug: string } | null)?.slug ?? 'service',
+          category_id: s.category_id ?? '',
         }))
       );
     }
     loadData();
   }, [clientSlug]);
+
+  const filteredServices = useMemo(() => {
+    if (!serviceLineFilter) return availableServices;
+    return availableServices.filter((s) => s.category_id === serviceLineFilter);
+  }, [availableServices, serviceLineFilter]);
 
   function toggleService(serviceId: string) {
     setSelectedServiceIds((prev) =>
@@ -178,8 +200,16 @@ export default function NewProjectPage() {
 
           {/* Services */}
           <p style={sectionHeadingStyle}>Services</p>
+          <Select
+            label="Service Line"
+            value={serviceLineFilter}
+            onChange={(e) => setServiceLineFilter(e.target.value)}
+            placeholder="All service lines"
+            options={serviceLines.map((sl) => ({ label: sl.name, value: sl.id }))}
+            fullWidth
+          />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: gap.sm }}>
-            {availableServices.map((svc) => {
+            {filteredServices.map((svc) => {
               const selected = selectedServiceIds.includes(svc.id);
               return (
                 <button
@@ -200,12 +230,12 @@ export default function NewProjectPage() {
                     color: color.text.primary,
                   }}
                 >
-                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={20} />
+                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={28} />
                   {svc.name}
                 </button>
               );
             })}
-            {availableServices.length === 0 && (
+            {filteredServices.length === 0 && (
               <span style={{ color: color.text.muted, fontFamily: font.family.body, fontSize: font.size.body.sm }}>
                 Loading services...
               </span>

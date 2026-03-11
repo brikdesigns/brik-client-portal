@@ -11,7 +11,7 @@ import { AddressAutocomplete } from '@/components/address-autocomplete';
 import { parseAddressString } from '@/lib/address';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
-import { heading } from '@/lib/styles';
+import { heading, label } from '@/lib/styles';
 import { formatPhone } from '@/lib/format';
 import { font, color, space, gap, border } from '@/lib/tokens';
 import { useToast } from '@/components/toast-provider';
@@ -186,10 +186,7 @@ export default function NewCompanyPage() {
             <div>
               <label
                 style={{
-                  fontFamily: font.family.body,
-                  fontSize: font.size.body.xs,
-                  fontWeight: font.weight.medium,
-                  color: color.text.primary,
+                  ...label.md,
                   display: 'block',
                   marginBottom: gap.xs,
                 }}

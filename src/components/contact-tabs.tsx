@@ -6,25 +6,26 @@ import { font, color, gap, border } from '@/lib/tokens';
 const tabs = [
   { label: 'Overview', value: 'overview' },
   { label: 'Companies', value: 'companies' },
+  { label: 'Activity', value: 'activity' },
 ];
 
-const tabStyle = (active: boolean) => ({
-  fontFamily: font.family.label,
-  fontSize: font.size.body.md,
-  fontWeight: font.weight.medium,
-  color: active ? color.text.brand : color.text.muted,
-  textDecoration: 'none' as const,
-  padding: `${gap.sm} 0`,
-  borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
-  cursor: 'pointer' as const,
-  background: 'none',
-  border: 'none',
-});
-
-export function ServiceTabs({ slug }: { slug: string }) {
+export function ContactTabs({ contactId }: { contactId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeTab = searchParams.get('tab') ?? 'overview';
+
+  const tabStyle = (active: boolean) => ({
+    fontFamily: font.family.label,
+    fontSize: font.size.body.md,
+    fontWeight: font.weight.medium,
+    color: active ? color.text.brand : color.text.muted,
+    textDecoration: 'none' as const,
+    padding: `${gap.sm} 0`,
+    borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
+    cursor: 'pointer' as const,
+    background: 'none',
+    border: 'none',
+  });
 
   return (
     <div
@@ -40,7 +41,7 @@ export function ServiceTabs({ slug }: { slug: string }) {
           key={t.value}
           style={tabStyle(activeTab === t.value)}
           onClick={() => {
-            router.push(`/admin/services/${slug}?tab=${t.value}`);
+            router.push(`/admin/contacts/${contactId}?tab=${t.value}`);
           }}
         >
           {t.label}

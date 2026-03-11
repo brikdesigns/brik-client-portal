@@ -1,7 +1,7 @@
 'use client';
 
 import { useRouter, useSearchParams } from 'next/navigation';
-import { TabBar } from '@bds/components/ui/TabBar/TabBar';
+import { font, color, gap, border } from '@/lib/tokens';
 
 const tabs = [
   { label: 'All', value: '' },
@@ -10,23 +10,47 @@ const tabs = [
   { label: 'Clients', value: 'client' },
 ];
 
+const tabStyle = (active: boolean) => ({
+  fontFamily: font.family.label,
+  fontSize: font.size.body.md,
+  fontWeight: font.weight.medium,
+  color: active ? color.text.brand : color.text.muted,
+  textDecoration: 'none' as const,
+  padding: `${gap.sm} 0`,
+  borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
+  cursor: 'pointer' as const,
+  background: 'none',
+  border: 'none',
+});
+
 export function CompanyTabs() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeType = searchParams.get('type') ?? '';
 
   return (
-    <TabBar
-      items={tabs.map((t) => ({
-        label: t.label,
-        active: activeType === t.value,
-        onClick: () => {
-          const href = t.value
-            ? `/admin/companies?type=${t.value}`
-            : '/admin/companies';
-          router.push(href);
-        },
-      }))}
-    />
+    <div
+      style={{
+        display: 'flex',
+        gap: gap.xl,
+        borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+        marginBottom: '0',
+      }}
+    >
+      {tabs.map((t) => (
+        <button
+          key={t.value}
+          style={tabStyle(activeType === t.value)}
+          onClick={() => {
+            const href = t.value
+              ? `/admin/companies?type=${t.value}`
+              : '/admin/companies';
+            router.push(href);
+          }}
+        >
+          {t.label}
+        </button>
+      ))}
+    </div>
   );
 }

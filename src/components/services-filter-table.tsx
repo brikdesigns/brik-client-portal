@@ -88,7 +88,7 @@ export function ServicesFilterTable({
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
           <FilterButton
             size="sm"
-            label="Category"
+            label="Service Line"
             value={categoryFilter}
             onChange={setCategoryFilter}
             options={categoryOptions.map((o) => ({ id: o.value, label: o.label }))}
@@ -122,7 +122,7 @@ export function ServicesFilterTable({
             {
               header: '',
               accessor: (s) =>
-                s.category ? <ServiceBadge category={s.category.slug} serviceName={s.name} size={16} /> : null,
+                s.category ? <ServiceBadge category={s.category.slug} serviceName={s.name} size={28} /> : null,
               style: { width: '32px', padding: `${space.xs} ${gap.xs} ${space.xs} ${space.sm}` },
             },
             {
@@ -131,7 +131,7 @@ export function ServicesFilterTable({
               style: { fontWeight: 500 },
             },
             {
-              header: 'Category',
+              header: 'Service Line',
               accessor: (s) => s.category?.name ?? '—',
               style: { color: color.text.secondary },
             },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useState, useMemo, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
@@ -23,10 +23,17 @@ function toSlug(text: string): string {
   return text.toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
 }
 
+export interface ServiceLineOption {
+  id: string;
+  name: string;
+  slug: string;
+}
+
 export interface ServiceOption {
   id: string;
   name: string;
   category_slug: string;
+  category_id: string;
 }
 
 interface EditProjectFormProps {
@@ -46,11 +53,12 @@ interface EditProjectFormProps {
     clickup_status: string | null;
   };
   clientName: string;
+  serviceLines: ServiceLineOption[];
   availableServices: ServiceOption[];
   assignedServiceIds: string[];
 }
 
-export function EditProjectForm({ project, clientName, availableServices, assignedServiceIds }: EditProjectFormProps) {
+export function EditProjectForm({ project, clientName, serviceLines, availableServices, assignedServiceIds }: EditProjectFormProps) {
   const [name, setName] = useState(project.name);
   const [description, setDescription] = useState(project.description ?? '');
   const [status, setStatus] = useState(project.status);
@@ -63,9 +71,15 @@ export function EditProjectForm({ project, clientName, availableServices, assign
   const [clickupType, setClickupType] = useState(project.clickup_type ?? '');
   const [clickupStatus, setClickupStatus] = useState(project.clickup_status ?? '');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>(assignedServiceIds);
+  const [serviceLineFilter, setServiceLineFilter] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+
+  const filteredServices = useMemo(() => {
+    if (!serviceLineFilter) return availableServices;
+    return availableServices.filter((s) => s.category_id === serviceLineFilter);
+  }, [availableServices, serviceLineFilter]);
 
   function toggleService(serviceId: string) {
     setSelectedServiceIds((prev) =>
@@ -196,8 +210,19 @@ export function EditProjectForm({ project, clientName, availableServices, assign
 
           {/* Services */}
           <p style={sectionHeadingStyle}>Services</p>
+          <Select
+            label="Service Line"
+            value={serviceLineFilter}
+            onChange={(e) => setServiceLineFilter(e.target.value)}
+            placeholder="All service lines"
+            options={serviceLines.map((sl) => ({
+              label: sl.name,
+              value: sl.id,
+            }))}
+            fullWidth
+          />
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: gap.sm }}>
-            {availableServices.map((svc) => {
+            {filteredServices.map((svc) => {
               const selected = selectedServiceIds.includes(svc.id);
               return (
                 <button
@@ -218,7 +243,7 @@ export function EditProjectForm({ project, clientName, availableServices, assign
                     color: color.text.primary,
                   }}
                 >
-                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={12} />
+                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={28} />
                   {svc.name}
                 </button>
               );

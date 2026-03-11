@@ -15,7 +15,7 @@ async function getContactByToken(token: string) {
 
   const { data: contact } = await supabase
     .from('contacts')
-    .select('id, full_name, email, setup_token_expires_at, setup_completed_at, companies(name)')
+    .select('id, first_name, last_name, email, setup_token_expires_at, setup_completed_at, companies(name)')
     .eq('setup_token', token)
     .single();
 
@@ -81,20 +81,20 @@ export default async function WelcomePage(props: WelcomePageProps) {
   }
 
   const company = contact.companies as unknown as { name: string } | null;
-  const firstName = contact.full_name?.split(' ')[0] || '';
 
   return (
     <WelcomeShell>
       <h1 style={styles.heading}>
-        Welcome{firstName ? `, ${firstName}` : ''}
+        Welcome{contact.first_name ? `, ${contact.first_name}` : ''}
       </h1>
       <p style={styles.subtext}>
-        Set up your password to access the {company?.name ?? 'Brik'} portal.
+        Set up your account to access the {company?.name ?? 'Brik'} portal.
       </p>
       <WelcomeSetupForm
         token={params.token}
         contactEmail={contact.email ?? ''}
-        contactName={contact.full_name ?? ''}
+        contactFirstName={contact.first_name ?? ''}
+        contactLastName={contact.last_name ?? ''}
       />
     </WelcomeShell>
   );

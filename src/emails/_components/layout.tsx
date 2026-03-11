@@ -20,7 +20,7 @@ const BRAND = {
   bgSurface: '#ffffff',
 };
 
-const LOGO_URL = 'https://portal.brikdesigns.com/images/brik-logo.svg';
+const LOGO_URL = 'https://portal.brikdesigns.com/images/brik-logo.png';
 const SITE_URL = 'https://portal.brikdesigns.com';
 
 const fontFamily =
@@ -98,7 +98,7 @@ export function BrikEmailLayout({ preview, children }: BrikEmailLayoutProps) {
             </Text>
 
             <Text style={styles.footerText}>
-              We&apos;re located in Palm Beach, Florida
+              We&apos;re located in the heartland
             </Text>
             <Text style={styles.footerText}>
               &copy; {new Date().getFullYear()} Brik Designs, Inc. All rights
