@@ -16,7 +16,7 @@ function getResend() {
   return new Resend(process.env.RESEND_API_KEY);
 }
 
-const FROM_EMAIL = 'Brik Designs <contact@brikdesigns.com>';
+const FROM_EMAIL = 'Brik Designs <hello@brikdesigns.com>';
 
 // ---------------------------------------------------------------------------
 // Invite
