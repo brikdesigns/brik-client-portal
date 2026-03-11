@@ -4,6 +4,7 @@ import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getStripe } from '@/lib/stripe';
 import { parseBody, isValidationError } from '@/lib/validation';
+import { rateLimitOrNull, EXTERNAL_SYNC_LIMIT } from '@/lib/rate-limit';
 
 const stripeSyncSchema = z.object({
   dry_run: z.boolean().optional(),
@@ -17,6 +18,9 @@ interface SyncResult {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'stripe-sync', EXTERNAL_SYNC_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 

@@ -11,6 +11,7 @@ import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysi
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
 import { sendAnalysisCompleteEmail, logEmail } from '@/lib/email';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
 const ANALYZABLE_TYPES = ['website', 'brand_logo', 'online_reviews', 'competitors'] as const;
 
@@ -21,6 +22,9 @@ const analyzeSchema = z.object({
 });
 
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'reporting-analyze', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
   const { user } = auth;

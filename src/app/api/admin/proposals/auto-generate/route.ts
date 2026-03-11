@@ -10,6 +10,7 @@ import {
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
 const autoGenerateSchema = z.object({
@@ -34,6 +35,9 @@ const autoGenerateSchema = z.object({
  * Returns: { proposal_id, token, slug, recommendations }
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'proposal-auto-generate', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) {
     console.error('Auto-generate: auth failed');

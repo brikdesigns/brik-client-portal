@@ -1,3 +1,5 @@
+import { NextResponse } from 'next/server';
+
 /**
  * Simple in-memory rate limiter for serverless functions.
  *
@@ -95,3 +97,29 @@ export const SETUP_LIMIT: RateLimitConfig = { limit: 5, windowSeconds: 900 };
 
 /** AI generation endpoints: 10 requests per minute per IP */
 export const AI_GENERATION_LIMIT: RateLimitConfig = { limit: 10, windowSeconds: 60 };
+
+/** Admin email sending: 20 per minute per IP (prevent accidental spam) */
+export const ADMIN_EMAIL_LIMIT: RateLimitConfig = { limit: 20, windowSeconds: 60 };
+
+/** External API sync (Stripe, GHL): 5 per minute per IP */
+export const EXTERNAL_SYNC_LIMIT: RateLimitConfig = { limit: 5, windowSeconds: 60 };
+
+/**
+ * Rate limit helper that returns a 429 NextResponse if exceeded, or null if OK.
+ * Reduces boilerplate in route handlers.
+ */
+export function rateLimitOrNull(
+  request: Request,
+  prefix: string,
+  config: RateLimitConfig
+): NextResponse | null {
+  const ip = getClientIp(request);
+  const rl = checkRateLimit(`${prefix}:${ip}`, config);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429, headers: { 'Retry-After': String(Math.ceil((rl.resetAt - Date.now()) / 1000)) } }
+    );
+  }
+  return null;
+}

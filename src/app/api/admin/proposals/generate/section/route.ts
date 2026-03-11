@@ -9,6 +9,7 @@ import {
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
 const SECTION_TYPES = ['overview_and_goals', 'scope_of_project', 'project_timeline', 'why_brik'] as const;
 
@@ -28,6 +29,9 @@ const sectionRegenerateSchema = z.object({
  * Returns: { section }
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'proposal-section-regen', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 

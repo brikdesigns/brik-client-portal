@@ -15,10 +15,11 @@ const tabStyle = (active: boolean) => ({
   color: active ? color.text.brand : color.text.muted,
   textDecoration: 'none' as const,
   padding: `${gap.sm} 0`,
-  borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
-  cursor: 'pointer' as const,
   background: 'none',
   border: 'none',
+  borderBottom: active ? `${border.width.lg} solid ${color.text.brand}` : `${border.width.lg} solid transparent`,
+  marginBottom: `calc(-1 * ${border.width.lg})`,
+  cursor: 'pointer' as const,
 });
 
 export function BillingTabs() {

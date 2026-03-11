@@ -9,6 +9,7 @@ import {
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
 const generateSchema = z.object({
   company_id: uuidSchema,
@@ -25,6 +26,9 @@ const generateSchema = z.object({
  * Returns: { sections, meeting_notes_content, meeting_notes_url }
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'proposal-generate', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) {
     console.error('Proposal generate: auth failed');

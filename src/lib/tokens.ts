@@ -192,6 +192,8 @@ export const border = {
     sm: 'var(--border-width-sm)',
     md: 'var(--border-width-md)',
     lg: 'var(--border-width-lg)',
+    xl: 'var(--border-width-xl)',
+    huge: 'var(--border-width-huge)',
   },
   radius: {
     none: 'var(--border-radius-none)',

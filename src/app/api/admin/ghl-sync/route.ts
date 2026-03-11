@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getContact, getContactOpportunities, getPipelines } from '@/lib/ghl';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, EXTERNAL_SYNC_LIMIT } from '@/lib/rate-limit';
 
 const ghlSyncSchema = z.object({
   company_id: uuidSchema,
