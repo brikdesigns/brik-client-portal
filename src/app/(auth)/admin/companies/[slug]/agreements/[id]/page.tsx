@@ -5,6 +5,7 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { AgreementStatusBadge } from '@/components/status-badges';
 import { AgreementActions } from '@/components/agreement-actions';
+import { AgreementContent } from '@/components/agreement-content';
 import { heading, detail } from '@/lib/styles';
 import { font, color, space, gap, border } from '@/lib/tokens';
 
@@ -106,27 +107,11 @@ export default async function AgreementDetailPage({ params }: Props) {
         </Card>
       )}
 
-      {/* Agreement text preview */}
-      <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
-        <h2 style={sectionHeadingStyle}>Agreement Text</h2>
-        <div
-          style={{
-            fontFamily: font.family.body,
-            fontSize: font.size.body.sm,
-            lineHeight: font.lineHeight.relaxed,
-            color: color.text.secondary,
-            whiteSpace: 'pre-wrap',
-            maxHeight: '400px',
-            overflowY: 'auto',
-            padding: space.md,
-            backgroundColor: color.surface.secondary,
-            borderRadius: border.radius.md,
-            border: `${border.width.sm} solid ${color.border.muted}`,
-          }}
-        >
-          {agreement.content_snapshot}
-        </div>
-      </Card>
+      {/* Agreement text — collapsible sections */}
+      <div style={{ marginBottom: space.lg }}>
+        <h2 style={{ ...sectionHeadingStyle, marginBottom: space.md }}>Agreement Text</h2>
+        <AgreementContent contentSnapshot={agreement.content_snapshot} />
+      </div>
 
       {/* Signing audit trail */}
       {agreement.status === 'signed' && (

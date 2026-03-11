@@ -601,7 +601,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 header: '',
                 accessor: (cs) => {
                   const catSlug = cs.services?.service_categories?.slug;
-                  return catSlug ? <ServiceBadge category={catSlug} size={16} /> : null;
+                  return catSlug ? <ServiceBadge category={catSlug} serviceName={cs.services?.name} size={16} /> : null;
                 },
                 style: { width: '32px', padding: `${space.xs} ${gap.xs} ${space.xs} ${space.sm}` },
               },

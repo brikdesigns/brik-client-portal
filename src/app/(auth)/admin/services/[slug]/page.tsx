@@ -88,7 +88,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
             label: 'Category',
             value: category ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.sm }}>
-                <ServiceBadge category={category.slug} size={14} />
+                <ServiceBadge category={category.slug} serviceName={service.name} size={14} />
                 {category.name}
               </span>
             ) : 'Uncategorized',
