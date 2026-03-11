@@ -19,15 +19,9 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Search broadly (no exact match filter) so user sees all relevant pages
+    // Query the Meetings database filtered by company name
+    // Falls back to recent meetings if no title match
     const results = await searchMeetingByClientName(companyName, { exactMatch: false });
-
-    // If no results from company name, try broader "discovery" search
-    if (results.length === 0) {
-      const fallback = await searchMeetingByClientName('discovery', { exactMatch: false });
-      return NextResponse.json({ results: fallback });
-    }
-
     return NextResponse.json({ results });
   } catch (err) {
     console.error('Meeting notes search failed:', err);

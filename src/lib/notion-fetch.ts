@@ -7,6 +7,9 @@
 const NOTION_API = 'https://api.notion.com/v1';
 const NOTION_VERSION = '2022-06-28';
 
+/** Notion Meetings database ID — single source of truth for discovery calls */
+const MEETINGS_DATABASE_ID = '2e197d34-ed28-811e-b0f8-e13779bf48d8';
+
 function getNotionToken(): string {
   const token = process.env.NOTION_TOKEN;
   if (!token) throw new Error('NOTION_TOKEN environment variable is not set');
@@ -51,9 +54,10 @@ interface NotionSearchResult {
 }
 
 /**
- * Search Notion for meeting pages by client name in the title.
- * Meeting notes are titled with [client-name] (e.g. "EXAMPLE DISCOVERY - Birdwell & Mutlak Dentistry").
- * When exactMatch is false, returns all search results so the user can browse and pick.
+ * Query the Meetings database for meeting pages matching a company name.
+ * Filters by Title containing the company name.
+ * When exactMatch is false, returns all results so the user can browse and pick.
+ * Falls back to returning all meetings (most recent first) if no title matches.
  */
 export async function searchMeetingByClientName(
   clientName: string,
@@ -61,25 +65,28 @@ export async function searchMeetingByClientName(
 ): Promise<NotionSearchResult[]> {
   const exactMatch = options?.exactMatch ?? true;
 
-  const res = await fetch(`${NOTION_API}/search`, {
+  // Query the Meetings database filtered by title containing company name
+  const res = await fetch(`${NOTION_API}/databases/${MEETINGS_DATABASE_ID}/query`, {
     method: 'POST',
     headers: notionHeaders(),
     body: JSON.stringify({
-      query: clientName,
-      filter: { value: 'page', property: 'object' },
-      sort: { direction: 'descending', timestamp: 'last_edited_time' },
+      filter: {
+        property: 'Title',
+        title: { contains: clientName },
+      },
+      sorts: [{ property: 'Meeting Date', direction: 'descending' }],
       page_size: 20,
     }),
   });
 
   if (!res.ok) {
     const err = await res.text();
-    throw new Error(`Notion search failed (${res.status}): ${err}`);
+    throw new Error(`Notion Meetings query failed (${res.status}): ${err}`);
   }
 
   const data = await res.json();
 
-  const pages = (data.results || [])
+  let pages = (data.results || [])
     .map((page: Record<string, unknown>) => ({
       id: page.id as string,
       title: extractTitle(page),
@@ -87,6 +94,30 @@ export async function searchMeetingByClientName(
       lastEdited: (page as Record<string, string>).last_edited_time || '',
     }))
     .filter((p: NotionSearchResult) => p.title.length > 0);
+
+  // If no title matches, fetch recent meetings so user can browse
+  if (pages.length === 0 && !exactMatch) {
+    const fallbackRes = await fetch(`${NOTION_API}/databases/${MEETINGS_DATABASE_ID}/query`, {
+      method: 'POST',
+      headers: notionHeaders(),
+      body: JSON.stringify({
+        sorts: [{ property: 'Meeting Date', direction: 'descending' }],
+        page_size: 15,
+      }),
+    });
+
+    if (fallbackRes.ok) {
+      const fallbackData = await fallbackRes.json();
+      pages = (fallbackData.results || [])
+        .map((page: Record<string, unknown>) => ({
+          id: page.id as string,
+          title: extractTitle(page),
+          url: (page as Record<string, string>).url || '',
+          lastEdited: (page as Record<string, string>).last_edited_time || '',
+        }))
+        .filter((p: NotionSearchResult) => p.title.length > 0);
+    }
+  }
 
   if (!exactMatch) return pages;
 
