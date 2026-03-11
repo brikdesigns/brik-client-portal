@@ -277,6 +277,7 @@ export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: 
     : companyTypeColors[type] ?? { bg: color.background.secondary, text: color.text.primary };
   return (
     <Tag
+      size="sm"
       icon={<FontAwesomeIcon icon={faUser} style={{ width: 10, height: 10 }} />}
       style={{ backgroundColor: colors.bg, color: colors.text }}
     >
@@ -289,10 +290,10 @@ export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: 
 export const CompanyTypeBadge = CompanyTypeTag;
 
 export function ServiceTypeTag({ type }: { type: string }) {
-  return <Tag>{serviceTypeLabels[type] ?? type}</Tag>;
+  return <Tag size="sm">{serviceTypeLabels[type] ?? type}</Tag>;
 }
 
 export function RoleTag({ role }: { role: string }) {
-  return <Tag>{roleLabels[role] ?? role}</Tag>;
+  return <Tag size="sm">{roleLabels[role] ?? role}</Tag>;
 }
 

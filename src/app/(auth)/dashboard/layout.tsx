@@ -30,7 +30,7 @@ export default async function DashboardLayout({
       <main
         style={{
           flex: 1,
-          backgroundColor: color.page.secondary,
+          backgroundColor: color.page.primary,
           padding: space.xl,
           marginLeft: '260px',
           minHeight: '100vh',

@@ -117,7 +117,7 @@ export function AgreementsFilterTable({
           },
           {
             header: 'Type',
-            accessor: (a) => <Tag>{typeLabel(a.type)}</Tag>,
+            accessor: (a) => <Tag size="sm">{typeLabel(a.type)}</Tag>,
           },
           {
             header: 'Status',

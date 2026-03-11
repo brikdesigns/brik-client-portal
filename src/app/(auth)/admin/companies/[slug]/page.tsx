@@ -50,7 +50,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       domain_hosted, referred_by, other_marketing_company,
       pipeline, pipeline_stage, opportunity_owner, followers, introduction_date, ghl_contact_id,
       ghl_tags, ghl_source, ghl_opportunity_value_cents, ghl_last_synced,
-      projects(id, name, status, start_date, end_date),
+      projects(id, name, slug, status, start_date, end_date),
       invoices(id, description, amount_cents, status, due_date, invoice_url),
       company_services(
         id, status, started_at, notes,
@@ -112,7 +112,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
   const latestBaa = agreements?.find((a) => a.type === 'baa') || null;
 
-  const projects = (client.projects as { id: string; name: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
+  const projects = (client.projects as { id: string; name: string; slug: string; status: string; start_date: string | null; end_date: string | null }[]) ?? [];
   const invoices = (client.invoices as { id: string; description: string | null; amount_cents: number; status: string; due_date: string | null; invoice_url: string | null }[]) ?? [];
 
   const clientServices = ((client as unknown as Record<string, unknown>).company_services as {
@@ -728,6 +728,15 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 header: 'End',
                 accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
                 style: { color: color.text.secondary },
+              },
+              {
+                header: '',
+                accessor: (p) => (
+                  <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                    View
+                  </Button>
+                ),
+                style: { textAlign: 'right' },
               },
             ]}
           />
