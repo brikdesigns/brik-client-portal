@@ -184,8 +184,9 @@ export default function NewProposalPage() {
       }
 
       setStep(2);
-    } catch {
-      setError('An unexpected error occurred during generation.');
+    } catch (err) {
+      console.error('Generation failed:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred during generation.');
     } finally {
       setGenerating(false);
     }

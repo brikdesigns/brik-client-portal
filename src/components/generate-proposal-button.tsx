@@ -86,8 +86,9 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
       setShowModal(false);
       router.push(`/admin/companies/${slug}/proposals/${data.proposal_id}`);
       router.refresh();
-    } catch {
-      setError('An unexpected error occurred.');
+    } catch (err) {
+      console.error('Auto-generate failed:', err);
+      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
     } finally {
       setGenerating(false);
     }
