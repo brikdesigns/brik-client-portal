@@ -29,9 +29,10 @@ function toSlug(text: string): string {
 
 export default function NewCompanyPage() {
   const searchParams = useSearchParams();
-  const initialType = searchParams.get('type') === 'lead' ? 'lead' : 'client';
+  const typeParam = searchParams.get('type');
+  const initialType = typeParam === 'lead' ? 'lead' : typeParam === 'prospect' ? 'prospect' : 'client';
 
-  const [type, setType] = useState<'lead' | 'client'>(initialType);
+  const [type, setType] = useState<'lead' | 'prospect' | 'client'>(initialType);
   const [name, setName] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
@@ -57,7 +58,7 @@ export default function NewCompanyPage() {
 
     const supabase = createClient();
     const slug = toSlug(name);
-    const defaultStatus = type === 'lead' ? 'needs_qualified' : 'active';
+    const defaultStatus = type === 'lead' ? 'needs_qualified' : type === 'prospect' ? 'needs_proposal' : 'active';
 
     // If structured fields are empty, extract them from the address string
     let finalCity = city;
@@ -167,7 +168,9 @@ export default function NewCompanyPage() {
         >
           {type === 'lead'
             ? 'Add a new lead to track through qualification.'
-            : 'Complete this form to begin the new client workflow.'}
+            : type === 'prospect'
+              ? 'Add a prospect to track through the proposal process.'
+              : 'Complete this form to begin the new client workflow.'}
         </p>
       </div>
 
@@ -196,6 +199,9 @@ export default function NewCompanyPage() {
               <div style={{ display: 'flex', gap: gap.sm }}>
                 <button type="button" style={toggleStyle(type === 'lead')} onClick={() => setType('lead')}>
                   Lead
+                </button>
+                <button type="button" style={toggleStyle(type === 'prospect')} onClick={() => setType('prospect')}>
+                  Prospect
                 </button>
                 <button type="button" style={toggleStyle(type === 'client')} onClick={() => setType('client')}>
                   Client

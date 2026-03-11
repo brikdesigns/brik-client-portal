@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useState, useRef, type ReactNode } from 'react';
-import { Toast } from '@bds/components/ui/Toast/Toast';
+import { Toast, type ToastVariant as BdsToastVariant } from '@bds/components/ui/Toast/Toast';
 type ToastVariant = 'neutral' | 'success' | 'error';
 
 interface ToastItem {
@@ -38,20 +38,11 @@ const toastWrapperStyles: React.CSSProperties = {
   animation: 'toast-slide-up 0.25s ease-out',
 };
 
-/** Error variant — system red background */
-const errorStyleOverride: React.CSSProperties = {
-  backgroundColor: 'var(--color-system-red)',
-};
-
-/** Success variant — system green background */
-const successStyleOverride: React.CSSProperties = {
-  backgroundColor: 'var(--color-system-green)',
-};
-
-const variantStyles: Record<ToastVariant, React.CSSProperties | undefined> = {
-  neutral: undefined,
-  success: successStyleOverride,
-  error: errorStyleOverride,
+/** Map provider variants to BDS Toast variants */
+const bdsVariantMap: Record<ToastVariant, BdsToastVariant> = {
+  neutral: 'default',
+  success: 'success',
+  error: 'error',
 };
 
 export function ToastProvider({ children }: { children: ReactNode }) {
@@ -93,8 +84,8 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <Toast
                 title={t.title}
                 description={t.description}
+                variant={bdsVariantMap[t.variant]}
                 onDismiss={() => dismiss(t.id)}
-                style={variantStyles[t.variant]}
               />
             </div>
           ))}

@@ -224,7 +224,7 @@ const companyTypeLabels: Record<string, string> = {
 
 // Company type tag colors (BDS system palette tokens)
 const companyTypeColors: Record<string, { bg: string; text: string }> = {
-  lead:     { bg: 'var(--system--purple)', text: color.text.onColorDark },
+  lead:     { bg: color.system.purple,     text: color.text.onColorDark },
   prospect: { bg: color.system.blue,       text: color.text.onColorDark },
   client:   { bg: color.system.green,      text: color.text.onColorDark },
 };

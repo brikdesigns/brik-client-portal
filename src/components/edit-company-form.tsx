@@ -52,8 +52,15 @@ interface EditCompanyFormProps {
   users: Array<{ id: string; full_name: string | null; email: string }>;
 }
 
+const typeOptions = [
+  { label: 'Lead', value: 'lead' },
+  { label: 'Prospect', value: 'prospect' },
+  { label: 'Client', value: 'client' },
+];
+
 export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
   const [name, setName] = useState(client.name);
+  const [type, setType] = useState(client.type ?? 'client');
   const [status, setStatus] = useState(client.status);
   const [contactId, setContactId] = useState(client.contact_id ?? '');
   const [address, setAddress] = useState(client.address ?? '');
@@ -99,6 +106,7 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
         .update({
           name,
           slug: newSlug,
+          type,
           status,
           contact_id: contactId || null,
           address: address || null,
@@ -140,14 +148,29 @@ export function EditCompanyForm({ client, users }: EditCompanyFormProps) {
             fullWidth
           />
 
-          <Select
-            label="Status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            placeholder="Select status"
-            options={statusOptions}
-            fullWidth
-          />
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: '1fr 1fr',
+              gap: gap.lg,
+            }}
+          >
+            <Select
+              label="Type"
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              options={typeOptions}
+              fullWidth
+            />
+            <Select
+              label="Status"
+              value={status}
+              onChange={(e) => setStatus(e.target.value)}
+              placeholder="Select status"
+              options={statusOptions}
+              fullWidth
+            />
+          </div>
 
           <AddressAutocomplete
             label="Business Address"
