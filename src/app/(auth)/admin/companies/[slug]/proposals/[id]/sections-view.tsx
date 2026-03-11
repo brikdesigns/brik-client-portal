@@ -88,7 +88,7 @@ export function ProposalSectionsView({
       {/* Meeting Notes alert banner */}
       {meetingNotesUrl && (
         <AlertBanner
-          icon="info"
+          variant="information"
           title="Meeting Notes"
           description="Source notes used to generate this proposal"
           action={
