@@ -29,10 +29,18 @@ export default async function EditProjectPage({ params }: Props) {
 
   const client = project.companies as unknown as { id: string; name: string; slug: string } | null;
 
+  // Fetch service lines (categories)
+  const { data: categories } = await supabase
+    .from('service_categories')
+    .select('id, name, slug')
+    .order('name');
+
+  const serviceLines = (categories ?? []).map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
+
   // Fetch available services for the selector
   const { data: services } = await supabase
     .from('services')
-    .select('id, name, service_categories(slug)')
+    .select('id, name, category_id, service_categories(slug)')
     .eq('active', true)
     .order('name');
 
@@ -40,6 +48,7 @@ export default async function EditProjectPage({ params }: Props) {
     id: s.id,
     name: s.name,
     category_slug: (s.service_categories as unknown as { slug: string } | null)?.slug ?? 'service',
+    category_id: s.category_id ?? '',
   }));
 
   // Fetch currently assigned services
@@ -69,6 +78,7 @@ export default async function EditProjectPage({ params }: Props) {
       <EditProjectForm
         project={project}
         clientName={client?.name ?? 'Unknown'}
+        serviceLines={serviceLines}
         availableServices={availableServices}
         assignedServiceIds={assignedServiceIds}
       />

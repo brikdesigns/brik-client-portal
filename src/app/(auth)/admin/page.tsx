@@ -6,7 +6,7 @@ import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { heading } from '@/lib/styles';
-import { color, gap, space } from '@/lib/tokens';
+import { border, color, gap, space } from '@/lib/tokens';
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
@@ -39,11 +39,19 @@ export default async function AdminOverviewPage() {
         title="Want to set up a new client?"
         description="Click to begin the setup workflow for new clients."
         action={
-          <Button variant="secondary" size="sm" asLink href="/admin/companies/new">
+          <Button
+            variant="primary"
+            size="sm"
+            asLink
+            href="/admin/companies/new"
+            style={{
+              backgroundColor: color.background.onColorDark,
+            }}
+          >
             Get started
           </Button>
         }
-        style={{ marginBottom: space.xl }}
+        style={{ marginBottom: space.xl, borderRadius: border.radius.md }}
       />
 
       <div

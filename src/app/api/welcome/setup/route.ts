@@ -22,10 +22,14 @@ const CONTACT_TO_COMPANY_ROLE: Record<string, string> = {
  * links the contact to the user, and marks setup as complete.
  */
 export async function POST(request: Request) {
-  const { token, password } = await request.json();
+  const { token, password, email, first_name, last_name } = await request.json();
 
   if (!token || !password) {
     return NextResponse.json({ error: 'Token and password are required' }, { status: 400 });
+  }
+
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return NextResponse.json({ error: 'Invalid email address' }, { status: 400 });
   }
 
   if (password.length < 8) {
@@ -60,17 +64,22 @@ export async function POST(request: Request) {
     }
   }
 
-  if (!contact.email) {
-    return NextResponse.json({ error: 'Contact has no email address' }, { status: 400 });
+  // Use submitted values, falling back to contact record
+  const finalEmail = email?.trim() || contact.email;
+  const finalFirstName = first_name?.trim() || contact.first_name;
+  const finalLastName = last_name?.trim() ?? contact.last_name;
+
+  if (!finalEmail) {
+    return NextResponse.json({ error: 'Email address is required' }, { status: 400 });
   }
 
   // Create Supabase auth user
   const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-    email: contact.email,
+    email: finalEmail,
     password,
     email_confirm: true, // Auto-confirm since they got the link via verified email
     user_metadata: {
-      full_name: [contact.first_name, contact.last_name].filter(Boolean).join(' '),
+      full_name: [finalFirstName, finalLastName].filter(Boolean).join(' '),
       role: contact.role || 'team_member',
     },
   });
@@ -94,18 +103,21 @@ export async function POST(request: Request) {
   await supabase
     .from('profiles')
     .update({
-      first_name: contact.first_name,
-      last_name: contact.last_name,
+      first_name: finalFirstName,
+      last_name: finalLastName,
       role: 'client',
       company_id: contact.company_id,
     })
     .eq('id', userId);
 
-  // Link the contact to the auth user and mark setup complete
+  // Link the contact to the auth user, update name/email if changed, mark setup complete
   await supabase
     .from('contacts')
     .update({
       user_id: userId,
+      first_name: finalFirstName,
+      last_name: finalLastName,
+      email: finalEmail,
       setup_completed_at: new Date().toISOString(),
       setup_token: null, // Invalidate the token
       setup_token_expires_at: null,

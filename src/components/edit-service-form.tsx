@@ -11,7 +11,7 @@ import { font, color, space, gap, border } from '@/lib/tokens';
 const textareaStyle = {
   width: '100%',
   fontFamily: font.family.body,
-  fontSize: font.size.body.sm,
+  fontSize: font.size.body.md,
   lineHeight: font.lineHeight.normal,
   padding: space.input,
   borderRadius: border.radius.input,
@@ -148,7 +148,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
           </div>
 
           <Select
-            label="Category"
+            label="Service Line"
             value={categoryId}
             onChange={(e) => setCategoryId(e.target.value)}
             placeholder="No category"
@@ -219,7 +219,7 @@ export function EditServiceForm({ service }: EditServiceFormProps) {
               htmlFor="active"
               style={{
                 fontFamily: font.family.body,
-                fontSize: font.size.body.sm,
+                fontSize: font.size.body.md,
                 color: color.text.primary,
               }}
             >

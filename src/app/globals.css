@@ -313,6 +313,19 @@ blockquote {
 }
 
 /*
+ * Portal PageHeader tabs — extend the baseline border across the full
+ * container width. BDS TabBar only borders individual tab buttons, so
+ * the gap to the right of the last tab has no line. Fix: put a full-width
+ * border on the wrapper, overlap tab borders onto it via negative margin.
+ */
+.bds-page-header-tabs {
+  border-bottom: var(--border-width-lg) solid var(--border-secondary);
+}
+.bds-page-header-tabs .bds-tab-bar--tab .bds-tab-bar-item {
+  margin-bottom: calc(-1 * var(--border-width-lg));
+}
+
+/*
  * Portal dropdown density — BDS defaults to padding-xl (24px) inside
  * dropdown panels. Override to padding-md (16px) for a tighter feel.
  * Scoped variable override uses primitive (--space-400), not alias.
@@ -340,6 +353,19 @@ blockquote {
 }
 .cell-link:hover {
   color: var(--text-brand-primary);
+}
+
+/*
+ * Form input sizing — TextArea and Checkbox labels should use body-md (16px),
+ * not body-sm (14px). Override globally so all forms are consistent.
+ */
+textarea {
+  font-size: var(--body-md);
+}
+input[type="checkbox"] + label,
+input[type="checkbox"] ~ label,
+input[type="checkbox"] ~ span {
+  font-size: var(--body-md);
 }
 
 /* Dark mode logo inversion — filter to white */

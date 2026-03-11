@@ -111,7 +111,7 @@ export function ProjectsFilterTable({
                       key={s.id}
                       category={s.category_slug}
                       serviceName={s.name}
-                      size={24}
+                      size={28}
                     />
                   ))}
                 </div>

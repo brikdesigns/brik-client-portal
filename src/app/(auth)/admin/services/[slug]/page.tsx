@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@bds/components/ui/Badge/Badge';
-import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -53,8 +52,6 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
     companies: { id: string; name: string; slug: string; status: string } | null;
   }[]) ?? [];
 
-  const activeAssignments = assignments.filter((a) => a.status === 'active').length;
-
   const tabKeys = ['overview', 'companies'];
   const activeTab = tab && tabKeys.includes(tab) ? tab : 'overview';
 
@@ -85,10 +82,10 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
         }
         metadata={[
           {
-            label: 'Category',
+            label: 'Service Line',
             value: category ? (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.sm }}>
-                <ServiceBadge category={category.slug} serviceName={service.name} size={14} />
+                <ServiceBadge category={category.slug} serviceName={service.name} size={28} />
                 {category.name}
               </span>
             ) : 'Uncategorized',
@@ -113,34 +110,34 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
       {/* ── Overview Tab ───────────────────────────────────────── */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-          {/* Stats */}
-          <div
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-              gap: space.md,
-            }}
-          >
-            <CardSummary label="Active clients" value={activeAssignments} />
-            <CardSummary label="Total assigned" value={assignments.length} />
-          </div>
-
-          {/* Notion */}
-          {(service as unknown as Record<string, string>).notion_page_id && (
+          {/* Details */}
+          <h2 style={detail.sectionHeading}>Details</h2>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
+            <div>
+              <p style={fieldLabelStyle}>Icon</p>
+              <div style={fieldValueStyle}>
+                <ServiceBadge category={category?.slug ?? 'service'} serviceName={service.name} size={40} />
+              </div>
+            </div>
             <div>
               <p style={fieldLabelStyle}>Notion</p>
               <p style={fieldValueStyle}>
-                <a
-                  href={`https://www.notion.so/${(service as unknown as Record<string, string>).notion_page_id.replace(/-/g, '')}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={linkStyle}
-                >
-                  View in Notion &#x2197;
-                </a>
+                {(service as unknown as Record<string, string>).notion_page_id ? (
+                  <a
+                    href={`https://www.notion.so/${(service as unknown as Record<string, string>).notion_page_id.replace(/-/g, '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={linkStyle}
+                  >
+                    View in Notion &#x2197;
+                  </a>
+                ) : (
+                  <span style={detail.empty}>—</span>
+                )}
               </p>
             </div>
-          )}
+            <div />
+          </div>
 
           {/* Stripe */}
           <h2 style={detail.sectionHeading}>Stripe</h2>

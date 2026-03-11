@@ -447,7 +447,7 @@ export default function EditProposalPage() {
                   >
                     {categorySlug && (
                       <div style={{ paddingTop: '28px' }}>
-                        <ServiceBadge category={categorySlug} serviceName={item.name} size={16} />
+                        <ServiceBadge category={categorySlug} serviceName={item.name} size={28} />
                       </div>
                     )}
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: gap.sm }}>
