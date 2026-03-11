@@ -26,6 +26,14 @@ interface GenerateResult {
   status: string;
 }
 
+/** ESIGN audit trail captured during proposal acceptance */
+export interface SignerInfo {
+  email: string;
+  name?: string;
+  ip: string;
+  userAgent: string;
+}
+
 /**
  * Generate an agreement from a template for a given proposal + client.
  * Called after proposal acceptance. Uses service role key (bypasses RLS).
@@ -148,10 +156,14 @@ export async function generateAgreement(
 /**
  * Generate all required agreements for a client after proposal acceptance.
  * Always creates a Marketing Agreement. Also creates BAA if client is in healthcare.
+ *
+ * When `signer` is provided, agreements are auto-signed with the same ESIGN audit
+ * trail from the proposal acceptance — the client agreed to all terms in one action.
  */
 export async function generateAgreementsForProposal(
   proposalId: string,
-  clientId: string
+  clientId: string,
+  signer?: SignerInfo
 ): Promise<GenerateResult[]> {
   const supabase = getServiceClient();
 
@@ -172,6 +184,26 @@ export async function generateAgreementsForProposal(
   if (client && isHealthcareClient(client.industry)) {
     const baa = await generateAgreement(proposalId, clientId, 'baa');
     results.push(baa);
+  }
+
+  // Auto-sign all generated agreements if signer info provided
+  if (signer) {
+    const now = new Date().toISOString();
+    for (const agreement of results) {
+      await supabase
+        .from('agreements')
+        .update({
+          status: 'signed',
+          sent_at: now,
+          signed_at: now,
+          signed_by_name: signer.name ?? signer.email,
+          signed_by_email: signer.email,
+          signed_by_ip: signer.ip,
+          signed_by_user_agent: signer.userAgent,
+        })
+        .eq('id', agreement.id);
+      agreement.status = 'signed';
+    }
   }
 
   return results;

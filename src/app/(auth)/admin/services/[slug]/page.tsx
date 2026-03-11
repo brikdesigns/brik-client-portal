@@ -8,7 +8,8 @@ import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
-import { font, color, space, gap, border } from '@/lib/tokens';
+import { ServiceTabs } from '@/components/service-tabs';
+import { font, color, space, gap } from '@/lib/tokens';
 import { detail } from '@/lib/styles';
 
 interface Props {
@@ -54,23 +55,8 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
 
   const activeAssignments = assignments.filter((a) => a.status === 'active').length;
 
-  const tabs = [
-    { key: 'overview', label: 'Overview' },
-    { key: 'companies', label: 'Companies' },
-  ];
-  const activeTab = tab && tabs.some((t) => t.key === tab) ? tab : 'overview';
-
-  const tabStyle = (active: boolean) => ({
-    fontFamily: font.family.label,
-    fontSize: font.size.body.md,
-    fontWeight: font.weight.medium,
-    color: active ? color.text.brand : color.text.muted,
-    textDecoration: 'none' as const,
-    padding: `${gap.sm} 0`,
-    borderBottom: active ? `${border.width.lg} solid ${color.text.brand}` : `${border.width.lg} solid transparent`,
-    marginBottom: `calc(-1 * ${border.width.lg})`,
-    display: 'inline-block' as const,
-  });
+  const tabKeys = ['overview', 'companies'];
+  const activeTab = tab && tabKeys.includes(tab) ? tab : 'overview';
 
   const fieldLabelStyle = detail.label;
   const fieldValueStyle = detail.value;
@@ -121,15 +107,7 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
               : '—',
           },
         ]}
-        tabs={
-          <div style={{ display: 'flex', gap: gap.xl }}>
-            {tabs.map((t) => (
-              <a key={t.key} href={`/admin/services/${service.slug}?tab=${t.key}`} style={tabStyle(activeTab === t.key)}>
-                {t.label}
-              </a>
-            ))}
-          </div>
-        }
+        tabs={<ServiceTabs slug={service.slug} />}
       />
 
       {/* ── Overview Tab ───────────────────────────────────────── */}

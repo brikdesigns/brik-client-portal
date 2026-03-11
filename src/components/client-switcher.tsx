@@ -51,6 +51,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
       <button
         onClick={() => setIsOpen(!isOpen)}
         style={{
+          width: '100%',
           display: 'flex',
           alignItems: 'center',
           gap: gap.md,
@@ -90,6 +91,7 @@ export function ClientSwitcher({ clients, currentClientId, isAdmin }: ClientSwit
             position: 'absolute',
             bottom: `calc(100% + ${gap.xs})`,
             left: 0,
+            right: 0,
             minWidth: '200px',
             maxHeight: '300px',
             overflowY: 'auto',

@@ -146,10 +146,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   const allTabs: { key: string; label: string; types: string[]; dot?: boolean }[] = [
     { key: 'overview', label: 'Overview', types: ['lead', 'prospect', 'client'] },
     { key: 'reporting', label: 'Reporting', types: ['lead', 'prospect', 'client'], dot: !reportSet },
-    { key: 'onboarding', label: 'Billing', types: ['prospect'], dot: !latestProposal },
-    { key: 'services', label: 'Services', types: ['client'], dot: clientServices.length === 0 },
+    { key: 'billing', label: 'Billing', types: ['prospect', 'client'], dot: !latestProposal || invoices.some((i) => i.status === 'open') },
+    { key: 'services', label: 'Services', types: ['prospect', 'client'], dot: clientServices.length === 0 },
     { key: 'projects', label: 'Projects', types: ['client'], dot: projects.some((p) => p.status === 'in_progress') },
-    { key: 'invoices', label: 'Invoices', types: ['client'], dot: invoices.some((i) => i.status === 'open') },
     { key: 'contacts', label: 'Contacts', types: ['lead', 'prospect', 'client'], dot: !contacts?.length },
   ];
   const tabs = allTabs.filter((t) => t.types.includes(companyType));
@@ -492,44 +491,96 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         </>
       )}
 
-      {/* ── Onboarding Tab (prospects only) ────────────────────── */}
-      {activeTab === 'onboarding' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
-          <CardControl
-            title="Proposal"
-            description={
-              latestProposal
-                ? `${latestProposal.title} — ${formatCurrency(latestProposal.total_amount_cents)}`
-                : 'Auto-generates from Notion meeting notes — AI recommends services and writes all sections.'
-            }
-            action={
-              <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
-                {latestProposal && <ProposalStatusBadge status={latestProposal.status} />}
-                {latestProposal ? (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
-                    View
-                  </Button>
-                ) : (
-                  <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} />
-                )}
+      {/* ── Billing Tab (prospects + clients) ────────────────────── */}
+      {activeTab === 'billing' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+          {/* Agreements section — proposals + BAA */}
+          {(latestProposal || companyType === 'prospect') && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: gap.lg }}>
+              <CardControl
+                title="Proposal"
+                description={
+                  latestProposal
+                    ? `${latestProposal.title} — ${formatCurrency(latestProposal.total_amount_cents)}`
+                    : 'Auto-generates from Notion meeting notes — AI recommends services and writes all sections.'
+                }
+                action={
+                  <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
+                    {latestProposal && <ProposalStatusBadge status={latestProposal.status} />}
+                    {latestProposal ? (
+                      <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
+                        View
+                      </Button>
+                    ) : (
+                      <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} />
+                    )}
+                  </div>
+                }
+                style={{ boxShadow: shadow.sm }}
+              />
+              {latestBaa && (
+                <CardControl
+                  title="Business Associate Agreement"
+                  description={`BAA — ${latestBaa.status === 'signed' ? 'Signed' : latestBaa.status === 'sent' || latestBaa.status === 'viewed' ? 'Awaiting signature' : 'Draft'}`}
+                  action={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
+                      <AgreementStatusBadge status={latestBaa.status} />
+                      <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
+                        View
+                      </Button>
+                    </div>
+                  }
+                  style={{ boxShadow: shadow.sm }}
+                />
+              )}
+            </div>
+          )}
+
+          {/* Invoices section — clients only */}
+          {companyType === 'client' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
+                <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
+                <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
               </div>
-            }
-            style={{ boxShadow: shadow.sm }}
-          />
-          {latestBaa && (
-            <CardControl
-              title="Business Associate Agreement"
-              description={`BAA — ${latestBaa.status === 'signed' ? 'Signed' : latestBaa.status === 'sent' || latestBaa.status === 'viewed' ? 'Awaiting signature' : 'Draft'}`}
-              action={
-                <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
-                  <AgreementStatusBadge status={latestBaa.status} />
-                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
-                    View
-                  </Button>
-                </div>
-              }
-              style={{ boxShadow: shadow.sm }}
-            />
+              <DataTable
+                data={invoices}
+                rowKey={(inv) => inv.id}
+                emptyMessage="No invoices yet."
+                columns={[
+                  {
+                    header: 'Description',
+                    accessor: (inv) => inv.description || 'Invoice',
+                    style: { fontWeight: font.weight.medium, color: color.text.primary },
+                  },
+                  {
+                    header: 'Amount',
+                    accessor: (inv) => formatCurrency(inv.amount_cents),
+                  },
+                  {
+                    header: 'Due',
+                    accessor: (inv) => inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
+                    style: { color: color.text.secondary },
+                  },
+                  {
+                    header: 'Status',
+                    accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
+                  },
+                  {
+                    header: '',
+                    accessor: (inv) =>
+                      inv.invoice_url ? (
+                        <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
+                          <Button variant="secondary" size="sm">
+                            View
+                          </Button>
+                        </a>
+                      ) : null,
+                    style: { textAlign: 'right' },
+                  },
+                ]}
+              />
+            </div>
           )}
         </div>
       )}
@@ -565,7 +616,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                       {cs.services.name}
                     </a>
                   ) : '—',
-                style: { fontWeight: 500 },
+                style: { fontWeight: font.weight.medium },
               },
               {
                 header: 'Type',
@@ -583,6 +634,17 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: 'Status',
                 accessor: (cs) => <ServiceStatusBadge status={cs.status} />,
+              },
+              {
+                header: 'Started',
+                accessor: (cs) =>
+                  cs.started_at ? new Date(cs.started_at).toLocaleDateString() : '—',
+                style: { color: color.text.secondary },
+              },
+              {
+                header: 'Notes',
+                accessor: (cs) => cs.notes || '—',
+                style: { color: color.text.muted },
               },
             ]}
           />
@@ -619,53 +681,6 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 header: 'End',
                 accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
                 style: { color: color.text.secondary },
-              },
-            ]}
-          />
-        </div>
-      )}
-
-      {/* ── Invoices Tab ──────────────────────────────────────── */}
-      {activeTab === 'invoices' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
-            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Invoices</h2>
-            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
-          </div>
-          <DataTable
-            data={invoices}
-            rowKey={(inv) => inv.id}
-            emptyMessage="No invoices yet."
-            columns={[
-              {
-                header: 'Description',
-                accessor: (inv) => inv.description || 'Invoice',
-                style: { fontWeight: font.weight.medium, color: color.text.primary },
-              },
-              {
-                header: 'Amount',
-                accessor: (inv) => formatCurrency(inv.amount_cents),
-              },
-              {
-                header: 'Due',
-                accessor: (inv) => inv.due_date ? new Date(inv.due_date).toLocaleDateString() : '—',
-                style: { color: color.text.secondary },
-              },
-              {
-                header: 'Status',
-                accessor: (inv) => <InvoiceStatusBadge status={inv.status} />,
-              },
-              {
-                header: '',
-                accessor: (inv) =>
-                  inv.invoice_url ? (
-                    <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                      <Button variant="secondary" size="sm">
-                        View
-                      </Button>
-                    </a>
-                  ) : null,
-                style: { textAlign: 'right' },
               },
             ]}
           />

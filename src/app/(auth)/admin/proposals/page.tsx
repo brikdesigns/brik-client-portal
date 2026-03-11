@@ -31,7 +31,7 @@ export default async function ProposalsPage() {
 
   const draft = allProposals.filter((p) => p.status === 'draft').length;
   const sent = allProposals.filter((p) => p.status === 'sent' || p.status === 'viewed').length;
-  const accepted = allProposals.filter((p) => p.status === 'accepted').length;
+  const signed = allProposals.filter((p) => p.status === 'signed').length;
 
   return (
     <div>
@@ -47,7 +47,7 @@ export default async function ProposalsPage() {
       >
         <CardSummary label="Draft" value={draft} />
         <CardSummary label="Pending" value={sent} />
-        <CardSummary label="Accepted" value={accepted} />
+        <CardSummary label="Signed" value={signed} />
         <CardSummary label="Total" value={allProposals.length} />
       </div>
 

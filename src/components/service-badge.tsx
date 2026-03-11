@@ -123,8 +123,8 @@ export function ServiceBadge({ category, serviceName, size = 28 }: ServiceBadgeP
         <img
           src={iconPath}
           alt={serviceName}
-          width={size * 0.6}
-          height={size * 0.6}
+          width={size}
+          height={size}
           style={{ objectFit: 'contain', display: 'block' }}
           onError={() => setImageError(true)}
         />

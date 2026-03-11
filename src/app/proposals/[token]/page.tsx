@@ -174,7 +174,7 @@ export default function PublicProposalPage() {
         }
         const data = await res.json();
         setProposal(data.proposal);
-        if (data.proposal.status === 'accepted') {
+        if (data.proposal.status === 'signed') {
           setAccepted(true);
         }
       } catch {
@@ -205,7 +205,7 @@ export default function PublicProposalPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || 'Failed to accept proposal.');
+        setError(data.error || 'Failed to sign proposal.');
         return;
       }
 
@@ -423,7 +423,7 @@ export default function PublicProposalPage() {
                 Next
               </Button>
             ) : accepted ? (
-              <Badge status="positive">Accepted</Badge>
+              <Badge status="positive">Signed</Badge>
             ) : null}
           </div>
         </div>
@@ -510,10 +510,10 @@ function FeeSummaryContent({ items, total, accepted, isExpired, email, setEmail,
           )}
           <div style={{ marginTop: space.md }}>
             <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.secondary, margin: `0 0 ${space.sm}` }}>
-              By clicking Accept, you agree to the scope and pricing outlined in this proposal.
+              By clicking Sign, you agree to the scope and pricing outlined in this proposal.
             </p>
             <Button variant="primary" size="md" loading={accepting} onClick={onAccept}>
-              Accept Proposal
+              Sign Proposal
             </Button>
           </div>
         </div>
@@ -521,7 +521,7 @@ function FeeSummaryContent({ items, total, accepted, isExpired, email, setEmail,
 
       {accepted && (
         <div style={{ borderTop: `${border.width.sm} solid ${color.border.secondary}`, marginTop: space.lg, paddingTop: space.lg }}>
-          <Badge status="positive">Accepted</Badge>
+          <Badge status="positive">Signed</Badge>
         </div>
       )}
 
@@ -634,11 +634,11 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
         }}>
           {accepted ? (
             <>
-              <Badge status="positive">Accepted</Badge>
+              <Badge status="positive">Signed</Badge>
               <p style={{ ...bodyStyle, color: color.text.secondary, marginTop: space.sm }}>
                 {proposal.accepted_by_email
-                  ? `Accepted by ${proposal.accepted_by_email} on ${proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString() : 'today'}`
-                  : 'This proposal has been accepted. Thank you!'}
+                  ? `Signed by ${proposal.accepted_by_email} on ${proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleDateString() : 'today'}`
+                  : 'This proposal has been signed. Thank you!'}
               </p>
             </>
           ) : isExpired ? (
@@ -651,7 +651,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
           ) : (
             <>
               <p style={{ ...bodyStyle, color: color.text.secondary, marginBottom: space.md }}>
-                By clicking Accept, you agree to the scope and pricing outlined in this proposal.
+                By clicking Sign, you agree to the scope and pricing outlined in this proposal.
               </p>
               <div style={{ maxWidth: '320px', margin: `0 auto ${space.md}` }}>
                 <TextInput
@@ -670,7 +670,7 @@ function SimpleFallback({ proposal, items, isExpired, accepted, email, setEmail,
                 </p>
               )}
               <Button variant="primary" size="md" loading={accepting} onClick={onAccept}>
-                Accept Proposal
+                Sign Proposal
               </Button>
             </>
           )}
