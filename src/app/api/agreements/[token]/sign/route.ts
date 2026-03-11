@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { tryPromoteCompany } from '@/lib/agreements/promote';
 import { sendAgreementSignedEmail, logEmail } from '@/lib/email';
 
 const ADMIN_EMAIL = 'nick@brikdesigns.com';
@@ -32,7 +33,7 @@ export async function POST(
   // Fetch agreement
   const { data: agreement, error } = await supabase
     .from('agreements')
-    .select('id, status, valid_until')
+    .select('id, company_id, status, valid_until')
     .eq('token', token)
     .single();
 
@@ -118,6 +119,13 @@ export async function POST(
     }
   } catch (err) {
     console.error('Failed to send agreement signed notification:', err);
+  }
+
+  // Check if all agreements are now signed — promote company to client if so
+  try {
+    await tryPromoteCompany(agreement.company_id);
+  } catch (err) {
+    console.error('Failed to promote company after agreement signing:', err);
   }
 
   return NextResponse.json({ success: true });

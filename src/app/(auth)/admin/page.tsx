@@ -1,11 +1,12 @@
 import { createClient } from '@/lib/supabase/server';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
+import { Banner } from '@bds/components/ui/Banner/Banner';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { heading } from '@/lib/styles';
-import { color, gap, space, border, font } from '@/lib/tokens';
+import { color, gap, space } from '@/lib/tokens';
 
 export default async function AdminOverviewPage() {
   const supabase = await createClient();
@@ -34,46 +35,16 @@ export default async function AdminOverviewPage() {
     <div>
       <PageHeader title="Overview" subtitle="Portal activity and quick stats." />
 
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: `${space.lg} ${space.xl}`,
-          marginBottom: space.xl,
-          backgroundColor: color.background.elevated,
-          border: `${border.width.md} solid ${color.border.secondary}`,
-          borderRadius: border.radius.lg,
-        }}
-      >
-        <div>
-          <p
-            style={{
-              fontFamily: font.family.heading,
-              fontSize: font.size.heading.small,
-              fontWeight: font.weight.semibold,
-              lineHeight: font.lineHeight.tight,
-              color: color.text.primary,
-              margin: 0,
-            }}
-          >
-            Want to set up a new client?
-          </p>
-          <p
-            style={{
-              fontFamily: font.family.body,
-              fontSize: font.size.body.sm,
-              color: color.text.secondary,
-              margin: `${space.xs} 0 0`,
-            }}
-          >
-            Click to begin the setup workflow for new clients.
-          </p>
-        </div>
-        <Button variant="primary" size="sm" asLink href="/admin/companies/new">
-          Get started
-        </Button>
-      </div>
+      <Banner
+        title="Want to set up a new client?"
+        description="Click to begin the setup workflow for new clients."
+        action={
+          <Button variant="secondary" size="sm" asLink href="/admin/companies/new">
+            Get started
+          </Button>
+        }
+        style={{ marginBottom: space.xl }}
+      />
 
       <div
         style={{

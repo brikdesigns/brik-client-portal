@@ -49,7 +49,7 @@ const companyStatusMap: Record<string, StatusConfig> = {
   },
   needs_proposal: {
     label: 'Needs Proposal',
-    variant: 'info',
+    variant: 'warning',
     icon: <FontAwesomeIcon icon={faClipboardList} style={iconSize} />,
   },
   active: {
@@ -66,6 +66,11 @@ const companyStatusMap: Record<string, StatusConfig> = {
 
 // ── Service Status ──────────────────────────────────────────────────
 const serviceStatusMap: Record<string, StatusConfig> = {
+  pending: {
+    label: 'Pending',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faClock} style={iconSize} />,
+  },
   active: {
     label: 'Active',
     variant: 'positive',
@@ -190,6 +195,11 @@ const proposalStatusMap: Record<string, StatusConfig> = {
     label: 'Viewed',
     variant: 'progress',
     icon: <FontAwesomeIcon icon={faEye} style={iconSize} />,
+  },
+  signed: {
+    label: 'Signed',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
   },
   accepted: {
     label: 'Accepted',

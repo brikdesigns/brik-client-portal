@@ -1,13 +1,12 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
 import { text, heading, meta } from '@/lib/styles';
-import { font, color, space, gap } from '@/lib/tokens';
+import { font, space, gap } from '@/lib/tokens';
 import { ProposalActions } from '@/components/proposal-actions';
 import { ProposalSectionsView } from './sections-view';
 import type {
@@ -128,37 +127,6 @@ export default async function ProposalDetailPage({ params }: Props) {
         ]}
       />
 
-      {/* Shareable link — visible when sent or later */}
-      {(proposal.status === 'sent' || proposal.status === 'viewed' || proposal.status === 'accepted') && (
-        <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: space.md, flexWrap: 'wrap' }}>
-            <div>
-              <p style={metaLabelStyle}>Shareable Link</p>
-              <p style={{ ...metaValueStyle, wordBreak: 'break-all' }}>
-                <a
-                  href={shareableLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  style={{ color: color.system.link, textDecoration: 'none' }}
-                >
-                  {shareableLink}
-                </a>
-              </p>
-            </div>
-            <div style={{ display: 'flex', gap: gap.md, flexWrap: 'wrap' }}>
-              {proposal.view_count > 0 && (
-                <Badge status="info">{proposal.view_count} view{proposal.view_count !== 1 ? 's' : ''}</Badge>
-              )}
-              {proposal.first_viewed_at && (
-                <p style={{ ...metaValueStyle, fontSize: font.size.body.sm, color: color.text.muted }}>
-                  First viewed: {new Date(proposal.first_viewed_at).toLocaleString()}
-                </p>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
       {/* Proposal sections — collapsible cards with structured content */}
       <ProposalSectionsView
         sections={sections as (ScopeOfProjectSection | ProjectTimelineSection | ProposalSectionBase)[]}
@@ -168,17 +136,17 @@ export default async function ProposalDetailPage({ params }: Props) {
         hasSections={hasSections}
       />
 
-      {/* Acceptance audit trail */}
-      {proposal.status === 'accepted' && (
+      {/* Signature audit trail */}
+      {proposal.status === 'signed' && (
         <Card variant="outlined" padding="lg" style={{ marginBottom: space.lg }}>
-          <h2 style={sectionHeadingStyle}>Acceptance Record</h2>
+          <h2 style={sectionHeadingStyle}>Signature Record</h2>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: space.md }}>
             <div>
-              <p style={metaLabelStyle}>Accepted By</p>
+              <p style={metaLabelStyle}>Signed By</p>
               <p style={metaValueStyle}>{proposal.accepted_by_email}</p>
             </div>
             <div>
-              <p style={metaLabelStyle}>Accepted At</p>
+              <p style={metaLabelStyle}>Signed At</p>
               <p style={metaValueStyle}>
                 {proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleString() : '—'}
               </p>
