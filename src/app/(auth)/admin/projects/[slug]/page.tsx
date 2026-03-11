@@ -164,7 +164,7 @@ export default async function ProjectDetailPage({ params }: Props) {
                     color: color.text.primary,
                   }}
                 >
-                  <ServiceBadge category={svc.category_slug} size={12} />
+                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={12} />
                   {svc.name}
                 </div>
               ))}

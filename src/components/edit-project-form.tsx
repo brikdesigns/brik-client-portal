@@ -218,7 +218,7 @@ export function EditProjectForm({ project, clientName, availableServices, assign
                     color: color.text.primary,
                   }}
                 >
-                  <ServiceBadge category={svc.category_slug} size={12} />
+                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={12} />
                   {svc.name}
                 </button>
               );
