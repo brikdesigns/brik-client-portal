@@ -18,6 +18,7 @@ const REQUIRED_SERVER_VARS = [
 const RECOMMENDED_SERVER_VARS = [
   'RESEND_API_KEY',
   'NEXT_PUBLIC_SITE_URL',
+  'NEXT_PUBLIC_SENTRY_DSN',
 ] as const;
 
 let validated = false;

@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Tag } from '@bds/components/ui/Tag/Tag';
-import { PageHeader, type MetadataItem } from '@/components/page-header';
+import { PageHeader } from '@/components/page-header';
 import { font, color, gap, space } from '@/lib/tokens';
 import { formatContactRole } from '@/lib/format';
 import { DataTable } from './data-table';
@@ -69,57 +69,6 @@ export function ContactsPageContent({ contacts }: { contacts: ContactRow[] }) {
     });
   }, [contacts, userTypeFilter, userStatusFilter, roleFilter, companyFilter]);
 
-  const metadata: MetadataItem[] = [
-    {
-      label: 'User Type',
-      value: (
-        <FilterButton
-          size="sm"
-          label="All"
-          value={userTypeFilter}
-          onChange={setUserTypeFilter}
-          options={userTypeOptions}
-        />
-      ),
-    },
-    {
-      label: 'User Status',
-      value: (
-        <FilterButton
-          size="sm"
-          label="All"
-          value={userStatusFilter}
-          onChange={setUserStatusFilter}
-          options={userStatusOptions}
-        />
-      ),
-    },
-    {
-      label: 'Role',
-      value: (
-        <FilterButton
-          size="sm"
-          label="All"
-          value={roleFilter}
-          onChange={setRoleFilter}
-          options={roleOptions}
-        />
-      ),
-    },
-    {
-      label: 'Company',
-      value: (
-        <FilterButton
-          size="sm"
-          label="All"
-          value={companyFilter}
-          onChange={setCompanyFilter}
-          options={companyOptions}
-        />
-      ),
-    },
-  ];
-
   return (
     <div>
       <PageHeader
@@ -130,7 +79,6 @@ export function ContactsPageContent({ contacts }: { contacts: ContactRow[] }) {
             Add Contact
           </Button>
         }
-        metadata={metadata}
       />
 
       {/* Filter bar */}
@@ -153,6 +101,37 @@ export function ContactsPageContent({ contacts }: { contacts: ContactRow[] }) {
         >
           Showing {filtered.length} of {contacts.length}
         </span>
+
+        <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <FilterButton
+            size="sm"
+            label="User Type"
+            value={userTypeFilter}
+            onChange={setUserTypeFilter}
+            options={userTypeOptions}
+          />
+          <FilterButton
+            size="sm"
+            label="Status"
+            value={userStatusFilter}
+            onChange={setUserStatusFilter}
+            options={userStatusOptions}
+          />
+          <FilterButton
+            size="sm"
+            label="Role"
+            value={roleFilter}
+            onChange={setRoleFilter}
+            options={roleOptions}
+          />
+          <FilterButton
+            size="sm"
+            label="Company"
+            value={companyFilter}
+            onChange={setCompanyFilter}
+            options={companyOptions}
+          />
+        </div>
       </div>
 
       <DataTable
