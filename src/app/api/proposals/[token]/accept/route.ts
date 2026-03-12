@@ -1,10 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { z } from 'zod';
+import crypto from 'crypto';
 import { generateAgreementsForProposal } from '@/lib/agreements/generate';
 import { tryPromoteCompany } from '@/lib/agreements/promote';
 import { sendProposalAcceptedEmail, sendWelcomeToBrikEmail, logEmail } from '@/lib/email';
+import { getPrimaryAdminEmail } from '@/lib/admin-notifications';
+import { parseBody, isValidationError, emailSchema } from '@/lib/validation';
+import { rateLimitOrNull, getClientIp, PUBLIC_TOKEN_LIMIT } from '@/lib/rate-limit';
 
-const ADMIN_EMAIL = 'nick@brikdesigns.com';
+const acceptSchema = z.object({
+  email: emailSchema,
+});
 
 function getServiceClient() {
   return createServiceClient(
@@ -17,15 +24,17 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  // Rate limit
+  const limited = rateLimitOrNull(request, 'proposal-accept', PUBLIC_TOKEN_LIMIT);
+  if (limited) return limited;
+
   const { token } = await params;
   const supabase = getServiceClient();
 
-  const body = await request.json();
-  const { email } = body as { email?: string };
-
-  if (!email) {
-    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-  }
+  // Validate input
+  const body = await parseBody(request, acceptSchema);
+  if (isValidationError(body)) return body;
+  const { email } = body;
 
   // Fetch proposal
   const { data: proposal, error } = await supabase
@@ -60,9 +69,7 @@ export async function POST(
   }
 
   // Capture audit trail
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('x-real-ip')
-    || 'unknown';
+  const ip = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   const { error: updateError } = await supabase
@@ -146,18 +153,19 @@ export async function POST(
     .eq('email', email)
     .single();
 
-  // Notify admin that proposal was accepted (non-blocking)
+  // Notify admin(s) that proposal was accepted (non-blocking)
   try {
-    if (company) {
+    const adminEmail = await getPrimaryAdminEmail();
+    if (company && adminEmail) {
       const result = await sendProposalAcceptedEmail({
-        to: ADMIN_EMAIL,
+        to: adminEmail,
         companyName: company.name,
         companySlug: company.slug,
         proposalId: proposal.id,
       });
 
       await logEmail(supabase, {
-        to: ADMIN_EMAIL,
+        to: adminEmail,
         subject: `Proposal signed: ${company.name}`,
         template: 'proposal_accepted',
         resendId: result?.id,
@@ -168,13 +176,36 @@ export async function POST(
     console.error('Failed to send proposal accepted notification:', err);
   }
 
-  // Send "Welcome to Brik" email to the prospect (non-blocking)
+  // Send "Welcome to Brik" email to the prospect with setup link (non-blocking)
   try {
     if (company) {
+      // Generate a setup token for the contact so the welcome email links to /welcome/[token]
+      let setupUrl: string | undefined;
+      const signerContact = await supabase
+        .from('contacts')
+        .select('id, setup_completed_at')
+        .eq('company_id', proposal.company_id)
+        .eq('email', email)
+        .single();
+
+      if (signerContact.data && !signerContact.data.setup_completed_at) {
+        const setupToken = crypto.randomUUID();
+        const SETUP_TOKEN_TTL_DAYS = 7;
+        const expiresAt = new Date(Date.now() + SETUP_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000).toISOString();
+        await supabase
+          .from('contacts')
+          .update({ setup_token: setupToken, setup_token_expires_at: expiresAt })
+          .eq('id', signerContact.data.id);
+
+        const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        setupUrl = `${siteUrl}/welcome/${setupToken}`;
+      }
+
       const result = await sendWelcomeToBrikEmail({
         to: email,
         recipientName: contact?.first_name ?? undefined,
         companyName: company.name,
+        setupUrl,
       });
 
       await logEmail(supabase, {

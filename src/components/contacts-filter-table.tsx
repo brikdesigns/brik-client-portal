@@ -93,7 +93,9 @@ export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
       <DataTable
         data={filtered}
         rowKey={(c) => c.id}
-        emptyMessage="No contacts match your filters."
+        emptyMessage="No contacts match your filters"
+        emptyDescription="Try adjusting your filters or add a new contact."
+        emptyAction={{ label: 'Add Contact', href: '/admin/contacts/new' }}
         columns={[
           {
             header: 'Name',

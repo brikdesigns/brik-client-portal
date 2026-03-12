@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo, type FormEvent } from 'react';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
@@ -35,7 +35,9 @@ const sectionHeadingStyle = {
 
 export default function NewProjectPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const clientSlug = params.slug as string;
+  const companyServiceId = searchParams.get('company_service_id');
   const [clientId, setClientId] = useState<string | null>(null);
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
@@ -119,6 +121,7 @@ export default function NewProjectPage() {
           clickup_assignee: clickupAssignee || null,
           clickup_type: clickupType || null,
           clickup_status: clickupStatus || null,
+          company_service_id: companyServiceId || null,
         })
         .select('id')
         .single();

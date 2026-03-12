@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { getStripe } from '@/lib/stripe';
+import { parseBody, isValidationError } from '@/lib/validation';
+import { rateLimitOrNull, EXTERNAL_SYNC_LIMIT } from '@/lib/rate-limit';
+
+const stripeSyncSchema = z.object({
+  dry_run: z.boolean().optional(),
+});
 
 interface SyncResult {
   matched: { service_name: string; stripe_product_id: string; stripe_price_id: string | null }[];
@@ -11,11 +18,15 @@ interface SyncResult {
 }
 
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'stripe-sync', EXTERNAL_SYNC_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
   // ── Parse options ──
-  const body = await request.json().catch(() => ({}));
+  const body = await parseBody(request, stripeSyncSchema);
+  if (isValidationError(body)) return body;
   const dryRun = body.dry_run === true;
 
   // ── Fetch all active Stripe products ──

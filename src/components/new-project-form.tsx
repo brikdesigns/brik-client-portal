@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useMemo, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
+import { MultiSelect } from '@bds/components/ui/MultiSelect/MultiSelect';
 import { Button } from '@bds/components/ui/Button/Button';
+
 import { heading } from '@/lib/styles';
 import { font, color, space, gap, border } from '@/lib/tokens';
 
@@ -34,11 +36,26 @@ interface ClickUpMember {
   profilePicture: string | null;
 }
 
-interface NewProjectFormProps {
-  companies: Array<{ id: string; name: string }>;
+interface ServiceLineOption {
+  id: string;
+  name: string;
+  slug: string;
 }
 
-export function NewProjectForm({ companies }: NewProjectFormProps) {
+interface ServiceOption {
+  id: string;
+  name: string;
+  category_slug: string;
+  category_id: string;
+}
+
+interface NewProjectFormProps {
+  companies: Array<{ id: string; name: string }>;
+  serviceLines: ServiceLineOption[];
+  availableServices: ServiceOption[];
+}
+
+export function NewProjectForm({ companies, serviceLines, availableServices }: NewProjectFormProps) {
   const router = useRouter();
 
   // ── Project fields ─────────────────────────────────────
@@ -48,6 +65,19 @@ export function NewProjectForm({ companies }: NewProjectFormProps) {
   const [status, setStatus] = useState('not_started');
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+
+  // ── Service fields ───────────────────────────────────
+  const [serviceLineFilter, setServiceLineFilter] = useState('');
+  const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
+
+  // Include filtered services for the dropdown + all selected services for tags
+  const serviceOptions = useMemo(() => {
+    const selectedSet = new Set(selectedServiceIds);
+    const filtered = serviceLineFilter
+      ? availableServices.filter((s) => s.category_id === serviceLineFilter || selectedSet.has(s.id))
+      : availableServices;
+    return filtered.map((s) => ({ label: s.name, value: s.id }));
+  }, [availableServices, serviceLineFilter, selectedServiceIds]);
 
   // ── ClickUp fields ─────────────────────────────────────
   const [folders, setFolders] = useState<ClickUpFolder[]>([]);
@@ -170,6 +200,7 @@ export function NewProjectForm({ companies }: NewProjectFormProps) {
           end_date: endDate || null,
           clickup_list_id: listId || null,
           clickup_assignee_id: assigneeId ? Number(assigneeId) : null,
+          service_ids: selectedServiceIds.length > 0 ? selectedServiceIds : undefined,
         }),
       });
 
@@ -262,6 +293,32 @@ export function NewProjectForm({ companies }: NewProjectFormProps) {
               fullWidth
             />
           </div>
+        </div>
+
+        {/* ── Services ────────────────────────────────── */}
+        <div style={dividerStyle} />
+        <h2 style={sectionHeadingStyle}>Services</h2>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
+          <Select
+            label="Service Line"
+            value={serviceLineFilter}
+            onChange={(e) => setServiceLineFilter(e.target.value)}
+            placeholder="All service lines"
+            options={serviceLines.map((sl) => ({
+              label: sl.name,
+              value: sl.id,
+            }))}
+            fullWidth
+          />
+          <MultiSelect
+            label="Services"
+            placeholder={serviceLineFilter ? 'Select a service...' : 'Select a service line first'}
+            options={serviceOptions}
+            value={selectedServiceIds}
+            onChange={setSelectedServiceIds}
+            fullWidth
+          />
         </div>
 
         {/* ── ClickUp Integration ─────────────────────── */}

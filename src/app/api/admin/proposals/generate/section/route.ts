@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getMeetingNotes } from '@/lib/notion-fetch';
 import {
@@ -7,6 +8,18 @@ import {
   type ServiceDetail,
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
+
+const SECTION_TYPES = ['overview_and_goals', 'scope_of_project', 'project_timeline', 'why_brik'] as const;
+
+const sectionRegenerateSchema = z.object({
+  company_id: uuidSchema,
+  meeting_notes_url: z.string().url().optional(),
+  service_ids: z.array(z.string().uuid()).min(1, 'At least one service_id is required'),
+  section_type: z.enum(SECTION_TYPES),
+  current_content: z.string().optional(),
+});
 
 /**
  * POST /api/admin/proposals/generate/section
@@ -16,27 +29,17 @@ import {
  * Returns: { section }
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'proposal-section-regen', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
   const supabase = await createClient();
 
-  const body = await request.json();
-  const { company_id, meeting_notes_url, service_ids, section_type, current_content } = body as {
-    company_id: string;
-    meeting_notes_url?: string;
-    service_ids: string[];
-    section_type: 'overview_and_goals' | 'scope_of_project' | 'project_timeline' | 'why_brik';
-    current_content?: string;
-  };
-
-  const validTypes = ['overview_and_goals', 'scope_of_project', 'project_timeline', 'why_brik'];
-  if (!company_id || !service_ids?.length || !validTypes.includes(section_type)) {
-    return NextResponse.json(
-      { error: 'company_id, service_ids, and a valid section_type are required' },
-      { status: 400 }
-    );
-  }
+  const body = await parseBody(request, sectionRegenerateSchema);
+  if (isValidationError(body)) return body;
+  const { company_id, meeting_notes_url, service_ids, section_type, current_content } = body;
 
   try {
     const { data: company } = await supabase

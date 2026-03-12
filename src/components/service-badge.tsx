@@ -1,226 +1,144 @@
 'use client';
 
-import { useState } from 'react';
-import { font, gap } from '@/lib/tokens';
-
-interface ServiceBadgeProps {
-  category: string; // slug: brand, marketing, information, product, service
-  serviceName?: string; // optional service name for SVG icon
-  size?: number;
-}
-
-const categoryConfig: Record<string, { token: string; label: string }> = {
-  brand: { token: 'yellow', label: 'Brand' },
-  marketing: { token: 'green', label: 'Marketing' },
-  information: { token: 'blue', label: 'Information' },
-  product: { token: 'purple', label: 'Product' },
-  service: { token: 'orange', label: 'Service' },
-};
+import {
+  ServiceBadge as BdsServiceBadge,
+  categoryConfig,
+  type ServiceCategory,
+} from '@bds/components/ui/ServiceBadge/ServiceBadge';
+import { font, gap, serviceColor } from '@/lib/tokens';
 
 /**
- * Manual mapping for services that don't have exact filename matches
- * Format: "Service Name" -> "icon-filename-without-extension"
+ * Thin wrapper around BDS ServiceBadge.
  *
- * Tiered services (Basic, Mid-Range, High-End, etc.) are auto-stripped
- * to their base name before checking this map — no need to add each tier.
+ * Adapts portal conventions (numeric size, raw DB service names) to
+ * BDS props. Strips tier suffixes and resolves service names to the
+ * closest matching icon — passes undefined if no icon exists so BDS
+ * renders the colored-square fallback.
  */
-const serviceIconOverrides: Record<string, string> = {
-  // Generic category services (named after the category itself)
-  'Brand Design': 'brand-design',
-  'Marketing Design': 'marketing-design',
-  'Information Design': 'information-design',
-  'Product Design': 'product-design',
-  'Back Office Design': 'back-office-design',
 
-  // Brand services
-  'Brand Identity Bundle': 'brand-design',
-  'Logo Update': 'brand-logo',
-  'Premium Logo Design': 'brand-logo',
-  'Standard Logo Design': 'brand-logo',
-  'Brand Listings': 'brand-listings',
-  'Brand Guidelines': 'brand-guidelines',
-  'Business Card Design': 'brand-business-card',
-  'Email Signature Design': 'brand-email-signature',
-  'Stationery Design': 'brand-stationary',
-
-  // Marketing services
-  'Comprehensive Marketing Audit & Consultation': 'marketing-consulting',
-  'Custom Large E-Commerce Web Development and Design': 'marketing-web-design',
-  'Custom Large Web Development and Design': 'marketing-web-design',
-  'Custom Standard E-Commerce Web Development and Design': 'marketing-web-design',
-  'Custom Standard Web Development and Design': 'marketing-web-design',
-  'Email Drip Campaign (Up to 6 Emails)': 'marketing-email',
-  'Email Signature Design (Marketing)': 'marketing-email-signature',
-  'Landing Pages': 'marketing-landing-pages',
-  'Patient Experience Mapping': 'patient-experience',
-  'Social Media Graphic Designs': 'marketing-social-graphics',
-  'Swag and Merchandise Design': 'marketing-swag',
-  'Website Experience Mapping': 'website-experience',
-  'Website Maintenance': 'marketing-web-design',
-  'SEO Optimization': 'marketing-consulting',
-  'Google Business Profile Management': 'marketing-consulting',
-  'Social Media Management': 'marketing-social-graphics',
-
-  // Information services
-  'Digital Design': 'info-digital-design',
-  'Infographics': 'info-infographics',
-  'Intake Form Design': 'info-intake-form',
-  'Layout Design': 'info-layout-design',
-  'Print Design': 'info-print-design',
-  'Sales Materials': 'info-sales-materials',
-  'Signage Design': 'info-signage',
-  'Welcome Kit': 'info-welcome-kit',
-
-  // Product services
-  'App Design': 'product-app-design',
-  'Content Design': 'product-content-design',
-  'Design Systems': 'product-design-systems',
-  'Enterprise Design': 'product-enterprise-design',
-
-  // Service (Back Office) category mappings
-  'Automated Workflow and AI Integration': 'back-office-automation-ai',
-  'Back Office Support': 'back-office-business-solutions',
-  'CRM Setup and Data Cleanup': 'back-office-crm-data',
-  'Customer Journey Mapping': 'back-office-journey-mapping',
-  'Customer Support': 'back-office-customer-support',
-  'Digital File Organization': 'back-office-digital-file-organization',
-  'Software and Subscription Audit': 'back-office-audit',
-  'Software Automation Setup': 'back-office-automated-workflow',
-  'Standard Operating Procedures (SOP) Creation': 'back-office-sop-creation',
-  'Training Setup & Organization': 'back-office-training-setup',
+const sizeToVariant = (px?: number): 'sm' | 'md' | 'lg' => {
+  if (!px || px <= 20) return 'sm';
+  if (px <= 28) return 'md';
+  return 'lg';
 };
 
 /**
- * Strip tier/pricing suffixes from service names for icon lookup
+ * Strip tier/pricing suffixes from service names.
  * e.g., "Automated Workflow and AI Integration (Basic)" → "Automated Workflow and AI Integration"
  */
 function stripTierSuffix(name: string): string {
   return name
-    .replace(/\s*\((?:Basic|Mid-Range|High-End|Standard|Premium|Essential|Pro|Enterprise|Starter|Up to \d+[^)]*)\)\s*$/i, '')
+    .replace(/\s*\((?:Basic|Base|Mid-Range|High-End|Standard|Premium|Essential|Pro|Enterprise|Starter|Up to \d+[^)]*|\d+[^)]*)\)\s*$/i, '')
     .trim();
 }
 
 /**
- * SVG filename prefix per category — matches actual file naming convention
- * Most categories use their own name, but "service" category uses "back-office-"
+ * Maps service base names → the canonical name recognized by BDS overrides.
+ * This handles services whose DB names don't match BDS override keys.
+ *
+ * Only needed for services whose names differ from the BDS override map.
+ * Tier variants are auto-stripped before checking this map.
  */
-const categoryFilePrefix: Record<string, string> = {
-  brand: 'brand',
-  marketing: 'marketing',
-  information: 'info',
-  product: 'product',
-  service: 'back-office',
+const portalNameOverrides: Record<string, string | null> = {
+  // Brand
+  'Business Card': 'Business Card Design',
+  'Email Signature': 'Email Signature Design',
+  'Letterhead Stationary': 'Stationery Design',
+  'Online Business Listings': 'Brand Listings',
+
+  // Marketing
+  'Email Marketing – Ongoing Management': 'Email Drip Campaign (Up to 6 Emails)',
+  'Email Marketing': 'Email Drip Campaign (Up to 6 Emails)',
+  'Fractional CMO & Strategic Marketing Oversight': 'Comprehensive Marketing Audit & Consultation',
+  'Marketing Support': 'Comprehensive Marketing Audit & Consultation',
+  'On Demand: Builder\'s Choice': null,
+  'On Demand: Starter Stack': null,
+  'On-Demand: The Brikhouse': null,
+  'Press Release + Distribution': null,
+  'Press Release + Distribution + Media Pitching': null,
+  'Social Media Graphic Bundle of 10': 'Social Media Graphic Designs',
+  'Social Media Graphic Bundle of 5': 'Social Media Graphic Designs',
+  'Swag & Merchandise Design Bundle': 'Swag and Merchandise Design',
+  'Swag and Merchandise Design': 'Swag and Merchandise Design',
+  'Templated Website Design & Development': 'Custom Standard Web Development and Design',
+  'Website Maintenance': 'Custom Standard Web Development and Design',
+
+  // Information
+  'Booklet Design': 'Layout Design',
+  'Brochure': 'Print Design',
+  'Flyer': 'Print Design',
+  'Intake Forms': 'Intake Form Design',
+  'Large Signage Design': 'Signage Design',
+  'One-Pager': 'Print Design',
+  'Sales Pitch Deck': 'Sales Materials',
+  'Sales Proposal': 'Sales Materials',
+  'Sales Resources': 'Sales Materials',
+  'Small Signage Design': 'Signage Design',
+  'Welcome Onboarding Kit': 'Welcome Kit',
+
+  // Product
+  'Full SaaS or Enterprise Product Design': 'Enterprise Design',
+  'Mobile App Design': 'App Design',
+
+  // Service (Back Office)
+  'Back Office Support': null,  // no specific icon → colored square
+  'Ongoing Data Management & Reporting': 'CRM Setup and Data Cleanup',
+  'Patient Experience Mapping': null,  // icon exists in marketing/ but DB has it in service/
+  'Software and Subscription Audit': 'Software and Subscription Audit',
 };
 
 /**
- * Normalize service name to match SVG filename convention
- * Examples:
- * - "Brand Design" -> "brand-design"
- * - "Marketing Web Design" -> "marketing-web-design"
- * - "Back Office Audit" -> "back-office-audit"
+ * Resolve a service name to one the BDS component can find an icon for.
+ * Returns undefined if no icon exists (BDS will render colored square).
  */
-function normalizeServiceName(name: string): string {
-  return name
-    .toLowerCase()
-    .replace(/\s+/g, '-')
-    .replace(/[^a-z0-9-]/g, '');
+function resolveServiceName(name: string): string | undefined {
+  // 1. Strip tier suffix
+  const baseName = stripTierSuffix(name);
+
+  // 2. Check portal overrides (null = no icon available)
+  if (baseName in portalNameOverrides) {
+    return portalNameOverrides[baseName] ?? undefined;
+  }
+
+  // 3. Original name might have a suffix we didn't strip — check that too
+  if (name in portalNameOverrides) {
+    return portalNameOverrides[name] ?? undefined;
+  }
+
+  // 4. Pass through — BDS will try its own overrides + fallback path
+  return baseName;
 }
 
-/**
- * Get SVG path for a service
- * Pattern: /badges/services/{category}/{prefix}-{name}.svg
- *
- * 1. Check manual overrides (exact name, then with tier suffix stripped)
- * 2. Fallback: category-appropriate prefix + normalized name
- */
-function getServiceIconPath(category: string, serviceName: string): string {
-  // Check exact override first
-  if (serviceIconOverrides[serviceName]) {
-    return `/badges/services/${category}/${serviceIconOverrides[serviceName]}.svg`;
-  }
-
-  // Strip tier suffix and try override again
-  const baseName = stripTierSuffix(serviceName);
-  if (baseName !== serviceName && serviceIconOverrides[baseName]) {
-    return `/badges/services/${category}/${serviceIconOverrides[baseName]}.svg`;
-  }
-
-  // Fallback: use category-appropriate prefix + normalized base name
-  const prefix = categoryFilePrefix[category] ?? category;
-  const normalized = normalizeServiceName(baseName);
-  // Remove the category name OR prefix from normalized to avoid duplication
-  // e.g., "information-design" → strip "information-" → "design" → "info-design"
-  // e.g., "marketing-web-design" → strip "marketing-" → "web-design" → "marketing-web-design"
-  const stripped = normalized
-    .replace(new RegExp(`^${category}-`), '')
-    .replace(new RegExp(`^${prefix}-`), '');
-
-  return `/badges/services/${category}/${prefix}-${stripped}.svg`;
+interface ServiceBadgeProps {
+  category: string;
+  serviceName?: string;
+  size?: number;
 }
 
 export function ServiceBadge({ category, serviceName, size = 28 }: ServiceBadgeProps) {
-  const config = categoryConfig[category] ?? { token: 'orange', label: category };
-  const [imageError, setImageError] = useState(false);
+  const resolved = serviceName ? resolveServiceName(serviceName) : undefined;
 
-  // If serviceName provided and image hasn't errored, try to render SVG icon
-  if (serviceName && !imageError) {
-    const iconPath = getServiceIconPath(category, serviceName);
-
-    return (
-      <div
-        title={serviceName}
-        style={{
-          width: `${size}px`,
-          height: `${size}px`,
-          borderRadius: '6px',
-          backgroundColor: `var(--services--${config.token})`,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexShrink: 0,
-          overflow: 'hidden',
-        }}
-      >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={iconPath}
-          alt={serviceName}
-          width={size}
-          height={size}
-          style={{ objectFit: 'contain', display: 'block' }}
-          onError={() => setImageError(true)}
-        />
-      </div>
-    );
-  }
-
-  // Fallback: colored square (for category badges without specific service or failed image)
   return (
-    <div
-      title={serviceName || config.label}
-      style={{
-        width: `${size}px`,
-        height: `${size}px`,
-        borderRadius: '6px',
-        backgroundColor: `var(--services--${config.token})`,
-        flexShrink: 0,
-      }}
+    <BdsServiceBadge
+      category={category as ServiceCategory}
+      serviceName={resolved}
+      size={sizeToVariant(size)}
     />
   );
 }
 
 export function ServiceCategoryLabel({ category }: { category: string }) {
-  const config = categoryConfig[category] ?? { token: 'orange', label: category };
+  const config = categoryConfig[category as ServiceCategory] ?? { token: 'orange', label: category };
 
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
-      <ServiceBadge category={category} size={12} />
+      <BdsServiceBadge category={category as ServiceCategory} size="sm" />
       <span
         style={{
           fontFamily: font.family.label,
           fontSize: font.size.body.xs,
           fontWeight: font.weight.medium,
-          color: `var(--services--${config.token}-dark)`,
+          color: serviceColor(category).text,
           textTransform: 'uppercase',
           letterSpacing: '0.5px',
         }}

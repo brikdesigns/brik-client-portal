@@ -1,3 +1,4 @@
+import { withSentryConfig } from '@sentry/nextjs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
@@ -10,6 +11,20 @@ const nextConfig = {
   distDir: process.env.NEXT_BUILD_OUTPUT_DIR || '.next',
   env: {
     NEXT_PUBLIC_APP_VERSION: pkg.version,
+  },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-XSS-Protection', value: '1; mode=block' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
+        ],
+      },
+    ];
   },
   turbopack: {
     resolveAlias: {
@@ -27,4 +42,14 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+export default withSentryConfig(nextConfig, {
+  // Suppress source map upload warnings when SENTRY_AUTH_TOKEN is not set
+  silent: !process.env.SENTRY_AUTH_TOKEN,
+
+  // Don't widen the upload scope to include all files
+  widenClientFileUpload: false,
+
+  // Disable source map upload until auth token is configured
+  disableServerWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+  disableClientWebpackPlugin: !process.env.SENTRY_AUTH_TOKEN,
+});

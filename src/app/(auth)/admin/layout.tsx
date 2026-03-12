@@ -18,14 +18,13 @@ export default async function AdminLayout({
     redirect('/dashboard');
   }
 
-  const { user, profile } = authUser;
+  const { user } = authUser;
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <PortalSidebar
         role="admin"
         userId={user.id}
-        userName={profile.full_name || user.email || 'Admin'}
         isAdmin
       />
       <main

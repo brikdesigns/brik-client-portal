@@ -109,7 +109,8 @@ export function ReportingFilterTable({ reportSets }: { reportSets: ReportSetRow[
       <DataTable
         data={filtered}
         rowKey={(rs) => rs.id}
-        emptyMessage="No analyses match your filters."
+        emptyMessage="No analyses match your filters"
+        emptyDescription="Try adjusting your filters to see more results."
         columns={[
           {
             header: 'Client',

@@ -95,17 +95,26 @@ export function EditInvoiceForm({ invoice, clientName, clientSlug }: EditInvoice
 
   return (
     <div style={{ maxWidth: '600px' }}>
-      <div
-        style={{
-          fontFamily: font.family.body,
-          fontSize: font.size.body.xs,
-          color: color.text.muted,
-          marginBottom: space.md,
-        }}
-      >
-        Client: <a
+      <div style={{ marginBottom: space.md }}>
+        <p
+          style={{
+            fontFamily: font.family.label,
+            fontSize: font.size.label.md,
+            color: color.text.muted,
+            margin: 0,
+            marginBottom: '2px',
+          }}
+        >
+          Client
+        </p>
+        <a
           href={`/admin/companies/${clientSlug || invoice.company_id}`}
-          style={{ color: color.system.link, textDecoration: 'none' }}
+          style={{
+            fontFamily: font.family.body,
+            fontSize: font.size.body.md,
+            color: color.system.link,
+            textDecoration: 'none',
+          }}
         >
           {clientName}
         </a>

@@ -108,12 +108,16 @@ export const color = {
     onColorDark: 'var(--text-on-color-dark)',
     onColorLight: 'var(--text-on-color-light)',
     negative: 'var(--text-negative)',
+    warning: 'var(--text-warning)',
+    success: 'var(--text-success)',
   },
   surface: {
     primary: 'var(--surface-primary)',
     secondary: 'var(--surface-secondary)',
     tertiary: 'var(--surface-tertiary)',
     negative: 'var(--surface-negative)',
+    warning: 'var(--surface-warning)',
+    success: 'var(--surface-success)',
     overlay: 'var(--surface-overlay)',
     brandPrimary: 'var(--surface-brand-primary)',
     brandSecondary: 'var(--surface-brand-secondary)',
@@ -153,7 +157,40 @@ export const color = {
     orange: 'var(--color-system-orange)',
     purple: 'var(--color-system-purple)',
   },
+  service: {
+    brand: {
+      bg: 'var(--background-service-brand)',
+      text: 'var(--text-service-brand)',
+      light: 'var(--services--yellow-light)',
+    },
+    marketing: {
+      bg: 'var(--background-service-marketing)',
+      text: 'var(--text-service-marketing)',
+      light: 'var(--services--green-light)',
+    },
+    information: {
+      bg: 'var(--background-service-information)',
+      text: 'var(--text-service-information)',
+      light: 'var(--services--blue-light)',
+    },
+    product: {
+      bg: 'var(--background-service-product)',
+      text: 'var(--text-service-product)',
+      light: 'var(--services--purple-light)',
+    },
+    service: {
+      bg: 'var(--background-service-service)',
+      text: 'var(--text-service-service)',
+      light: 'var(--services--orange-light)',
+    },
+  },
 } as const;
+
+/** Look up service color tokens by category slug */
+export function serviceColor(category: string) {
+  const key = category as keyof typeof color.service;
+  return color.service[key] ?? color.service.service;
+}
 
 // ─── Spacing (Padding) ──────────────────────────────────────────────
 
@@ -192,6 +229,8 @@ export const border = {
     sm: 'var(--border-width-sm)',
     md: 'var(--border-width-md)',
     lg: 'var(--border-width-lg)',
+    xl: 'var(--border-width-xl)',
+    huge: 'var(--border-width-huge)',
   },
   radius: {
     none: 'var(--border-radius-none)',

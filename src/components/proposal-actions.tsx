@@ -41,20 +41,28 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug,
       }
 
       // Send email to primary contact
+      let emailWarning = '';
       try {
-        await fetch('/api/admin/email/proposal-sent', {
+        const emailRes = await fetch('/api/admin/email/proposal-sent', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ proposal_id: proposalId }),
         });
+        if (!emailRes.ok) {
+          const data = await emailRes.json().catch(() => ({ error: 'Unknown error' }));
+          emailWarning = data.error || 'Email delivery failed';
+        }
       } catch {
-        // Email is non-blocking — proposal is already marked as sent
-        console.error('Email send failed (non-critical)');
+        emailWarning = 'Could not reach email service';
       }
 
       // Copy link to clipboard
       await navigator.clipboard.writeText(shareableLink);
-      toastSuccess(`Proposal sent to ${companyName}`);
+      if (emailWarning) {
+        toastSuccess(`Proposal marked sent — link copied. Email failed: ${emailWarning}`);
+      } else {
+        toastSuccess(`Proposal sent to ${companyName} — link copied`);
+      }
       router.refresh();
     } finally {
       setSending(false);

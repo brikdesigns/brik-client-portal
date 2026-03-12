@@ -1,9 +1,16 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { tryPromoteCompany } from '@/lib/agreements/promote';
 import { sendAgreementSignedEmail, logEmail } from '@/lib/email';
+import { getPrimaryAdminEmail } from '@/lib/admin-notifications';
+import { parseBody, isValidationError, emailSchema, nonEmptyString } from '@/lib/validation';
+import { rateLimitOrNull, getClientIp, PUBLIC_TOKEN_LIMIT } from '@/lib/rate-limit';
 
-const ADMIN_EMAIL = 'nick@brikdesigns.com';
+const signSchema = z.object({
+  name: nonEmptyString.describe('Full legal name'),
+  email: emailSchema,
+});
 
 function getServiceClient() {
   return createServiceClient(
@@ -16,19 +23,17 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  // Rate limit
+  const limited = rateLimitOrNull(request, 'agreement-sign', PUBLIC_TOKEN_LIMIT);
+  if (limited) return limited;
+
   const { token } = await params;
   const supabase = getServiceClient();
 
-  const body = await request.json();
-  const { name, email } = body as { name?: string; email?: string };
-
-  if (!name?.trim()) {
-    return NextResponse.json({ error: 'Full legal name is required' }, { status: 400 });
-  }
-
-  if (!email?.trim()) {
-    return NextResponse.json({ error: 'Email address is required' }, { status: 400 });
-  }
+  // Validate input
+  const body = await parseBody(request, signSchema);
+  if (isValidationError(body)) return body;
+  const { name, email } = body;
 
   // Fetch agreement
   const { data: agreement, error } = await supabase
@@ -67,9 +72,7 @@ export async function POST(
   }
 
   // Capture ESIGN audit trail
-  const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    || request.headers.get('x-real-ip')
-    || 'unknown';
+  const ip = getClientIp(request);
   const userAgent = request.headers.get('user-agent') || 'unknown';
 
   const { error: updateError } = await supabase
@@ -77,8 +80,8 @@ export async function POST(
     .update({
       status: 'signed',
       signed_at: new Date().toISOString(),
-      signed_by_name: name.trim(),
-      signed_by_email: email.trim(),
+      signed_by_name: name,
+      signed_by_email: email,
       signed_by_ip: ip,
       signed_by_user_agent: userAgent,
     })
@@ -88,29 +91,30 @@ export async function POST(
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
-  // Notify admin that agreement was signed (non-blocking)
+  // Notify admin(s) that agreement was signed (non-blocking)
   try {
+    const adminEmail = await getPrimaryAdminEmail();
     const { data: fullAgreement } = await supabase
       .from('agreements')
       .select('title, company_id, companies(name, slug)')
       .eq('id', agreement.id)
       .single();
 
-    if (fullAgreement) {
+    if (fullAgreement && adminEmail) {
       const company = fullAgreement.companies as unknown as { name: string; slug: string };
       const signedAt = new Date().toISOString();
       const result = await sendAgreementSignedEmail({
-        to: ADMIN_EMAIL,
+        to: adminEmail,
         companyName: company.name,
         agreementTitle: fullAgreement.title || 'Agreement',
-        signedByName: name!.trim(),
-        signedByEmail: email!.trim(),
+        signedByName: name,
+        signedByEmail: email,
         signedAt,
         companySlug: company.slug,
       });
 
       await logEmail(supabase, {
-        to: ADMIN_EMAIL,
+        to: adminEmail,
         subject: `Agreement signed: ${company.name} — ${fullAgreement.title || 'Agreement'}`,
         template: 'agreement_signed',
         resendId: result?.id,

@@ -70,5 +70,12 @@ export async function tryPromoteCompany(companyId: string): Promise<boolean> {
     .update({ status: 'active', type: 'client' })
     .eq('id', companyId);
 
+  // Activate pending services from signed proposals
+  await supabase
+    .from('company_services')
+    .update({ status: 'active' })
+    .eq('company_id', companyId)
+    .eq('status', 'pending');
+
   return true;
 }

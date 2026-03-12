@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { InvoiceStatusBadge } from './status-badges';
@@ -95,15 +94,16 @@ export function InvoicesFilterTable({
       <DataTable
         data={filtered}
         rowKey={(inv) => inv.id}
-        emptyMessage="No invoices match your filters."
+        emptyMessage="No invoices match your filters"
+        emptyDescription="Try adjusting your filters to see more results."
         columns={[
           {
             header: 'Client',
             accessor: (inv) =>
               inv.company ? (
-                <TextLink href={`/admin/companies/${inv.company.slug}`} size="small">
+                <a className="cell-link" href={`/admin/companies/${inv.company.slug}`}>
                   {inv.company.name}
-                </TextLink>
+                </a>
               ) : (
                 '—'
               ),
@@ -144,7 +144,7 @@ export function InvoicesFilterTable({
                 </Button>
                 {inv.invoice_url && (
                   <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
-                    <Button variant="primary" size="sm">View</Button>
+                    <Button variant="secondary" size="sm">View</Button>
                   </a>
                 )}
               </div>

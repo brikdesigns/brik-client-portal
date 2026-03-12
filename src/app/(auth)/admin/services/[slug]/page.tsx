@@ -3,22 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
-import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
-import { ServiceStatusBadge, ServiceTypeTag } from '@/components/status-badges';
+import { ServiceTypeTag } from '@/components/status-badges';
+import { ServiceDetailTabs } from '@/components/service-detail-tabs';
 import { formatCurrency } from '@/lib/format';
-import { ServiceTabs } from '@/components/service-tabs';
-import { font, color, space, gap } from '@/lib/tokens';
-import { detail } from '@/lib/styles';
+import { gap } from '@/lib/tokens';
 
 interface Props {
   params: Promise<{ slug: string }>;
-  searchParams: Promise<{ tab?: string }>;
 }
 
-export default async function ServiceDetailPage({ params, searchParams }: Props) {
+export default async function ServiceDetailPage({ params }: Props) {
   const { slug } = await params;
-  const { tab } = await searchParams;
   const supabase = await createClient();
 
   const { data: service, error } = await supabase
@@ -52,15 +48,26 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
     companies: { id: string; name: string; slug: string; status: string } | null;
   }[]) ?? [];
 
-  const tabKeys = ['overview', 'companies'];
-  const activeTab = tab && tabKeys.includes(tab) ? tab : 'overview';
+  // Fetch projects that use this service
+  const { data: projectServices } = await supabase
+    .from('project_services')
+    .select('projects(id, name, slug, status, start_date, end_date, companies(id, name, slug))')
+    .eq('service_id', service.id);
 
-  const fieldLabelStyle = detail.label;
-  const fieldValueStyle = detail.value;
-  const linkStyle = detail.link;
-
-  const complexityLabels: Record<string, string> = { low: 'Low', medium: 'Medium', high: 'High' };
-  const offeringLabels: Record<string, string> = { single_service: 'Standalone', bundled: 'Bundled' };
+  const projects = (projectServices ?? [])
+    .map((ps) => {
+      const proj = (ps as unknown as { projects: {
+        id: string; name: string; slug: string; status: string;
+        start_date: string | null; end_date: string | null;
+        companies: { id: string; name: string; slug: string } | null;
+      } | null }).projects;
+      return proj;
+    })
+    .filter(Boolean) as {
+      id: string; name: string; slug: string; status: string;
+      start_date: string | null; end_date: string | null;
+      companies: { id: string; name: string; slug: string } | null;
+    }[];
 
   return (
     <div>
@@ -104,170 +111,25 @@ export default async function ServiceDetailPage({ params, searchParams }: Props)
               : '—',
           },
         ]}
-        tabs={<ServiceTabs slug={service.slug} />}
       />
 
-      {/* ── Overview Tab ───────────────────────────────────────── */}
-      {activeTab === 'overview' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-          {/* Details */}
-          <h2 style={detail.sectionHeading}>Details</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
-            <div>
-              <p style={fieldLabelStyle}>Icon</p>
-              <div style={fieldValueStyle}>
-                <ServiceBadge category={category?.slug ?? 'service'} serviceName={service.name} size={40} />
-              </div>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Notion</p>
-              <p style={fieldValueStyle}>
-                {(service as unknown as Record<string, string>).notion_page_id ? (
-                  <a
-                    href={`https://www.notion.so/${(service as unknown as Record<string, string>).notion_page_id.replace(/-/g, '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={linkStyle}
-                  >
-                    View in Notion &#x2197;
-                  </a>
-                ) : (
-                  <span style={detail.empty}>—</span>
-                )}
-              </p>
-            </div>
-            <div />
-          </div>
-
-          {/* Stripe */}
-          <h2 style={detail.sectionHeading}>Stripe</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
-            <div>
-              <p style={fieldLabelStyle}>Stripe Product</p>
-              <p style={fieldValueStyle}>
-                {service.stripe_product_id ? (
-                  <a
-                    href={`https://dashboard.stripe.com/products/${service.stripe_product_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ ...linkStyle, fontFamily: 'monospace' }}
-                  >
-                    {service.stripe_product_id} &#x2197;
-                  </a>
-                ) : '—'}
-              </p>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Stripe Price</p>
-              <p style={fieldValueStyle}>
-                {service.stripe_price_id ? (
-                  <a
-                    href={`https://dashboard.stripe.com/prices/${service.stripe_price_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ ...linkStyle, fontFamily: 'monospace' }}
-                  >
-                    {service.stripe_price_id} &#x2197;
-                  </a>
-                ) : '—'}
-              </p>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Stripe Product URL</p>
-              <p style={fieldValueStyle}>
-                {(service as unknown as Record<string, string>).stripe_product_url ? (
-                  <a
-                    href={(service as unknown as Record<string, string>).stripe_product_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={linkStyle}
-                  >
-                    View in Stripe &#x2197;
-                  </a>
-                ) : '—'}
-              </p>
-            </div>
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
-            <div>
-              <p style={fieldLabelStyle}>Stripe Last Sync</p>
-              <p style={fieldValueStyle}>
-                {(service as unknown as Record<string, string>).stripe_last_synced
-                  ? new Date((service as unknown as Record<string, string>).stripe_last_synced).toLocaleDateString()
-                  : '—'}
-              </p>
-            </div>
-            <div />
-            <div />
-          </div>
-
-          {/* Operations */}
-          <h2 style={detail.sectionHeading}>Operations</h2>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
-            <div>
-              <p style={fieldLabelStyle}>Operations Cost</p>
-              <p style={fieldValueStyle}>
-                {(service as unknown as Record<string, string>).operational_complexity
-                  ? complexityLabels[(service as unknown as Record<string, string>).operational_complexity] ?? (service as unknown as Record<string, string>).operational_complexity
-                  : '—'}
-              </p>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Automation</p>
-              <p style={fieldValueStyle}>—</p>
-            </div>
-            <div>
-              <p style={fieldLabelStyle}>Offering Structure</p>
-              <p style={fieldValueStyle}>
-                {(service as unknown as Record<string, string>).offering_structure
-                  ? offeringLabels[(service as unknown as Record<string, string>).offering_structure] ?? (service as unknown as Record<string, string>).offering_structure
-                  : '—'}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── Companies Tab ──────────────────────────────────────── */}
-      {activeTab === 'companies' && (
-        <DataTable
-          data={assignments}
-          rowKey={(a) => a.id}
-          emptyMessage="No clients have been assigned this service yet."
-          columns={[
-            {
-              header: 'Client',
-              accessor: (a) =>
-                a.companies ? (
-                  <a
-                    href={`/admin/companies/${a.companies.slug}`}
-                    style={{ color: color.text.primary, textDecoration: 'none' }}
-                  >
-                    {a.companies.name}
-                  </a>
-                ) : (
-                  '—'
-                ),
-              style: { fontWeight: font.weight.medium },
-            },
-            {
-              header: 'Status',
-              accessor: (a) => <ServiceStatusBadge status={a.status} />,
-            },
-            {
-              header: 'Started',
-              accessor: (a) =>
-                a.started_at ? new Date(a.started_at).toLocaleDateString() : '—',
-              style: { color: color.text.secondary },
-            },
-            {
-              header: 'Notes',
-              accessor: (a) => a.notes || '—',
-              style: { color: color.text.muted },
-            },
-          ]}
-        />
-      )}
+      <ServiceDetailTabs
+        service={{
+          slug: service.slug,
+          name: service.name,
+          notion_page_id: (service as unknown as Record<string, string | null>).notion_page_id ?? null,
+          stripe_product_id: service.stripe_product_id,
+          stripe_price_id: service.stripe_price_id,
+          stripe_product_url: (service as unknown as Record<string, string | null>).stripe_product_url ?? null,
+          stripe_sync_status: (service as unknown as Record<string, string | null>).stripe_sync_status ?? null,
+          stripe_last_synced: (service as unknown as Record<string, string | null>).stripe_last_synced ?? null,
+          operational_complexity: (service as unknown as Record<string, string | null>).operational_complexity ?? null,
+          offering_structure: (service as unknown as Record<string, string | null>).offering_structure ?? null,
+        }}
+        category={category ? { slug: category.slug } : null}
+        assignments={assignments}
+        projects={projects}
+      />
     </div>
   );
 }

@@ -16,24 +16,27 @@ export default async function AdminCompaniesPage() {
       slug,
       type,
       status,
-      contact_email,
-      contact_name,
       industry,
-      created_at
+      created_at,
+      contacts!contacts_company_id_fkey(full_name, email, is_primary)
     `)
     .order('name');
 
-  const companies: CompanyRow[] = (allCompanies ?? []).map((c) => ({
-    id: c.id,
-    name: c.name,
-    slug: c.slug,
-    type: (c as unknown as { type: string }).type,
-    status: c.status,
-    contact_email: c.contact_email,
-    contact_name: c.contact_name,
-    industry: c.industry,
-    created_at: c.created_at,
-  }));
+  const companies: CompanyRow[] = (allCompanies ?? []).map((c) => {
+    const contacts = (c as unknown as { contacts: Array<{ full_name: string; email: string | null; is_primary: boolean }> }).contacts ?? [];
+    const primary = contacts.find((ct) => ct.is_primary) ?? contacts[0] ?? null;
+    return {
+      id: c.id,
+      name: c.name,
+      slug: c.slug,
+      type: (c as unknown as { type: string }).type,
+      status: c.status,
+      contact_email: primary?.email ?? null,
+      contact_name: primary?.full_name ?? null,
+      industry: c.industry,
+      created_at: c.created_at,
+    };
+  });
 
   const leadCount = companies.filter((c) => c.type === 'lead').length;
   const prospectCount = companies.filter((c) => c.type === 'prospect').length;

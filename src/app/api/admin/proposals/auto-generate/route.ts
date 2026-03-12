@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getMeetingNotes, fetchMeetingNotes } from '@/lib/notion-fetch';
 import { recommendServices, type CatalogService } from '@/lib/service-recommendation';
@@ -8,7 +9,14 @@ import {
   type ServiceDetail,
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 import crypto from 'crypto';
+
+const autoGenerateSchema = z.object({
+  company_id: uuidSchema,
+  meeting_note_page_id: z.string().optional(),
+});
 
 /**
  * POST /api/admin/proposals/auto-generate
@@ -27,6 +35,9 @@ import crypto from 'crypto';
  * Returns: { proposal_id, token, slug, recommendations }
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'proposal-auto-generate', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) {
     console.error('Auto-generate: auth failed');
@@ -35,15 +46,9 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const body = await request.json();
-  const { company_id, meeting_note_page_id } = body as {
-    company_id: string;
-    meeting_note_page_id?: string;
-  };
-
-  if (!company_id) {
-    return NextResponse.json({ error: 'company_id is required' }, { status: 400 });
-  }
+  const body = await parseBody(request, autoGenerateSchema);
+  if (isValidationError(body)) return body;
+  const { company_id, meeting_note_page_id } = body;
 
   try {
     // 1. Fetch company + primary contact
@@ -59,7 +64,7 @@ export async function POST(request: Request) {
 
     const { data: contact } = await supabase
       .from('contacts')
-      .select('name, email')
+      .select('full_name, first_name, email')
       .eq('company_id', company_id)
       .eq('is_primary', true)
       .single();
@@ -154,7 +159,7 @@ export async function POST(request: Request) {
     const generationInput: ProposalGenerationInput = {
       companyName: company.name,
       companyIndustry: company.industry,
-      contactName: contact?.name || 'the team',
+      contactName: contact?.first_name || contact?.full_name || 'the team',
       meetingNotes: notesResult.content,
       services: serviceDetails,
     };

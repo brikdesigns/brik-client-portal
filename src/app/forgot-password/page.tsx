@@ -1,6 +1,11 @@
+import type { Metadata } from 'next';
 import Image from 'next/image';
 import { ForgotPasswordForm } from '@/components/forgot-password-form';
 import { font, color, space, gap, border, shadow } from '@/lib/tokens';
+
+export const metadata: Metadata = {
+  title: 'Forgot Password — Brik Client Portal',
+};
 
 export default function ForgotPasswordPage() {
   return (

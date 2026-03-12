@@ -2,6 +2,7 @@
 
 import { createContext, useCallback, useContext, useState, useRef, type ReactNode } from 'react';
 import { Toast, type ToastVariant as BdsToastVariant } from '@bds/components/ui/Toast/Toast';
+import { gap } from '@/lib/tokens';
 type ToastVariant = 'neutral' | 'success' | 'error';
 
 interface ToastItem {
@@ -29,7 +30,7 @@ const containerStyles: React.CSSProperties = {
   zIndex: 9999,
   display: 'flex',
   flexDirection: 'column',
-  gap: 'var(--gap-sm)',
+  gap: gap.sm,
   pointerEvents: 'none',
 };
 

@@ -1,16 +1,36 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
+import { parseBody, isValidationError } from '@/lib/validation';
 
-interface ProposalItem {
-  id?: string;
-  service_id?: string;
-  name: string;
-  description?: string;
-  quantity?: number;
-  unit_price_cents: number;
-  sort_order?: number;
-}
+const proposalItemSchema = z.object({
+  id: z.string().optional(),
+  service_id: z.string().uuid().optional(),
+  name: z.string().min(1),
+  description: z.string().optional(),
+  quantity: z.number().int().positive().optional(),
+  unit_price_cents: z.number().int(),
+  sort_order: z.number().int().optional(),
+});
+
+const sectionSchema = z.object({
+  type: z.string(),
+  title: z.string(),
+  content: z.string().nullable(),
+  sort_order: z.number().int(),
+});
+
+const patchProposalSchema = z.object({
+  title: z.string().optional(),
+  valid_until: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  sections: z.array(sectionSchema).optional(),
+  meeting_notes_url: z.string().nullable().optional(),
+  meeting_notes_content: z.string().nullable().optional(),
+  total_amount_cents: z.number().int().optional(),
+  items: z.array(proposalItemSchema).optional(),
+});
 
 export async function PATCH(
   request: Request,
@@ -22,21 +42,13 @@ export async function PATCH(
 
   const supabase = await createClient();
 
-  const body = await request.json();
+  const body = await parseBody(request, patchProposalSchema);
+  if (isValidationError(body)) return body;
   const {
     title, valid_until, notes, sections,
     meeting_notes_url, meeting_notes_content,
     total_amount_cents, items,
-  } = body as {
-    title?: string;
-    valid_until?: string | null;
-    notes?: string | null;
-    sections?: Array<{ type: string; title: string; content: string | null; sort_order: number }>;
-    meeting_notes_url?: string | null;
-    meeting_notes_content?: string | null;
-    total_amount_cents?: number;
-    items?: ProposalItem[];
-  };
+  } = body;
 
   // Update proposal fields
   const updates: Record<string, unknown> = {};

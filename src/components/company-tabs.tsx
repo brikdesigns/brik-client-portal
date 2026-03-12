@@ -17,10 +17,11 @@ const tabStyle = (active: boolean) => ({
   color: active ? color.text.brand : color.text.muted,
   textDecoration: 'none' as const,
   padding: `${gap.sm} 0`,
-  borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
-  cursor: 'pointer' as const,
   background: 'none',
   border: 'none',
+  borderBottom: active ? `${border.width.lg} solid ${color.text.brand}` : `${border.width.lg} solid transparent`,
+  marginBottom: `calc(-1 * ${border.width.md})`,
+  cursor: 'pointer' as const,
 });
 
 export function CompanyTabs() {
@@ -33,7 +34,7 @@ export function CompanyTabs() {
       style={{
         display: 'flex',
         gap: gap.xl,
-        borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+        borderBottom: `${border.width.md} solid ${color.border.muted}`,
         marginBottom: '0',
       }}
     >

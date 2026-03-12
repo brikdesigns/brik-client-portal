@@ -54,14 +54,17 @@ export default async function ProposalsPage() {
       <DataTable
           data={allProposals}
           rowKey={(p) => p.id}
-          emptyMessage="No proposals yet."
+          emptyMessage="No proposals yet"
+          emptyDescription="Proposals are created from a company's detail page."
+          emptyAction={{ label: 'View Companies', href: '/admin/companies' }}
           columns={[
             {
               header: 'Client',
               accessor: (p) => (
                 <a
+                  className="cell-link"
                   href={`/admin/companies/${p.companies.slug}`}
-                  style={{ color: color.text.primary, textDecoration: 'none', fontWeight: font.weight.medium }}
+                  style={{ fontWeight: font.weight.medium }}
                 >
                   {p.companies.name}
                 </a>
@@ -71,8 +74,8 @@ export default async function ProposalsPage() {
               header: 'Title',
               accessor: (p) => (
                 <a
+                  className="cell-link"
                   href={`/admin/companies/${p.companies.slug}/proposals/${p.id}`}
-                  style={{ color: color.system.link, textDecoration: 'none' }}
                 >
                   {p.title}
                 </a>

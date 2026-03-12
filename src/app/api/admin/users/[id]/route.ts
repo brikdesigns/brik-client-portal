@@ -1,6 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
+import { parseBody, isValidationError, emailSchema } from '@/lib/validation';
+
+const updateUserSchema = z.object({
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  email: emailSchema.optional(),
+  role: z.enum(['super_admin', 'client']).optional(),
+  is_active: z.boolean().optional(),
+  company_id: z.string().uuid().optional().nullable(),
+});
 
 export async function PATCH(
   request: Request,
@@ -8,10 +19,12 @@ export async function PATCH(
 ) {
   try {
     const { id } = await context.params;
-    const body = await request.json();
 
     const auth = await requireAdmin();
     if (isAuthError(auth)) return auth;
+
+    const body = await parseBody(request, updateUserSchema);
+    if (isValidationError(body)) return body;
 
     const supabase = await createClient();
 

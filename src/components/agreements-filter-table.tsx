@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
@@ -96,15 +95,16 @@ export function AgreementsFilterTable({
       <DataTable
         data={filtered}
         rowKey={(a) => a.id}
-        emptyMessage="No agreements match your filters."
+        emptyMessage="No agreements match your filters"
+        emptyDescription="Try adjusting your filters to see more results."
         columns={[
           {
             header: 'Client',
             accessor: (a) =>
               a.company ? (
-                <TextLink href={`/admin/companies/${a.company.slug}`} size="small">
+                <a className="cell-link" href={`/admin/companies/${a.company.slug}`}>
                   {a.company.name}
-                </TextLink>
+                </a>
               ) : (
                 '—'
               ),
@@ -117,7 +117,7 @@ export function AgreementsFilterTable({
           },
           {
             header: 'Type',
-            accessor: (a) => <Tag>{typeLabel(a.type)}</Tag>,
+            accessor: (a) => <Tag size="sm">{typeLabel(a.type)}</Tag>,
           },
           {
             header: 'Status',

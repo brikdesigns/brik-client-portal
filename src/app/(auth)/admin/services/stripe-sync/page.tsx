@@ -244,7 +244,7 @@ export default function StripeSyncPage() {
                     fontFamily: font.family.body,
                     fontSize: font.size.body.sm,
                     fontWeight: font.weight.medium,
-                    color: 'var(--services--green-dark)',
+                    color: color.text.success,
                     margin: 0,
                   }}
                 >

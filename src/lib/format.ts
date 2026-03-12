@@ -31,8 +31,7 @@ export function formatIndustry(industry: string | null): string {
  */
 const CONTACT_ROLE_LABELS: Record<string, string> = {
   owner: 'Owner',
-  admin: 'Admin',
-  manager: 'Manager',
+  office_manager: 'Office Manager',
   team_member: 'Team Member',
 };
 

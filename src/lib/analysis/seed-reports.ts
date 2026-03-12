@@ -465,8 +465,6 @@ function generateScoredOpportunities(
   issues: WebsiteCheckResult[],
   unscored: WebsiteCheckResult[],
 ): string {
-  const sentences: string[] = [];
-
   const scored = results.filter((r) => r.score !== null);
   if (scored.length === 0) {
     return 'Analysis is pending — run the report to generate insights.';
@@ -476,73 +474,40 @@ function generateScoredOpportunities(
   const maxPossible = scored.length * 5;
   const pct = Math.round((totalScore / maxPossible) * 100);
 
-  // Opening — contextualize the score (guide helping hero understand their position)
-  if (pct >= 80) {
-    sentences.push(
-      `Scoring ${totalScore}/${maxPossible} (${pct}%) puts you in strong shape overall.`,
-    );
-  } else if (pct >= 60) {
-    sentences.push(
-      `At ${totalScore}/${maxPossible} (${pct}%), you have a solid foundation with clear room to improve.`,
-    );
-  } else if (pct >= 40) {
-    sentences.push(
-      `Scoring ${totalScore}/${maxPossible} (${pct}%) tells us there are meaningful gaps that may be costing you visibility or credibility with potential clients.`,
-    );
-  } else {
-    sentences.push(
-      `At ${totalScore}/${maxPossible} (${pct}%), there are significant areas to address — but this also means there's a lot of low-hanging fruit where improvements will make an immediate impact.`,
-    );
-  }
+  // Build a concise 2-3 sentence summary that synthesizes the audit
+  // into what it means for the client — not a category-by-category rehash.
 
-  // Strengths — acknowledge what's working (StoryBrand: hero has existing strengths)
   const strong = results.filter((r) => r.score !== null && r.score >= 4);
-  if (strong.length > 0) {
-    if (strong.length <= 3) {
-      sentences.push(
-        `Your strongest areas are ${strong.map((r) => r.category).join(' and ')} — these are working well and worth maintaining.`,
-      );
-    } else {
-      sentences.push(
-        `You're strong across ${strong.length} categories including ${strong.slice(0, 3).map((r) => r.category).join(', ')}.`,
-      );
-    }
+  const weak = issues.sort((a, b) => (a.score ?? 0) - (b.score ?? 0));
+  const topWeakNames = weak.slice(0, 3).map((r) => r.category.toLowerCase());
+
+  // Sentence 1: Overall position framed as context, not a grade
+  let opening: string;
+  if (pct >= 80) {
+    opening = `Your overall score of ${totalScore}/${maxPossible} reflects a strong foundation${strong.length > 0 ? `, especially in ${strong.slice(0, 2).map((r) => r.category.toLowerCase()).join(' and ')}` : ''}.`;
+  } else if (pct >= 60) {
+    opening = `At ${totalScore}/${maxPossible}, you have a solid base to build on${strong.length > 0 ? ` — ${strong.slice(0, 2).map((r) => r.category.toLowerCase()).join(' and ')} ${strong.length === 1 ? 'is' : 'are'} already working in your favor` : ''}.`;
+  } else if (pct >= 40) {
+    opening = `Scoring ${totalScore}/${maxPossible} means there are gaps that may be affecting how potential clients perceive you online${strong.length > 0 ? `, though ${strong.slice(0, 2).map((r) => r.category.toLowerCase()).join(' and ')} ${strong.length === 1 ? 'shows' : 'show'} real strength` : ''}.`;
+  } else {
+    opening = `At ${totalScore}/${maxPossible}, there's significant room to grow — but that also means even small improvements will make a noticeable difference.`;
   }
 
-  // Issues — frame as specific, solvable problems (Sandler: name the pain, then the plan)
-  if (issues.length > 0) {
-    const issueDetails = issues.map((r) => {
-      const feedback = r.feedback_summary?.replace(/\.$/, '') ?? '';
-      return feedback
-        ? `${r.category} (${r.score}/5) — ${feedback}`
-        : `${r.category} (${r.score}/5)`;
-    });
-
-    if (issues.length <= 2) {
-      sentences.push(
-        `The areas that need the most attention: ${issueDetails.join('; ')}. These are the kind of improvements that directly affect how patients or clients perceive you online.`,
-      );
-    } else {
-      sentences.push(
-        `Several areas need attention: ${issueDetails.join('; ')}. We'd recommend prioritizing the lowest-scoring categories first for the biggest impact.`,
-      );
-    }
+  // Sentence 2: What matters most — the highest-impact areas to address
+  let focus: string;
+  if (topWeakNames.length === 0) {
+    focus = 'No major issues stood out — maintaining what you have and refining the details will keep you ahead.';
+  } else if (topWeakNames.length === 1) {
+    focus = `The biggest opportunity is ${topWeakNames[0]}, which is where focused effort would have the most visible impact on how clients experience your brand.`;
+  } else {
+    focus = `The biggest opportunities are in ${topWeakNames.slice(0, -1).join(', ')} and ${topWeakNames[topWeakNames.length - 1]} — these are the areas where improvements would be most visible to potential clients.`;
   }
 
-  // Mid-range — the "good but not great" areas are easy wins
-  const midRange = results.filter((r) => r.score !== null && r.score === 3);
-  if (midRange.length > 0 && issues.length > 0) {
-    sentences.push(
-      `${midRange.map((r) => r.category).join(' and ')} scored average (3/5) — small improvements here could move the needle without major effort.`,
-    );
-  }
-
-  // Unverified
+  // Sentence 3 (conditional): Unscored items need a manual look
   if (unscored.length > 0) {
-    sentences.push(
-      `${unscored.map((r) => r.category).join(' and ')} couldn't be auto-verified and ${unscored.length === 1 ? 'needs' : 'need'} a quick manual check to complete the picture.`,
-    );
+    const unscoredNames = unscored.map((r) => r.category.toLowerCase()).join(' and ');
+    return `${opening} ${focus} We couldn't auto-verify ${unscoredNames}, so a quick manual review would complete the picture.`;
   }
 
-  return sentences.join(' ');
+  return `${opening} ${focus}`;
 }

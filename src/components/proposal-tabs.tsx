@@ -4,15 +4,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { font, color, gap, border } from '@/lib/tokens';
 
 const tabs = [
-  { label: 'Overview', value: 'overview' },
-  { label: 'Companies', value: 'companies' },
-  { label: 'Activity', value: 'activity' },
+  { label: 'Proposal', value: 'proposal' },
+  { label: 'Signature', value: 'signature' },
 ];
 
-export function ContactTabs({ contactId }: { contactId: string }) {
+export function ProposalTabs({ companySlug, proposalId }: { companySlug: string; proposalId: string }) {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const activeTab = searchParams.get('tab') ?? 'overview';
+  const activeTab = searchParams.get('tab') ?? 'proposal';
 
   const tabStyle = (active: boolean) => ({
     fontFamily: font.family.label,
@@ -21,10 +20,11 @@ export function ContactTabs({ contactId }: { contactId: string }) {
     color: active ? color.text.brand : color.text.muted,
     textDecoration: 'none' as const,
     padding: `${gap.sm} 0`,
-    borderBottom: active ? `2px solid ${color.text.brand}` : '2px solid transparent',
-    cursor: 'pointer' as const,
     background: 'none',
     border: 'none',
+    borderBottom: active ? `${border.width.lg} solid ${color.text.brand}` : `${border.width.lg} solid transparent`,
+    marginBottom: `calc(-1 * ${border.width.md})`,
+    cursor: 'pointer' as const,
   });
 
   return (
@@ -32,7 +32,7 @@ export function ContactTabs({ contactId }: { contactId: string }) {
       style={{
         display: 'flex',
         gap: gap.xl,
-        borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+        borderBottom: `${border.width.md} solid ${color.border.muted}`,
         marginBottom: '0',
       }}
     >
@@ -41,7 +41,7 @@ export function ContactTabs({ contactId }: { contactId: string }) {
           key={t.value}
           style={tabStyle(activeTab === t.value)}
           onClick={() => {
-            router.push(`/admin/contacts/${contactId}?tab=${t.value}`);
+            router.push(`/admin/companies/${companySlug}/proposals/${proposalId}?tab=${t.value}`);
           }}
         >
           {t.label}

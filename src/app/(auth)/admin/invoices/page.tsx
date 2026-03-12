@@ -1,67 +1,43 @@
 import { createClient } from '@/lib/supabase/server';
 
-import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { PageHeader } from '@/components/page-header';
-import { BillingTabs } from '@/components/billing-tabs';
-import { InvoicesFilterTable, type InvoiceRow } from '@/components/invoices-filter-table';
-import { AgreementsFilterTable, type AgreementRow } from '@/components/agreements-filter-table';
-import { formatCurrency } from '@/lib/format';
-import { space } from '@/lib/tokens';
+import { BillingTabContent } from '@/components/billing-tab-content';
+import type { InvoiceRow } from '@/components/invoices-filter-table';
+import type { AgreementRow } from '@/components/agreements-filter-table';
 
-interface Props {
-  searchParams: Promise<{ tab?: string }>;
-}
-
-export default async function AdminInvoicesPage({ searchParams }: Props) {
-  const { tab: tabFilter } = await searchParams;
+export default async function AdminInvoicesPage() {
   const supabase = await createClient();
 
-  const { data: invoices } = await supabase
-    .from('invoices')
-    .select(`
-      id, description, amount_cents, currency, status,
-      invoice_date, due_date, paid_at, invoice_url,
-      companies(id, name, slug)
-    `)
-    .order('created_at', { ascending: false });
+  const [{ data: invoices }, { data: agreements }] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select(`
+        id, description, amount_cents, currency, status,
+        invoice_date, due_date, paid_at, invoice_url,
+        companies(id, name, slug)
+      `)
+      .order('created_at', { ascending: false }),
+    supabase
+      .from('agreements')
+      .select(`
+        id, type, title, status, token, created_at,
+        signed_at, signed_by_name,
+        companies(id, name, slug)
+      `)
+      .order('created_at', { ascending: false }),
+  ]);
 
-  const { data: agreements } = await supabase
-    .from('agreements')
-    .select(`
-      id, type, title, status, token, created_at,
-      signed_at, signed_by_name,
-      companies(id, name, slug)
-    `)
-    .order('created_at', { ascending: false });
-
-  const allInvoices = invoices ?? [];
-  const allAgreements = agreements ?? [];
-
-  // Invoice stats
-  const openInvoices = allInvoices.filter((i) => i.status === 'open');
-  const paidInvoices = allInvoices.filter((i) => i.status === 'paid');
-  const totalOpen = openInvoices.reduce((sum, i) => sum + i.amount_cents, 0);
-
-  // Agreement stats
-  const pendingAgreements = allAgreements.filter((a) => a.status === 'sent' || a.status === 'viewed');
-  const signedAgreements = allAgreements.filter((a) => a.status === 'signed');
-
-  const activeTab = tabFilter === 'agreements' ? 'agreements' : 'invoices';
-  const showInvoices = activeTab === 'invoices';
-  const showAgreements = activeTab === 'agreements';
-
-  // Transform for client components
-  const invoiceRows: InvoiceRow[] = allInvoices.map((inv) => ({
+  const invoiceRows: InvoiceRow[] = (invoices ?? []).map((inv) => ({
     ...inv,
     company: inv.companies as unknown as { id: string; name: string; slug: string } | null,
   }));
 
-  const agreementRows: AgreementRow[] = allAgreements.map((a) => ({
+  const agreementRows: AgreementRow[] = (agreements ?? []).map((a) => ({
     ...a,
     company: a.companies as unknown as { id: string; name: string; slug: string } | null,
   }));
 
-  // Build client filter options from both invoices and agreements
+  // Build client filter options from both
   const clientMap = new Map<string, string>();
   invoiceRows.forEach((inv) => {
     if (inv.company) clientMap.set(inv.company.id, inv.company.name);
@@ -75,47 +51,12 @@ export default async function AdminInvoicesPage({ searchParams }: Props) {
 
   return (
     <div>
-      <PageHeader
-        title="Billing"
-        subtitle={
-          showInvoices
-            ? `${allInvoices.length} invoices across all clients.`
-            : `${allAgreements.length} agreements across all clients.`
-        }
-        tabs={<BillingTabs />}
+      <PageHeader title="Billing" />
+      <BillingTabContent
+        invoices={invoiceRows}
+        agreements={agreementRows}
+        clientOptions={clientOptions}
       />
-
-      {/* Stats */}
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-          gap: space.md,
-          marginBottom: space.lg,
-        }}
-      >
-        {showInvoices ? (
-          <>
-            <CardSummary label="Open" value={`${openInvoices.length} (${formatCurrency(totalOpen)})`} />
-            <CardSummary label="Paid" value={paidInvoices.length} />
-            <CardSummary label="Total" value={allInvoices.length} />
-          </>
-        ) : (
-          <>
-            <CardSummary label="Pending" value={pendingAgreements.length} />
-            <CardSummary label="Signed" value={signedAgreements.length} />
-            <CardSummary label="Total" value={allAgreements.length} />
-          </>
-        )}
-      </div>
-
-      {showInvoices && (
-        <InvoicesFilterTable invoices={invoiceRows} clientOptions={clientOptions} />
-      )}
-
-      {showAgreements && (
-        <AgreementsFilterTable agreements={agreementRows} clientOptions={clientOptions} />
-      )}
     </div>
   );
 }

@@ -1,8 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
 import { type WebsiteCheckResult } from '@/lib/analysis/website';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+
+const refreshSchema = z.object({
+  report_id: uuidSchema,
+});
 
 /**
  * POST /api/admin/reporting/refresh-opportunities
@@ -15,11 +21,9 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const { report_id } = await request.json() as { report_id: string };
-
-  if (!report_id) {
-    return NextResponse.json({ error: 'report_id is required' }, { status: 400 });
-  }
+  const body = await parseBody(request, refreshSchema);
+  if (isValidationError(body)) return body;
+  const { report_id } = body;
 
   // Fetch all items for this report
   const { data: items } = await supabase

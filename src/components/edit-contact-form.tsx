@@ -16,8 +16,7 @@ const iconSize = { width: 14, height: 14 };
 
 const roleOptions = [
   { label: 'Owner', value: 'owner' },
-  { label: 'Admin', value: 'admin' },
-  { label: 'Manager', value: 'manager' },
+  { label: 'Office Manager', value: 'office_manager' },
   { label: 'Team Member', value: 'team_member' },
 ];
 

@@ -9,7 +9,7 @@ import { SignOutButton } from '@/components/sign-out-button';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { ClientSwitcher } from '@/components/client-switcher';
 import { clearCurrentClientIdInBrowser } from '@/lib/current-client-browser';
-import { font, color, gap } from '@/lib/tokens';
+import { gap } from '@/lib/tokens';
 
 const adminNavItems = [
   { label: 'Overview', href: '/admin' },
@@ -31,7 +31,6 @@ const clientNavItems = [
 interface PortalSidebarProps {
   role: 'admin' | 'client';
   userId: string;
-  userName: string;
   isAdmin?: boolean;
   clients?: Array<{ id: string; name: string }>;
   currentClientId?: string | null;
@@ -40,7 +39,6 @@ interface PortalSidebarProps {
 export function PortalSidebar({
   role,
   userId,
-  userName,
   isAdmin = false,
   clients = [],
   currentClientId,
@@ -62,7 +60,6 @@ export function PortalSidebar({
   }));
 
   function handleViewAsClient() {
-    // Clear stale cookie — dashboard will auto-select first available company
     clearCurrentClientIdInBrowser();
     window.location.href = '/dashboard';
   }
@@ -124,28 +121,20 @@ export function PortalSidebar({
           </div>
         }
         userSection={
-          <>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: gap.sm }}>
             <Link
               href={role === 'admin' ? `/admin/users/${userId}` : `/dashboard/profile`}
-              style={{
-                fontFamily: font.family.body,
-                fontSize: font.size.body.xs,
-                color: color.text.secondary,
-                margin: `0 0 ${gap.xs}`,
-                overflow: 'hidden',
-                textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
-                textDecoration: 'none',
-                display: 'block',
-              }}
+              style={{ textDecoration: 'none', display: 'block' }}
             >
-              {userName}
+              <Button variant="secondary" size="sm" style={{ width: '100%' }}>
+                Account Settings
+              </Button>
             </Link>
-            <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
+            <div style={{ display: 'flex', alignItems: 'stretch', gap: gap.xs }}>
               <SignOutButton />
               <ThemeToggle />
             </div>
-          </>
+          </div>
         }
       />
     </>

@@ -1,16 +1,26 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendProjectUpdateEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, uuidSchema, nonEmptyString } from '@/lib/validation';
+import { rateLimitOrNull, ADMIN_EMAIL_LIMIT } from '@/lib/rate-limit';
+
+const projectUpdateSchema = z.object({
+  project_id: uuidSchema,
+  update_message: nonEmptyString,
+});
 
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'email-project-update', ADMIN_EMAIL_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const { project_id, update_message } = await request.json();
-  if (!project_id || !update_message) {
-    return NextResponse.json({ error: 'project_id and update_message are required' }, { status: 400 });
-  }
+  const body = await parseBody(request, projectUpdateSchema);
+  if (isValidationError(body)) return body;
+  const { project_id, update_message } = body;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

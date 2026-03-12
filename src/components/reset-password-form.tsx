@@ -41,6 +41,13 @@ export function ResetPasswordForm() {
         return;
       }
 
+      // Record password reset event
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ event_type: 'password_reset' }),
+      }).catch(() => {});
+
       router.push('/dashboard');
       router.refresh();
     } catch {

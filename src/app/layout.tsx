@@ -3,10 +3,14 @@ import { config } from '@fortawesome/fontawesome-svg-core';
 import '@fortawesome/fontawesome-svg-core/styles.css';
 import { poppins } from '@/lib/fonts';
 import { BDSProvider } from '@/components/bds-provider';
+import { validateEnv } from '@/lib/env';
 import './globals.css';
 
 // Prevent FA from injecting CSS at runtime — we import it above so it's SSR'd
 config.autoAddCss = false;
+
+// Fail fast if critical env vars are missing
+validateEnv();
 
 export const metadata: Metadata = {
   title: 'Brik Client Portal',

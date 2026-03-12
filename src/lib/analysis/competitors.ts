@@ -7,7 +7,7 @@
  *
  * Matches the Notion "Competitors Analysis" database schema:
  * - Website Score (out of 50) — from running analyzeWebsite() on their site
- * - Listings/Reviews Score (out of 7) — count of platforms they're listed on
+ * - Listings/Reviews Score (out of 5) — count of platforms they're listed on
  * - Distance, Services Offered, competitor name in metadata
  */
 
@@ -71,11 +71,11 @@ export async function analyzeCompetitors(
   }
 
   // Step 2: Find nearby competitors
-  const placeType = industryToPlaceType(industry);
+  const searchParams = industryToPlaceSearch(industry);
   const competitors = await findNearbyCompetitors(
     coords.lat,
     coords.lng,
-    placeType,
+    searchParams,
     clientName,
     apiKey,
   );
@@ -135,19 +135,19 @@ export async function analyzeCompetitors(
     const listingsScore = 1;
     const listingsExplanation = `Confirmed on Google Maps (${competitor.rating ?? 'N/A'} rating, ${competitor.totalReviews ?? 0} reviews).`;
 
-    // Combined score: website (/50) + listings (/7) = /57 per competitor
+    // Combined score: website (/50) + listings (/5) = /55 per competitor
     const combinedScore = websiteScore !== null ? websiteScore + listingsScore : null;
 
     results.push({
       category: slotLabel,
       status: websiteScore !== null ? 'pass' : 'neutral',
       score: combinedScore,
-      feedback_summary: `${competitor.name}: Website ${websiteScore ?? '?'}/50, Listings ${listingsScore}/7.`,
+      feedback_summary: `${competitor.name}: Website ${websiteScore ?? '?'}/50, Listings ${listingsScore}/5.`,
       notes: null,
       metadata: {
         competitor_name: competitor.name,
         distance: distanceMi,
-        services_offered: details.types?.join(', ') ?? '',
+        services_offered: humanizeTypes(details.types),
         website_score: websiteScore,
         website_score_explanation: websiteExplanation,
         listings_reviews_score: listingsScore,
@@ -207,16 +207,19 @@ interface NearbyCompetitor {
 async function findNearbyCompetitors(
   lat: number,
   lng: number,
-  type: string,
+  search: PlaceSearchParams,
   excludeName: string,
   apiKey: string,
 ): Promise<NearbyCompetitor[]> {
   const params = new URLSearchParams({
     location: `${lat},${lng}`,
     radius: '16093', // ~10 miles in meters
-    type,
+    type: search.type,
     key: apiKey,
   });
+  if (search.keyword) {
+    params.set('keyword', search.keyword);
+  }
 
   try {
     const res = await fetch(
@@ -297,12 +300,82 @@ async function getPlaceDetails(placeId: string, apiKey: string): Promise<PlaceDe
 
 // ── Helpers ──────────────────────────────────────────────────────────
 
-function industryToPlaceType(industry: Industry): string {
+interface PlaceSearchParams {
+  type: string;
+  keyword?: string;
+}
+
+function industryToPlaceSearch(industry: Industry): PlaceSearchParams {
   switch (industry) {
-    case 'dental': return 'dentist';
-    case 'real-estate': return 'real_estate_agency';
-    default: return 'establishment';
+    case 'dental': return { type: 'dentist', keyword: 'dentist dental' };
+    case 'commercial-real-estate': return { type: 'real_estate_agency', keyword: 'commercial real estate broker property investment' };
+    default: return { type: 'establishment' };
   }
+}
+
+/** Google Places types that are generic / not meaningful to display */
+const GENERIC_PLACE_TYPES = new Set([
+  'establishment',
+  'point_of_interest',
+  'political',
+  'locality',
+  'sublocality',
+  'neighborhood',
+  'premise',
+  'street_address',
+  'route',
+  'postal_code',
+  'country',
+  'administrative_area_level_1',
+  'administrative_area_level_2',
+  'food',
+  'store',
+  'health',
+]);
+
+/** Map raw Google Places types to human-readable labels */
+const TYPE_LABELS: Record<string, string> = {
+  real_estate_agency: 'Real estate brokerage',
+  real_estate_agent: 'Real estate agent',
+  general_contractor: 'General contractor',
+  insurance_agency: 'Insurance',
+  lawyer: 'Law firm',
+  accounting: 'Accounting',
+  finance: 'Financial services',
+  bank: 'Banking',
+  mortgage_broker: 'Mortgage broker',
+  property_management: 'Property management',
+  dentist: 'Dentist',
+  dental_clinic: 'Dental clinic',
+  doctor: 'Doctor',
+  hospital: 'Hospital',
+  physiotherapist: 'Physical therapy',
+  veterinary_care: 'Veterinary',
+  restaurant: 'Restaurant',
+  lodging: 'Lodging',
+  gym: 'Gym',
+  beauty_salon: 'Beauty salon',
+  hair_care: 'Hair salon',
+  spa: 'Spa',
+  car_dealer: 'Auto dealer',
+  car_repair: 'Auto repair',
+  moving_company: 'Moving company',
+  plumber: 'Plumber',
+  electrician: 'Electrician',
+  roofing_contractor: 'Roofing',
+  painter: 'Painter',
+  home_goods_store: 'Home goods',
+  furniture_store: 'Furniture',
+};
+
+/** Filter and humanize Google Places types for display */
+function humanizeTypes(types: string[] | null): string {
+  if (!types || types.length === 0) return '';
+  const meaningful = types
+    .filter((t) => !GENERIC_PLACE_TYPES.has(t))
+    .map((t) => TYPE_LABELS[t] ?? t.replace(/_/g, ' '))
+    .slice(0, 3); // max 3 labels to keep it scannable
+  return meaningful.join(', ');
 }
 
 /** Haversine distance in meters between two lat/lng pairs */

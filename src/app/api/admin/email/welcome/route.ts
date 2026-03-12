@@ -1,17 +1,24 @@
 import { NextResponse } from 'next/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
 import { sendWelcomeToBrikEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, ADMIN_EMAIL_LIMIT } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
+const welcomeEmailSchema = z.object({ contact_id: uuidSchema });
+
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'email-welcome', ADMIN_EMAIL_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
-  const { contact_id } = await request.json();
-  if (!contact_id) {
-    return NextResponse.json({ error: 'contact_id is required' }, { status: 400 });
-  }
+  const body = await parseBody(request, welcomeEmailSchema);
+  if (isValidationError(body)) return body;
+  const { contact_id } = body;
 
   const serviceClient = createServiceClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

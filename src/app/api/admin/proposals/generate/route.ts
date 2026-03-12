@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getMeetingNotes, searchMeetingByClientName } from '@/lib/notion-fetch';
 import {
@@ -7,6 +8,14 @@ import {
   type ServiceDetail,
   type ProposalGenerationInput,
 } from '@/lib/proposal-generation';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
+
+const generateSchema = z.object({
+  company_id: uuidSchema,
+  meeting_notes_url: z.string().url().optional(),
+  service_ids: z.array(z.string().uuid()).min(1, 'At least one service_id is required'),
+});
 
 /**
  * POST /api/admin/proposals/generate
@@ -17,6 +26,9 @@ import {
  * Returns: { sections, meeting_notes_content, meeting_notes_url }
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'proposal-generate', AI_GENERATION_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) {
     console.error('Proposal generate: auth failed');
@@ -25,19 +37,9 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const body = await request.json();
-  const { company_id, meeting_notes_url, service_ids } = body as {
-    company_id: string;
-    meeting_notes_url?: string;
-    service_ids: string[];
-  };
-
-  if (!company_id || !service_ids || service_ids.length === 0) {
-    return NextResponse.json(
-      { error: 'company_id and at least one service_id are required' },
-      { status: 400 }
-    );
-  }
+  const body = await parseBody(request, generateSchema);
+  if (isValidationError(body)) return body;
+  const { company_id, meeting_notes_url, service_ids } = body;
 
   try {
     // 1. Fetch company + primary contact
@@ -53,7 +55,7 @@ export async function POST(request: Request) {
 
     const { data: contact } = await supabase
       .from('contacts')
-      .select('name, email')
+      .select('full_name, first_name, email')
       .eq('company_id', company_id)
       .eq('is_primary', true)
       .single();
@@ -109,7 +111,7 @@ export async function POST(request: Request) {
     const generationInput: ProposalGenerationInput = {
       companyName: company.name,
       companyIndustry: company.industry,
-      contactName: contact?.name || 'the team',
+      contactName: contact?.first_name || contact?.full_name || 'the team',
       meetingNotes: notesResult.content,
       services: serviceDetails,
     };

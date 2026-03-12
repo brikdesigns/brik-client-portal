@@ -54,12 +54,18 @@ export function LoginForm() {
           .eq('id', authData.user.id)
           .single();
 
-        // Track login timestamp (fire-and-forget)
-        supabase
-          .from('profiles')
-          .update({ last_login_at: new Date().toISOString() })
-          .eq('id', authData.user.id)
-          .then();
+        // Track login: update timestamp + record activity event (await before navigating)
+        await Promise.all([
+          supabase
+            .from('profiles')
+            .update({ last_login_at: new Date().toISOString() })
+            .eq('id', authData.user.id),
+          fetch('/api/activity', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ event_type: 'login' }),
+          }).catch(() => {}),
+        ]);
 
         router.push(profile?.role === 'super_admin' ? '/admin' : '/dashboard');
       } else {

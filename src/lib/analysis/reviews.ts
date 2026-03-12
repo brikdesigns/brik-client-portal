@@ -6,7 +6,7 @@
  * - Yelp: Yelp Fusion API (business search)
  * - Apple Maps: Google Places as proxy (if on Google, almost certainly
  *   on Apple Maps too) with a direct Apple Maps link
- * - Healthgrades, WebMD, Vitals, Facebook: Serper.dev (Google Search API)
+ * - WebMD, Facebook: Serper.dev (Google Search API)
  *   for site-scoped searches. 2,500 free queries, no credit card.
  *   Falls back to manual verification links when not configured.
  *
@@ -39,9 +39,7 @@ export async function analyzeReviews(
         case 'Yelp':
           result = await analyzeYelp(clientName, address);
           break;
-        case 'Healthgrades':
         case 'WebMD':
-        case 'Vitals':
         case 'Facebook':
           result = await analyzeViaSiteSearch(platform, clientName, address);
           break;
@@ -234,9 +232,7 @@ async function analyzeYelp(
 // ── Serper.dev (Google Search API) for platforms without native APIs ─────
 
 const PLATFORM_DOMAINS: Record<string, string> = {
-  'Healthgrades': 'healthgrades.com',
   'WebMD': 'doctor.webmd.com',
-  'Vitals': 'vitals.com',
   'Facebook': 'facebook.com',
   'Zillow': 'zillow.com',
   'Realtor.com': 'realtor.com',
@@ -607,9 +603,7 @@ function buildPlatformSearchUrl(platform: string, name: string, address: string 
   const query = encodeURIComponent(name + (address ? ' ' + address : ''));
 
   const urls: Record<string, string> = {
-    'Healthgrades': `https://www.healthgrades.com/search?query=${encodeURIComponent(name)}`,
     'WebMD': `https://doctor.webmd.com/results?query=${encodeURIComponent(name)}`,
-    'Vitals': `https://www.vitals.com/search?q=${encodeURIComponent(name)}`,
     'Facebook': `https://www.facebook.com/search/pages/?q=${encodeURIComponent(name)}`,
     'Apple Maps': `https://maps.apple.com/?q=${query}`,
     'Zillow': `https://www.zillow.com/professionals/${encodeURIComponent(name.toLowerCase().replace(/\s+/g, '-'))}`,

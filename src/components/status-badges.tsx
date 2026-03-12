@@ -9,6 +9,7 @@ import {
   faCircleXmark,
   faPencil,
   faEye,
+  faReceipt,
   faPaperPlane,
   faClock,
   faStop,
@@ -131,7 +132,7 @@ const invoiceStatusMap: Record<string, StatusConfig> = {
   open: {
     label: 'Open',
     variant: 'info',
-    icon: <FontAwesomeIcon icon={faEye} style={iconSize} />,
+    icon: <FontAwesomeIcon icon={faReceipt} style={iconSize} />,
   },
   paid: {
     label: 'Paid',
@@ -198,11 +199,6 @@ const proposalStatusMap: Record<string, StatusConfig> = {
   },
   signed: {
     label: 'Signed',
-    variant: 'positive',
-    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
-  },
-  accepted: {
-    label: 'Accepted',
     variant: 'positive',
     icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
   },
@@ -276,6 +272,7 @@ export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: 
     : companyTypeColors[type] ?? { bg: color.background.secondary, text: color.text.primary };
   return (
     <Tag
+      size="sm"
       icon={<FontAwesomeIcon icon={faUser} style={{ width: 10, height: 10 }} />}
       style={{ backgroundColor: colors.bg, color: colors.text }}
     >
@@ -288,10 +285,10 @@ export function CompanyTypeTag({ type, muted = false }: { type: string; muted?: 
 export const CompanyTypeBadge = CompanyTypeTag;
 
 export function ServiceTypeTag({ type }: { type: string }) {
-  return <Tag>{serviceTypeLabels[type] ?? type}</Tag>;
+  return <Tag size="sm">{serviceTypeLabels[type] ?? type}</Tag>;
 }
 
 export function RoleTag({ role }: { role: string }) {
-  return <Tag>{roleLabels[role] ?? role}</Tag>;
+  return <Tag size="sm">{roleLabels[role] ?? role}</Tag>;
 }
 

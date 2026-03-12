@@ -46,6 +46,12 @@ function AuthCallbackHandler() {
           if (!error) {
             // Invite users need to set a password
             if (type === 'invite') {
+              // Record invite_accepted event
+              fetch('/api/activity', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ event_type: 'invite_accepted' }),
+              }).catch(() => {});
               router.push('/reset-password');
             } else {
               router.push(next);

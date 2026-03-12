@@ -46,6 +46,7 @@ export default async function AdminOverviewPage() {
             href="/admin/companies/new"
             style={{
               backgroundColor: color.background.onColorDark,
+              color: color.text.primary,
             }}
           >
             Get started
@@ -77,7 +78,9 @@ export default async function AdminOverviewPage() {
       <DataTable
         data={recentProjects ?? []}
         rowKey={(p) => p.id}
-        emptyMessage="No projects yet. Create your first client to get started."
+        emptyMessage="No projects yet"
+        emptyDescription="Create your first client to get started."
+        emptyAction={{ label: 'Add Company', href: '/admin/companies/new' }}
         columns={[
           {
             header: 'Project',

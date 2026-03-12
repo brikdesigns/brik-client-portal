@@ -11,7 +11,7 @@ export default async function DashboardLayout({
   const authUser = await getAuthUser();
   if (!authUser) return null;
 
-  const { user, profile } = authUser;
+  const { user } = authUser;
 
   // Get current client from cookie and available clients
   const currentClientId = await getCurrentClientId(user.id);
@@ -22,7 +22,6 @@ export default async function DashboardLayout({
       <PortalSidebar
         role="client"
         userId={user.id}
-        userName={profile.full_name || user.email || 'User'}
         isAdmin={isBrikAdmin(authUser)}
         clients={clients}
         currentClientId={currentClientId}
@@ -30,7 +29,7 @@ export default async function DashboardLayout({
       <main
         style={{
           flex: 1,
-          backgroundColor: color.page.secondary,
+          backgroundColor: color.page.primary,
           padding: space.xl,
           marginLeft: '260px',
           minHeight: '100vh',

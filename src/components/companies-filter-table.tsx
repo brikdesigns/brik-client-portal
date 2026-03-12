@@ -106,7 +106,9 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
       <DataTable
           data={filtered}
           rowKey={(c) => c.id}
-          emptyMessage="No companies match your filters."
+          emptyMessage="No companies match your filters"
+          emptyDescription="Try adjusting your filters or add a new company."
+          emptyAction={{ label: 'Add Company', href: '/admin/companies/new' }}
           columns={[
             {
               header: 'Company',
@@ -119,7 +121,7 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             },
             {
               header: 'Contact',
-              accessor: (c) => c.contact_email || '—',
+              accessor: (c) => c.contact_name || '—',
               style: { color: color.text.secondary },
             },
             {

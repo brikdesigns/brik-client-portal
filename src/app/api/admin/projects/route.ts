@@ -1,7 +1,22 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { createTask } from '@/lib/clickup';
+import { parseBody, isValidationError, nonEmptyString, uuidSchema } from '@/lib/validation';
+
+const projectSchema = z.object({
+  name: nonEmptyString,
+  company_id: uuidSchema,
+  description: z.string().optional(),
+  status: z.string().optional(),
+  start_date: z.string().optional(),
+  end_date: z.string().optional(),
+  clickup_list_id: z.string().optional(),
+  clickup_assignee_id: z.number().optional(),
+  service_ids: z.array(uuidSchema).optional(),
+  company_service_id: uuidSchema.optional(),
+});
 
 function toSlug(text: string): string {
   return text
@@ -18,7 +33,8 @@ export async function POST(request: Request) {
 
   const supabase = await createClient();
 
-  const body = await request.json();
+  const body = await parseBody(request, projectSchema);
+  if (isValidationError(body)) return body;
   const {
     name,
     company_id,
@@ -28,14 +44,9 @@ export async function POST(request: Request) {
     end_date,
     clickup_list_id,
     clickup_assignee_id,
+    service_ids,
+    company_service_id,
   } = body;
-
-  if (!name || !company_id) {
-    return NextResponse.json(
-      { error: 'name and company_id are required' },
-      { status: 400 }
-    );
-  }
 
   // ── Step 1: Try to create ClickUp task ─────────────────────
   let clickupTaskId: string | null = null;
@@ -88,12 +99,20 @@ export async function POST(request: Request) {
       start_date: start_date || null,
       end_date: end_date || null,
       clickup_task_id: clickupTaskId,
+      company_service_id: company_service_id || null,
     })
     .select('id, slug')
     .single();
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 400 });
+  }
+
+  // ── Step 3: Link services to project ─────────────────────
+  if (service_ids && service_ids.length > 0 && project) {
+    await supabase
+      .from('project_services')
+      .insert(service_ids.map((sid) => ({ project_id: project.id, service_id: sid })));
   }
 
   return NextResponse.json({

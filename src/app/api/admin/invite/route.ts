@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { sendInviteEmail, logEmail } from '@/lib/email';
+import { parseBody, isValidationError, emailSchema } from '@/lib/validation';
+
+const inviteSchema = z.object({
+  email: emailSchema,
+  first_name: z.string().optional(),
+  last_name: z.string().optional(),
+  role: z.enum(['super_admin', 'client']).optional(),
+  company_id: z.string().uuid().optional().nullable(),
+});
 
 export async function POST(request: Request) {
   const auth = await requireAdmin();
@@ -9,17 +19,9 @@ export async function POST(request: Request) {
 
   const { user, profile } = auth;
 
-  // Parse request body
-  const body = await request.json();
+  const body = await parseBody(request, inviteSchema);
+  if (isValidationError(body)) return body;
   const { email, first_name, last_name, role, company_id } = body;
-
-  if (!email) {
-    return NextResponse.json({ error: 'Email is required' }, { status: 400 });
-  }
-
-  if (role && !['super_admin', 'client'].includes(role)) {
-    return NextResponse.json({ error: 'Invalid role' }, { status: 400 });
-  }
 
   // Use service role client to create the user via invite
   const serviceClient = createServiceClient(

@@ -20,8 +20,9 @@ const BRAND = {
   bgSurface: '#ffffff',
 };
 
-const LOGO_URL = 'https://portal.brikdesigns.com/images/brik-logo.png';
-const SITE_URL = 'https://portal.brikdesigns.com';
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://portal.brikdesigns.com';
+const LOGO_URL = `${BASE_URL}/images/brik-logo.png`;
+const SITE_URL = BASE_URL;
 
 const fontFamily =
   "'Poppins', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";

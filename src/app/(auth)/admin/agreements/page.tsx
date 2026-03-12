@@ -2,7 +2,6 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
-import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -70,9 +69,9 @@ export default async function AdminAgreementsPage() {
                 accessor: (a) => {
                   const client = a.companies as unknown as { id: string; name: string; slug: string } | null;
                   return client ? (
-                    <TextLink href={`/admin/companies/${client.slug}`} size="small">
+                    <a className="cell-link" href={`/admin/companies/${client.slug}`}>
                       {client.name}
-                    </TextLink>
+                    </a>
                   ) : '—';
                 },
                 style: { fontWeight: font.weight.medium },
@@ -84,7 +83,7 @@ export default async function AdminAgreementsPage() {
               },
               {
                 header: 'Type',
-                accessor: (a) => <Tag>{typeLabel(a.type)}</Tag>,
+                accessor: (a) => <Tag size="sm">{typeLabel(a.type)}</Tag>,
               },
               {
                 header: 'Status',
@@ -120,16 +119,18 @@ export default async function AdminAgreementsPage() {
         <DataTable<AgreementRow>
           data={all}
           rowKey={(a) => a.id}
-          emptyMessage="No agreements yet."
+          emptyMessage="No agreements yet"
+          emptyDescription="Agreements are created from a company's detail page."
+          emptyAction={{ label: 'View Companies', href: '/admin/companies' }}
           columns={[
             {
               header: 'Client',
               accessor: (a) => {
                 const client = a.companies as unknown as { id: string; name: string; slug: string } | null;
                 return client ? (
-                  <TextLink href={`/admin/companies/${client.slug}`} size="small">
+                  <a className="cell-link" href={`/admin/companies/${client.slug}`}>
                     {client.name}
-                  </TextLink>
+                  </a>
                 ) : '—';
               },
               style: { fontWeight: font.weight.medium },
@@ -141,7 +142,7 @@ export default async function AdminAgreementsPage() {
             },
             {
               header: 'Type',
-              accessor: (a) => <Tag>{typeLabel(a.type)}</Tag>,
+              accessor: (a) => <Tag size="sm">{typeLabel(a.type)}</Tag>,
             },
             {
               header: 'Status',

@@ -4,7 +4,7 @@ import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { formatCurrency } from '@/lib/format';
 import { text, heading } from '@/lib/styles';
-import { color, font, space, gap, border } from '@/lib/tokens';
+import { color, font, space, gap } from '@/lib/tokens';
 import type { FeeSummaryItem } from '@/lib/proposal-types';
 
 interface FeeSummaryContentProps {
@@ -20,7 +20,8 @@ export function FeeSummaryContent({ items, totalAmountCents }: FeeSummaryContent
       <DataTable
         data={sorted}
         rowKey={(item) => item.id}
-        emptyMessage="No line items."
+        emptyMessage="No line items"
+        emptyDescription="Add services to this proposal to see pricing."
         columns={[
           {
             header: '',
@@ -78,8 +79,6 @@ export function FeeSummaryContent({ items, totalAmountCents }: FeeSummaryContent
           display: 'flex',
           justifyContent: 'flex-end',
           paddingTop: space.md,
-          borderTop: `${border.width.sm} solid ${color.border.muted}`,
-          marginTop: gap.sm,
         }}
       >
         <p style={{ ...heading.section, margin: 0 }}>

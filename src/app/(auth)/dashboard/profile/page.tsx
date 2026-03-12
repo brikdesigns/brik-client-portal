@@ -41,44 +41,44 @@ export default async function ClientProfilePage() {
       <PageHeader
         title={profile.full_name || profile.email}
         subtitle={profile.full_name ? profile.email : undefined}
-        metadata={[
-          { label: 'Role', value: <RoleTag role={profile.role} /> },
-          {
-            label: 'Status',
-            value: (
-              <Badge status={profile.is_active ? 'positive' : 'warning'}>
-                {profile.is_active ? 'Active' : 'Disabled'}
-              </Badge>
-            ),
-          },
-          ...(company ? [{ label: 'Company', value: company.name }] : []),
-        ]}
       />
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
+        <div style={detail.grid}>
+          <div>
+            <p style={fieldLabelStyle}>Role</p>
+            <p style={fieldValueStyle}><RoleTag role={profile.role} /></p>
+          </div>
+          <div>
+            <p style={fieldLabelStyle}>Status</p>
+            <p style={fieldValueStyle}>
+              <Badge status={profile.is_active ? 'positive' : 'warning'}>
+                {profile.is_active ? 'Active' : 'Disabled'}
+              </Badge>
+            </p>
+          </div>
+          {company && (
+            <div>
+              <p style={fieldLabelStyle}>Company</p>
+              <p style={fieldValueStyle}>{company.name}</p>
+            </div>
+          )}
+        </div>
+        <div style={detail.grid}>
           <div>
             <p style={fieldLabelStyle}>Email</p>
             <p style={fieldValueStyle}>{profile.email}</p>
           </div>
           <div>
-            <p style={fieldLabelStyle}>Company</p>
-            <p style={fieldValueStyle}>{company?.name || '—'}</p>
-          </div>
-          <div>
             <p style={fieldLabelStyle}>Last login</p>
             <p style={fieldValueStyle}>{formatDateTime(profile.last_login_at)}</p>
           </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
             <p style={fieldLabelStyle}>Account created</p>
             <p style={fieldValueStyle}>
               {new Date(profile.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
             </p>
           </div>
-          <div />
-          <div />
         </div>
       </div>
     </div>

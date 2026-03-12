@@ -1,7 +1,14 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { getContact, getContactOpportunities, getPipelines } from '@/lib/ghl';
+import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
+import { rateLimitOrNull, EXTERNAL_SYNC_LIMIT } from '@/lib/rate-limit';
+
+const ghlSyncSchema = z.object({
+  company_id: uuidSchema,
+});
 
 /**
  * POST /api/admin/ghl-sync
@@ -13,17 +20,17 @@ import { getContact, getContactOpportunities, getPipelines } from '@/lib/ghl';
  * Pulls: contact info, tags, source, opportunity value, pipeline/stage.
  */
 export async function POST(request: Request) {
+  const limited = rateLimitOrNull(request, 'ghl-sync', EXTERNAL_SYNC_LIMIT);
+  if (limited) return limited;
+
   const auth = await requireAdmin();
   if (isAuthError(auth)) return auth;
 
   const supabase = await createClient();
 
-  const body = await request.json();
+  const body = await parseBody(request, ghlSyncSchema);
+  if (isValidationError(body)) return body;
   const { company_id } = body;
-
-  if (!company_id) {
-    return NextResponse.json({ error: 'company_id is required' }, { status: 400 });
-  }
 
   // Get company with ghl_contact_id
   const { data: company, error: companyError } = await supabase

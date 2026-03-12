@@ -21,9 +21,11 @@ export default async function ServicesPage() {
     return (
       <div>
         <PageHeader title="Services" subtitle="Select a client to view services." />
-        <Card variant="elevated" padding="lg">
-          <EmptyState>No client selected. Use the client switcher above to select a client.</EmptyState>
-        </Card>
+        <EmptyState
+          title="No client selected"
+          description="Use the client switcher above to select a client."
+          inline={false}
+        />
       </div>
     );
   }
@@ -187,9 +189,11 @@ export default async function ServicesPage() {
           })}
         </div>
       ) : (
-        <Card variant="elevated" padding="lg">
-          <EmptyState>No services yet. Contact us to get started.</EmptyState>
-        </Card>
+        <EmptyState
+          title="No services yet"
+          description="Contact us to get started with your first service."
+          inline={false}
+        />
       )}
     </div>
   );

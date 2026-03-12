@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient as createServiceClient } from '@supabase/supabase-js';
+import { rateLimitOrNull, PUBLIC_TOKEN_LIMIT } from '@/lib/rate-limit';
 
 // Public route — uses service role key to bypass RLS
 function getServiceClient() {
@@ -13,6 +14,9 @@ export async function GET(
   _request: Request,
   { params }: { params: Promise<{ token: string }> }
 ) {
+  const limited = rateLimitOrNull(_request, 'proposal-view', PUBLIC_TOKEN_LIMIT);
+  if (limited) return limited;
+
   const { token } = await params;
   const supabase = getServiceClient();
 
