@@ -7,18 +7,19 @@ import {
   regenerateSection,
   type ServiceDetail,
   type ProposalGenerationInput,
+  type GeneratedSection,
 } from '@/lib/proposal-generation';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
-// Netlify Pro: allow up to 60s for single-section AI regeneration
-export const maxDuration = 60;
-
 const SECTION_TYPES = ['overview_and_goals', 'scope_of_project', 'project_timeline', 'why_brik'] as const;
+const ALL_SECTION_TYPES = new Set(SECTION_TYPES);
 
 const sectionRegenerateSchema = z.object({
   company_id: uuidSchema,
+  proposal_id: z.string().uuid().optional(),
   meeting_notes_url: z.string().url().optional(),
+  meeting_notes_content: z.string().optional(),
   service_ids: z.array(z.string().uuid()).min(1, 'At least one service_id is required'),
   section_type: z.enum(SECTION_TYPES),
   current_content: z.string().optional(),
@@ -26,9 +27,16 @@ const sectionRegenerateSchema = z.object({
 
 /**
  * POST /api/admin/proposals/generate/section
- * Regenerate a single proposal section. Admin-only.
+ * Generate a single proposal section (1 Claude call, ~15-20s). Admin-only.
  *
- * Body: { company_id, meeting_notes_url?, service_ids, section_type, current_content? }
+ * Body: { company_id, proposal_id?, meeting_notes_content?, meeting_notes_url?, service_ids, section_type, current_content? }
+ *
+ * If proposal_id is provided, the generated section is appended to the proposal's
+ * sections array in Supabase. When all 4 AI sections are present, generation_status
+ * is set to 'completed'.
+ *
+ * If meeting_notes_content is provided, Notion fetch is skipped (faster).
+ *
  * Returns: { section }
  */
 export async function POST(request: Request) {
@@ -42,7 +50,7 @@ export async function POST(request: Request) {
 
   const body = await parseBody(request, sectionRegenerateSchema);
   if (isValidationError(body)) return body;
-  const { company_id, meeting_notes_url, service_ids, section_type, current_content } = body;
+  const { company_id, proposal_id, meeting_notes_url, meeting_notes_content, service_ids, section_type, current_content } = body;
 
   try {
     const { data: company } = await supabase
@@ -57,15 +65,20 @@ export async function POST(request: Request) {
 
     const { data: contact } = await supabase
       .from('contacts')
-      .select('name, email')
+      .select('full_name, first_name, email')
       .eq('company_id', company_id)
       .eq('is_primary', true)
       .single();
 
-    const notesResult = await getMeetingNotes({
-      notionUrl: meeting_notes_url,
-      clientName: !meeting_notes_url ? company.name : undefined,
-    });
+    // Use provided meeting notes content if available, otherwise fetch from Notion
+    let meetingNotes = meeting_notes_content || '';
+    if (!meetingNotes) {
+      const notesResult = await getMeetingNotes({
+        notionUrl: meeting_notes_url,
+        clientName: !meeting_notes_url ? company.name : undefined,
+      });
+      meetingNotes = notesResult.content || '';
+    }
 
     const { data: services } = await supabase
       .from('services')
@@ -102,17 +115,69 @@ export async function POST(request: Request) {
     const generationInput: ProposalGenerationInput = {
       companyName: company.name,
       companyIndustry: company.industry,
-      contactName: contact?.name || 'the team',
-      meetingNotes: notesResult.content || '',
+      contactName: contact?.first_name || contact?.full_name || 'the team',
+      meetingNotes,
       services: serviceDetails,
     };
 
     const section = await regenerateSection(generationInput, section_type, current_content);
 
+    // If proposal_id provided, persist section to the proposal
+    if (proposal_id) {
+      await appendSectionToProposal(supabase, proposal_id, section);
+    }
+
     return NextResponse.json({ section });
   } catch (err) {
-    console.error('Section regeneration failed:', err);
+    console.error('Section generation failed:', err);
     const message = err instanceof Error ? err.message : 'Unknown error';
     return NextResponse.json({ error: message }, { status: 500 });
   }
+}
+
+/**
+ * Append a generated section to the proposal's sections array.
+ * Replaces any existing section of the same type.
+ * When all 4 AI sections are present, marks generation as completed.
+ */
+async function appendSectionToProposal(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  proposalId: string,
+  section: GeneratedSection,
+) {
+  // Fetch current sections
+  const { data: proposal } = await supabase
+    .from('proposals')
+    .select('sections')
+    .eq('id', proposalId)
+    .single();
+
+  const existing = (proposal?.sections as GeneratedSection[] | null) || [];
+
+  // Replace existing section of same type, or append
+  const filtered = existing.filter(s => s.type !== section.type);
+  filtered.push(section);
+
+  // Check if all 4 AI sections are now present
+  const presentTypes = new Set(filtered.map(s => s.type));
+  const allComplete = [...ALL_SECTION_TYPES].every(t => presentTypes.has(t));
+
+  // Add fee_summary placeholder if completing
+  if (allComplete && !presentTypes.has('fee_summary')) {
+    filtered.push({ type: 'fee_summary', title: 'Fee Summary', content: '', sort_order: 5 });
+  }
+
+  // Sort by sort_order
+  filtered.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
+
+  const updateData: Record<string, unknown> = { sections: filtered };
+  if (allComplete) {
+    updateData.generation_status = 'completed';
+    updateData.generated_at = new Date().toISOString();
+  }
+
+  await supabase
+    .from('proposals')
+    .update(updateData)
+    .eq('id', proposalId);
 }
