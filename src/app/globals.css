@@ -116,7 +116,13 @@ html {
   --color-system-blue: #2f80ed;
   --color-system-orange: #f2994a;
 
-
+  /* ---- BDS component CSS compatibility aliases ----
+     BDS component stylesheets reference these names internally.
+     Portal defines the canonical single-dash tokens above;
+     these aliases bridge the gap so BDS CSS resolves correctly. */
+  --system--red: var(--color-system-red);
+  --background-tertiary: var(--surface-tertiary);
+  --surface-nav: var(--surface-primary);
 
   /* ---- Typography (Poppins — Brik brand font) ---- */
   --font-family-body: Poppins, sans-serif;
@@ -126,6 +132,11 @@ html {
 
   /* Brand override: labels use medium (500) instead of BDS default semi-bold (600) */
   --font-weight-semi-bold: 500;
+
+  /* BDS component CSS uses double-dash variants; alias to canonical single-dash */
+  --font-weight--bold: var(--font-weight-bold);
+  --font-weight--semi-bold: var(--font-weight-semi-bold);
+  --font-line-height--100: var(--font-line-height-tight);
 
   /* ---- Spacing (Base mode — component-level, not spacious) ---- */
   --padding-none: var(--space-0);
@@ -260,6 +271,10 @@ html {
   /* System */
   --color-system-link: #6b8aff;
 
+  /* BDS component CSS compatibility aliases — dark mode */
+  --system--red: var(--color-system-red);
+  --background-tertiary: var(--surface-tertiary);
+  --surface-nav: var(--surface-primary);
 
   /* Service category color primitives — dark mode (muted for dark backgrounds) */
   --services--yellow: #d4b54a;
@@ -320,6 +335,14 @@ blockquote {
  */
 .bds-page-header .bds-page-header-title {
   font-size: var(--heading-md);
+}
+
+/*
+ * Portal PageHeader metadata values — BDS default is body-sm.
+ * Portal uses body-md for better readability at page level.
+ */
+.bds-page-header-metadata div > span:last-child {
+  font-size: var(--body-md) !important;
 }
 
 /*

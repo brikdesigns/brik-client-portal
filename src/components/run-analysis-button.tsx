@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
 import { AlertBanner } from '@bds/components/ui/AlertBanner/AlertBanner';
-import { space, shadow } from '@/lib/tokens';
+import { space, shadow, border, gap } from '@/lib/tokens';
 
 interface RunAnalysisButtonProps {
   clientId: string;
@@ -155,13 +155,13 @@ export function RunAnalysisButton({ clientId, slug }: RunAnalysisButtonProps) {
             zIndex: 9999,
             maxWidth: '400px',
             boxShadow: shadow.lg,
-            borderRadius: 'var(--border-radius-sm)',
+            borderRadius: border.radius.sm,
           }}
         >
           <AlertBanner
             variant="information"
             title={
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 'var(--gap-sm)' }}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.sm }}>
                 {progress !== 'Complete!' && <Spinner />}
                 {progress}
               </span>

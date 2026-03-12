@@ -146,6 +146,18 @@ export function ProjectsFilterTable({
         emptyAction={{ label: 'Add Project', href: '/admin/projects/new' }}
         columns={[
           {
+            header: 'Project',
+            accessor: (r) => (
+              <a
+                href={`/admin/projects/${r.project.slug}`}
+                className="cell-link"
+                style={{ fontWeight: font.weight.medium }}
+              >
+                {r.project.name}
+              </a>
+            ),
+          },
+          {
             header: '',
             accessor: (r) =>
               r.service ? (
@@ -176,18 +188,6 @@ export function ProjectsFilterTable({
               ) : (
                 <span style={{ color: color.text.muted }}>—</span>
               ),
-          },
-          {
-            header: 'Project',
-            accessor: (r) => (
-              <a
-                href={`/admin/projects/${r.project.slug}`}
-                className="cell-link"
-                style={{ fontWeight: font.weight.medium }}
-              >
-                {r.project.name}
-              </a>
-            ),
           },
           {
             header: 'Client',
