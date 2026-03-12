@@ -11,6 +11,9 @@ import {
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
+// Netlify Pro: allow up to 60s for single-section AI regeneration
+export const maxDuration = 60;
+
 const SECTION_TYPES = ['overview_and_goals', 'scope_of_project', 'project_timeline', 'why_brik'] as const;
 
 const sectionRegenerateSchema = z.object({
