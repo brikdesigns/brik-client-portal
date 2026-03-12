@@ -1,5 +1,5 @@
 import { ServiceBadge } from '@/components/service-badge';
-import { font, color, gap, border, space } from '@/lib/tokens';
+import { font, color, gap, border, space, serviceColor } from '@/lib/tokens';
 
 interface ServiceCardProps {
   name: string;
@@ -89,10 +89,10 @@ export function ServiceCard({
               padding: `${gap.tiny} ${gap.md}`,
               borderRadius: border.radius.sm,
               backgroundColor: status === 'paused'
-                ? 'var(--services--yellow-light)'
+                ? color.surface.warning
                 : color.background.secondary,
               color: status === 'paused'
-                ? 'var(--services--yellow-dark)'
+                ? color.text.warning
                 : color.text.secondary,
             }}
           >

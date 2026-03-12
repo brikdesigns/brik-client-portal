@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
+import { color, font } from '@/lib/tokens';
 
 interface GHLSyncButtonProps {
   companyId: string;
@@ -44,7 +45,7 @@ export function GHLSyncButton({ companyId, hasGhlId }: GHLSyncButtonProps) {
         {syncing ? 'Syncing...' : 'Sync GHL'}
       </Button>
       {error && (
-        <span style={{ color: 'var(--system--red)', fontSize: 'var(--body-xs)' }}>
+        <span style={{ color: color.system.red, fontSize: font.size.body.xs }}>
           {error}
         </span>
       )}

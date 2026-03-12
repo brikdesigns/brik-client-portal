@@ -116,10 +116,11 @@ html {
   --color-system-blue: #2f80ed;
   --color-system-orange: #f2994a;
 
-  /* ---- BDS component CSS aliases ---- */
-  /* BDS component .css files reference full-namespaced tokens (--_color---...).
-     Map them to the portal's shorthand tokens so ::placeholder, focus, disabled
-     styles work correctly. */
+  /* ---- BDS component CSS aliases (DO NOT REMOVE) ---- */
+  /* BDS compiled CSS (from the submodule) references Webflow-namespaced tokens
+     (--_color---...) internally. These aliases bridge BDS CSS → portal tokens.
+     Without them, BDS ::placeholder, focus, disabled styles break.
+     These are NOT used in portal component code — only consumed by BDS CSS. */
   --_color---text--muted: var(--text-muted);
   --_color---text--inverse: var(--text-inverse);
   --_color---text--primary: var(--text-primary);
@@ -184,7 +185,10 @@ html {
   --icon-md: var(--font-size-100);
   --icon-lg: var(--font-size-200);
 
-  /* ---- Service category colors (from brikdesigns.com) ---- */
+  /* ---- Service category color primitives ---- */
+  /* Three-tone palette per category (primary, dark, light). Consumed by
+     BDS ServiceBadge component and portal's serviceColor() token helper.
+     Portal components should use serviceColor() from tokens.ts, NOT raw var(). */
   --services--yellow: #f4d364;
   --services--yellow-dark: #634716;
   --services--yellow-light: #fffee1;
@@ -201,7 +205,7 @@ html {
   --services--orange-dark: #4e1400;
   --services--orange-light: #ffe8dc;
 
-  /* ---- BDS semantic service tokens (maps to colors above) ---- */
+  /* ---- BDS semantic service tokens (consumed by BDS ServiceBadge CSS) ---- */
   --background-service-brand: var(--services--yellow);
   --text-service-brand: var(--services--yellow-dark);
   --background-service-marketing: var(--services--green);
@@ -270,7 +274,7 @@ html {
   /* System */
   --color-system-link: #6b8aff;
 
-  /* BDS component CSS aliases (dark mode) */
+  /* BDS component CSS aliases — dark mode (DO NOT REMOVE, see light mode comment) */
   --_color---text--muted: var(--text-muted);
   --_color---text--inverse: var(--text-inverse);
   --_color---text--primary: var(--text-primary);
@@ -282,7 +286,7 @@ html {
   --_color---background--brand-primary: var(--background-brand-primary);
   --_color---background--input: var(--background-input);
 
-  /* Service category colors (dark mode — slightly muted for dark backgrounds) */
+  /* Service category color primitives — dark mode (muted for dark backgrounds) */
   --services--yellow: #d4b54a;
   --services--yellow-dark: #f4d364;
   --services--yellow-light: #2a2110;
@@ -299,7 +303,7 @@ html {
   --services--orange-dark: #e76134;
   --services--orange-light: #241008;
 
-  /* BDS semantic service tokens (dark mode) */
+  /* BDS semantic service tokens — dark mode */
   --background-service-brand: var(--services--yellow);
   --text-service-brand: var(--services--yellow-dark);
   --background-service-marketing: var(--services--green);
