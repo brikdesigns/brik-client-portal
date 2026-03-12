@@ -100,28 +100,26 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
     setError('');
     setProgressStep('Analyzing meeting notes...');
 
+    let proposalId: string | null = null;
+
     try {
       // Step 1: Recommend services + create proposal shell (~15-20s)
       const shell = await postJSON<{
         proposal_id: string;
-        company_id: string;
-        slug: string;
-        service_ids: string[];
-        meeting_notes_content: string;
       }>('/api/admin/proposals/auto-generate', {
         company_id: companyId,
         meeting_note_page_id: selectedNoteId,
         title: proposalTitle.trim() || undefined,
       });
+      proposalId = shell.proposal_id;
 
       // Step 2: Generate each section sequentially (~15-20s each)
+      // Pipeline mode: only send proposal_id + section_type (lightweight)
+      // The server reads meeting notes + services from the proposal DB row
       for (const step of SECTION_STEPS) {
         setProgressStep(step.label);
         await postJSON('/api/admin/proposals/generate/section', {
-          company_id: companyId,
           proposal_id: shell.proposal_id,
-          service_ids: shell.service_ids,
-          meeting_notes_content: shell.meeting_notes_content,
           section_type: step.type,
         });
       }
@@ -132,7 +130,19 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
       router.refresh();
     } catch (err) {
       console.error('Auto-generate failed:', err);
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      if (proposalId) {
+        // Step 1 succeeded but a section failed — proposal exists with partial content
+        setError(`${message} The proposal was created — you can resume generation from the proposal page.`);
+        // Redirect to the partial proposal after a short delay so user sees the message
+        setTimeout(() => {
+          setShowModal(false);
+          router.push(`/admin/companies/${slug}/proposals/${proposalId}`);
+          router.refresh();
+        }, 3000);
+      } else {
+        setError(message);
+      }
     } finally {
       setGenerating(false);
       setProgressStep('');

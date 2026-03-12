@@ -164,13 +164,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: itemsError.message }, { status: 400 });
     }
 
-    // Return everything the client needs to orchestrate section generation
+    // Return only what the client needs — meeting notes + services stay server-side
     return NextResponse.json({
       proposal_id: proposal.id,
-      company_id: company.id,
-      slug: company.slug,
-      service_ids: recommendedIds,
-      meeting_notes_content: content,
     });
   } catch (err) {
     console.error('Auto-generate pipeline failed:', err);

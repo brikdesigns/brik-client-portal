@@ -95,8 +95,11 @@ export const PUBLIC_TOKEN_LIMIT: RateLimitConfig = { limit: 20, windowSeconds: 6
 /** Account setup: 5 attempts per 15 minutes per IP */
 export const SETUP_LIMIT: RateLimitConfig = { limit: 5, windowSeconds: 900 };
 
-/** AI generation endpoints: 10 requests per minute per IP */
-export const AI_GENERATION_LIMIT: RateLimitConfig = { limit: 10, windowSeconds: 60 };
+/** AI generation: initial pipeline requests (auto-generate, manual generate): 5 per minute per IP */
+export const AI_GENERATION_LIMIT: RateLimitConfig = { limit: 5, windowSeconds: 60 };
+
+/** AI section generation: higher limit to accommodate 4 calls per pipeline: 20 per minute per IP */
+export const AI_SECTION_LIMIT: RateLimitConfig = { limit: 20, windowSeconds: 60 };
 
 /** Admin email sending: 20 per minute per IP (prevent accidental spam) */
 export const ADMIN_EMAIL_LIMIT: RateLimitConfig = { limit: 20, windowSeconds: 60 };

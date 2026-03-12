@@ -7,6 +7,7 @@ import { formatCurrency } from '@/lib/format';
 import { text, heading, detail } from '@/lib/styles';
 import { font, space, gap } from '@/lib/tokens';
 import { ProposalActions } from '@/components/proposal-actions';
+import { ResumeGeneration } from '@/components/resume-generation';
 import { ProposalTabs } from '@/components/proposal-tabs';
 import { ProposalSectionsView } from './sections-view';
 import type {
@@ -180,6 +181,16 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
             : []),
         ]}
       />
+
+      {/* Resume generation banner — shown when generation was interrupted */}
+      {proposal.generation_status === 'pending' && (
+        <ResumeGeneration
+          proposalId={proposal.id}
+          existingSectionTypes={
+            ((proposal.sections || []) as { type: string }[]).map(s => s.type)
+          }
+        />
+      )}
 
       {/* Tabs — only shown for signed proposals */}
       {isSigned && (

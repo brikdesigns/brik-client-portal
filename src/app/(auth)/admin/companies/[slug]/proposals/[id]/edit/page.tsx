@@ -62,6 +62,7 @@ export default function EditProposalPage() {
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [generatingStep, setGeneratingStep] = useState('');
 
   useEffect(() => {
     const supabase = createClient();
@@ -138,70 +139,89 @@ export default function EditProposalPage() {
     setSections(prev => prev.map((s, i) => (i === index ? updated : s)));
   }
 
+  /** Helper: POST JSON and return parsed response or throw */
+  async function postJSON<T>(url: string, body: Record<string, unknown>): Promise<T> {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(
+        res.status === 504 || res.status === 502
+          ? 'Request timed out. Try again.'
+          : `Server error (${res.status}). Try again.`
+      );
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data as T;
+  }
+
   async function handleGenerateSections() {
     setError('');
     setGenerating(true);
 
-    const serviceIds = items
-      .map(i => i.service_id)
-      .filter(Boolean);
+    const sectionSteps = [
+      { type: 'overview_and_goals', label: 'Writing overview...' },
+      { type: 'scope_of_project', label: 'Writing scope...' },
+      { type: 'project_timeline', label: 'Writing timeline...' },
+      { type: 'why_brik', label: 'Finalizing...' },
+    ];
 
     try {
-      const res = await fetch('/api/admin/proposals/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company_id: companyId,
-          meeting_notes_url: meetingNotesUrl || undefined,
-          service_ids: serviceIds.length > 0 ? serviceIds : undefined,
-        }),
-      });
+      // Pipeline mode: proposal already exists, server reads notes + services from DB
+      const generatedSections: ProposalSection[] = [];
 
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Generation failed.');
-        return;
+      for (const step of sectionSteps) {
+        setGeneratingStep(step.label);
+        const { section } = await postJSON<{ section: ProposalSection }>(
+          '/api/admin/proposals/generate/section',
+          {
+            proposal_id: proposalId,
+            section_type: step.type,
+          },
+        );
+        generatedSections.push(section);
       }
 
-      setSections(data.sections);
-      if (data.meeting_notes_content) setMeetingNotesContent(data.meeting_notes_content);
-      if (data.meeting_notes_url) setMeetingNotesUrl(data.meeting_notes_url);
+      // Keep existing fee_summary or add placeholder
+      const existingFee = sections.find(s => s.type === 'fee_summary');
+      generatedSections.push(existingFee || {
+        type: 'fee_summary',
+        title: 'Fee Summary',
+        content: '',
+        sort_order: 5,
+      } as ProposalSection);
+
+      setSections(generatedSections);
     } catch (err) {
       console.error('Generation failed:', err);
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during generation.');
     } finally {
       setGenerating(false);
+      setGeneratingStep('');
     }
   }
 
   async function handleRegenerateSection(sectionType: string) {
     setRegeneratingSection(sectionType);
-
-    const serviceIds = items.map(i => i.service_id).filter(Boolean);
     const currentSection = sections.find(s => s.type === sectionType);
 
     try {
-      const res = await fetch('/api/admin/proposals/generate/section', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company_id: companyId,
-          meeting_notes_url: meetingNotesUrl || undefined,
-          service_ids: serviceIds.length > 0 ? serviceIds : undefined,
+      // Pipeline mode: server reads notes + services from the proposal row
+      const { section } = await postJSON<{ section: ProposalSection }>(
+        '/api/admin/proposals/generate/section',
+        {
+          proposal_id: proposalId,
           section_type: sectionType,
           current_content: currentSection?.content || undefined,
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.error || 'Regeneration failed.');
-        return;
-      }
-
-      setSections(prev => prev.map(s => (s.type === sectionType ? data.section : s)));
-    } catch {
-      setError('Failed to regenerate section.');
+        },
+      );
+      setSections(prev => prev.map(s => (s.type === sectionType ? section : s)));
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to regenerate section.');
     } finally {
       setRegeneratingSection(null);
     }
@@ -348,7 +368,7 @@ export default function EditProposalPage() {
             onClick={handleGenerateSections}
             disabled={generating}
           >
-            {generating ? 'Generating...' : 'Rewrite Proposal'}
+            {generating ? (generatingStep || 'Generating...') : 'Rewrite Proposal'}
           </Button>
         }
       />

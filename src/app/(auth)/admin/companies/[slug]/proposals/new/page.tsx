@@ -69,6 +69,7 @@ export default function NewProposalPage() {
   // Step 2: Generated sections
   const [sections, setSections] = useState<ProposalSection[]>([]);
   const [generating, setGenerating] = useState(false);
+  const [generatingStep, setGeneratingStep] = useState('');
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
 
   // Step 3: Line items + metadata
@@ -135,6 +136,26 @@ export default function NewProposalPage() {
 
   // --- Step 2: Generation ---
 
+  /** Helper: POST JSON and return parsed response or throw */
+  async function postJSON<T>(url: string, body: Record<string, unknown>): Promise<T> {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(
+        res.status === 504 || res.status === 502
+          ? 'Request timed out. Try again with fewer services or shorter meeting notes.'
+          : `Server error (${res.status}). Try again.`
+      );
+    }
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data as T;
+  }
+
   async function handleGenerate() {
     if (selectedServiceIds.size === 0) {
       setError('Select at least one service before generating.');
@@ -144,58 +165,53 @@ export default function NewProposalPage() {
     setError('');
     setGenerating(true);
 
+    const sectionSteps = [
+      { type: 'overview_and_goals', label: 'Writing overview...' },
+      { type: 'scope_of_project', label: 'Writing scope...' },
+      { type: 'project_timeline', label: 'Writing timeline...' },
+      { type: 'why_brik', label: 'Finalizing...' },
+    ];
+
     try {
-      const res = await fetch('/api/admin/proposals/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company_id: companyId,
-          meeting_notes_url: meetingNotesUrl || undefined,
-          service_ids: Array.from(selectedServiceIds),
-        }),
-      });
+      const serviceIdArray = Array.from(selectedServiceIds);
+      const generatedSections: ProposalSection[] = [];
 
-      // Guard: Netlify can return HTML timeout/error pages instead of JSON
-      const contentType = res.headers.get('content-type') || '';
-      if (!res.ok) {
-        if (!contentType.includes('application/json')) {
-          setError(`Server error (${res.status}). The request may have timed out — try selecting fewer services or shorter meeting notes.`);
-          return;
-        }
-        const errData = await res.json();
-        setError(errData.error || 'Generation failed.');
-        return;
+      // Generate each section sequentially (~15-20s each, within Netlify 26s limit)
+      for (const step of sectionSteps) {
+        setGeneratingStep(step.label);
+        const { section } = await postJSON<{ section: ProposalSection }>(
+          '/api/admin/proposals/generate/section',
+          {
+            company_id: companyId,
+            meeting_notes_url: meetingNotesUrl || undefined,
+            service_ids: serviceIdArray,
+            section_type: step.type,
+          },
+        );
+        generatedSections.push(section);
       }
 
-      let data: Record<string, unknown>;
-      try {
-        data = await res.json();
-      } catch {
-        setError('Failed to parse server response. The generation may have timed out — try again.');
-        return;
-      }
+      // Add fee_summary placeholder
+      generatedSections.push({
+        type: 'fee_summary',
+        title: 'Fee Summary',
+        content: '',
+        sort_order: 5,
+      } as ProposalSection);
 
-      setSections(data.sections as ProposalSection[]);
-      if (data.meeting_notes_content) {
-        setMeetingNotesContent(data.meeting_notes_content as string);
-      }
-      if (data.meeting_notes_url) {
-        setMeetingNotesUrl(data.meeting_notes_url as string);
-      }
+      setSections(generatedSections);
 
-      // Auto-populate line items from selected services
-      if (data.services) {
-        const svcList = data.services as { id: string; name: string; base_price_cents: number; billing_frequency: string | null }[];
-        const autoItems: LineItem[] = svcList.map((s) => ({
-          key: crypto.randomUUID(),
-          service_id: s.id,
-          name: s.name,
-          description: '',
-          quantity: 1,
-          unit_price_cents: s.base_price_cents || 0,
-        }));
-        setItems(autoItems);
-      }
+      // Auto-populate line items from selected services (already loaded client-side)
+      const selectedServices = services.filter(s => selectedServiceIds.has(s.id));
+      const autoItems: LineItem[] = selectedServices.map((s) => ({
+        key: crypto.randomUUID(),
+        service_id: s.id,
+        name: s.name,
+        description: '',
+        quantity: 1,
+        unit_price_cents: s.base_price_cents || 0,
+      }));
+      setItems(autoItems);
 
       setStep(2);
     } catch (err) {
@@ -203,6 +219,7 @@ export default function NewProposalPage() {
       setError(err instanceof Error ? err.message : 'An unexpected error occurred during generation.');
     } finally {
       setGenerating(false);
+      setGeneratingStep('');
     }
   }
 
@@ -587,7 +604,7 @@ export default function NewProposalPage() {
               onClick={handleGenerate}
             >
               {generating ? (
-                <>Generating...</>
+                <>{generatingStep || 'Generating...'}</>
               ) : (
                 <>
                   <FontAwesomeIcon icon={faWandMagicSparkles} style={iconSize} /> Generate Draft
