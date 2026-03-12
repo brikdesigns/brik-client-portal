@@ -155,24 +155,38 @@ export default function NewProposalPage() {
         }),
       });
 
-      const data = await res.json();
-
+      // Guard: Netlify can return HTML timeout/error pages instead of JSON
+      const contentType = res.headers.get('content-type') || '';
       if (!res.ok) {
-        setError(data.error || 'Generation failed.');
+        if (!contentType.includes('application/json')) {
+          setError(`Server error (${res.status}). The request may have timed out — try selecting fewer services or shorter meeting notes.`);
+          return;
+        }
+        const errData = await res.json();
+        setError(errData.error || 'Generation failed.');
         return;
       }
 
-      setSections(data.sections);
+      let data: Record<string, unknown>;
+      try {
+        data = await res.json();
+      } catch {
+        setError('Failed to parse server response. The generation may have timed out — try again.');
+        return;
+      }
+
+      setSections(data.sections as ProposalSection[]);
       if (data.meeting_notes_content) {
-        setMeetingNotesContent(data.meeting_notes_content);
+        setMeetingNotesContent(data.meeting_notes_content as string);
       }
       if (data.meeting_notes_url) {
-        setMeetingNotesUrl(data.meeting_notes_url);
+        setMeetingNotesUrl(data.meeting_notes_url as string);
       }
 
       // Auto-populate line items from selected services
       if (data.services) {
-        const autoItems: LineItem[] = data.services.map((s: { id: string; name: string; base_price_cents: number; billing_frequency: string | null }) => ({
+        const svcList = data.services as { id: string; name: string; base_price_cents: number; billing_frequency: string | null }[];
+        const autoItems: LineItem[] = svcList.map((s) => ({
           key: crypto.randomUUID(),
           service_id: s.id,
           name: s.name,
@@ -209,15 +223,27 @@ export default function NewProposalPage() {
         }),
       });
 
-      const data = await res.json();
-
+      const contentType = res.headers.get('content-type') || '';
       if (!res.ok) {
-        setError(data.error || 'Regeneration failed.');
+        if (!contentType.includes('application/json')) {
+          setError(`Server error (${res.status}). The request may have timed out.`);
+          return;
+        }
+        const errData = await res.json();
+        setError(errData.error || 'Regeneration failed.');
+        return;
+      }
+
+      let data: Record<string, unknown>;
+      try {
+        data = await res.json();
+      } catch {
+        setError('Failed to parse regeneration response.');
         return;
       }
 
       setSections((prev) =>
-        prev.map((s) => (s.type === sectionType ? data.section : s))
+        prev.map((s) => (s.type === sectionType ? (data.section as ProposalSection) : s))
       );
     } catch {
       setError('Failed to regenerate section.');

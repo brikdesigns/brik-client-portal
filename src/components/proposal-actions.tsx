@@ -4,8 +4,10 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Modal } from '@bds/components/ui/Modal/Modal';
 import { useToast } from '@/components/toast-provider';
-import { gap } from '@/lib/tokens';
+import { gap, color } from '@/lib/tokens';
+import { text } from '@/lib/styles';
 
 interface ProposalActionsProps {
   proposalId: string;
@@ -22,6 +24,7 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug,
 
   const [sending, setSending] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   async function handleSend() {
     setSending(true);
@@ -78,41 +81,76 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug,
   async function handleDelete() {
     const supabase = createClient();
     setDeleting(true);
-    const { error } = await supabase
-      .from('proposals')
-      .delete()
-      .eq('id', proposalId);
+    try {
+      const { error } = await supabase
+        .from('proposals')
+        .delete()
+        .eq('id', proposalId);
 
-    if (error) {
-      toastError(`Failed to delete: ${error.message}`);
+      if (error) {
+        toastError(`Failed to delete: ${error.message}`);
+        return;
+      }
+
+      toastSuccess('Proposal deleted');
+      setShowDeleteModal(false);
+      router.push(`/admin/companies/${clientSlug}`);
+      router.refresh();
+    } finally {
       setDeleting(false);
-      return;
     }
-
-    router.push(`/admin/companies/${clientSlug}`);
-    router.refresh();
   }
 
   return (
-    <div style={{ display: 'flex', gap: gap.md }}>
-      {status === 'draft' && (
-        <>
-          <Button variant="secondary" size="sm" loading={deleting} onClick={handleDelete}>
-            Delete
-          </Button>
+    <>
+      <div style={{ display: 'flex', gap: gap.md }}>
+        {status === 'draft' && (
+          <>
+            <Button variant="secondary" size="sm" onClick={() => setShowDeleteModal(true)}>
+              Delete
+            </Button>
+            <Button variant="secondary" size="sm" onClick={handleCopyLink}>
+              {copied ? 'Copied!' : 'Share'}
+            </Button>
+            <Button variant="primary" size="sm" loading={sending} onClick={handleSend}>
+              Send Proposal
+            </Button>
+          </>
+        )}
+        {(status === 'sent' || status === 'viewed') && (
           <Button variant="secondary" size="sm" onClick={handleCopyLink}>
             {copied ? 'Copied!' : 'Share'}
           </Button>
-          <Button variant="primary" size="sm" loading={sending} onClick={handleSend}>
-            Send Proposal
-          </Button>
-        </>
-      )}
-      {(status === 'sent' || status === 'viewed') && (
-        <Button variant="secondary" size="sm" onClick={handleCopyLink}>
-          {copied ? 'Copied!' : 'Share'}
-        </Button>
-      )}
-    </div>
+        )}
+      </div>
+
+      <Modal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        title="Delete proposal"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" size="md" onClick={() => setShowDeleteModal(false)}>
+              Cancel
+            </Button>
+            <Button
+              variant="primary"
+              size="md"
+              loading={deleting}
+              onClick={handleDelete}
+              style={{ backgroundColor: color.system.red, borderColor: color.system.red }}
+            >
+              Delete
+            </Button>
+          </>
+        }
+      >
+        <p style={{ ...text.body, margin: 0 }}>
+          Are you sure you want to delete this proposal for <strong>{companyName}</strong>?
+          This action cannot be undone.
+        </p>
+      </Modal>
+    </>
   );
 }

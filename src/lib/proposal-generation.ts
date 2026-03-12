@@ -149,7 +149,10 @@ Return a JSON object with exactly 4 keys. Each section has "title" and "content"
   }
 }
 
-IMPORTANT: scope_items must include one entry per selected service. Use the exact service_name and service_id from the Selected Services section. The category_slug must be one of: brand, marketing, information, product, service.
+CRITICAL CONSTRAINT: The scope_items array MUST contain EXACTLY ${input.services.length} items — one for each selected service listed above. Do NOT add, remove, or substitute any services. Do NOT infer additional services from the meeting notes. Use the EXACT service_name and service_id values from the Selected Services section above. The category_slug must be one of: brand, marketing, information, product, service.
+
+ALLOWED service_ids: ${input.services.map(s => s.id).join(', ')}
+ALLOWED service_names: ${input.services.map(s => s.name).join(', ')}
 
 ## Section-Specific Instructions
 
@@ -190,6 +193,126 @@ IMPORTANT: scope_items must include one entry per selected service. Use the exac
 - Length: 5-7 paragraphs + bullet list`;
 }
 
+/** Validation result from scope_items guardrail. */
+export interface ScopeItemsValidationResult {
+  scopeItems: ScopeItem[];
+  warnings: string[];
+}
+
+/**
+ * Validate AI-generated scope_items against the selected services.
+ * Pure function — no side effects, fully testable.
+ *
+ * Guardrails:
+ * 1. Filters out hallucinated services not in the selected set
+ * 2. Corrects service_id when AI used wrong UUID but name matches
+ * 3. Backfills stub items for any selected services the AI missed
+ * 4. Returns warnings for every correction (logged by caller)
+ */
+export function validateScopeItems(
+  rawItems: Partial<ScopeItem>[],
+  selectedServices: Pick<ServiceDetail, 'id' | 'name' | 'category_slug' | 'included_scope' | 'not_included' | 'projected_timeline'>[],
+): ScopeItemsValidationResult {
+  const warnings: string[] = [];
+  const selectedById = new Set(selectedServices.map(s => s.id));
+  const selectedByName = new Map(selectedServices.map(s => [s.name.toLowerCase(), s]));
+
+  // Normalize raw items
+  const normalized: ScopeItem[] = rawItems.map(item => ({
+    service_id: item.service_id || null,
+    service_name: item.service_name || 'Unknown Service',
+    category_slug: item.category_slug || 'brand',
+    included: Array.isArray(item.included) ? item.included : [],
+    not_included: Array.isArray(item.not_included) ? item.not_included : [],
+    timeline: item.timeline || null,
+  }));
+
+  // Filter to only selected services. Try matching by ID first, then by name.
+  const matchedIds = new Set<string>();
+  const scopeItems: ScopeItem[] = [];
+
+  for (const item of normalized) {
+    if (item.service_id && selectedById.has(item.service_id)) {
+      matchedIds.add(item.service_id);
+      scopeItems.push(item);
+    } else {
+      // Fallback: match by name (AI sometimes uses wrong UUID)
+      const byName = selectedByName.get(item.service_name.toLowerCase());
+      if (byName && !matchedIds.has(byName.id)) {
+        warnings.push(`Corrected service_id for "${item.service_name}": AI returned "${item.service_id}", expected "${byName.id}"`);
+        item.service_id = byName.id;
+        matchedIds.add(byName.id);
+        scopeItems.push(item);
+      } else {
+        warnings.push(`Removed hallucinated service: "${item.service_name}" (id: ${item.service_id}) — not in selected set`);
+      }
+    }
+  }
+
+  // Backfill any selected services the AI missed entirely
+  for (const svc of selectedServices) {
+    if (!matchedIds.has(svc.id)) {
+      warnings.push(`Backfilled missing service: "${svc.name}" (id: ${svc.id}) — AI omitted it`);
+      scopeItems.push({
+        service_id: svc.id,
+        service_name: svc.name,
+        category_slug: svc.category_slug || 'brand',
+        included: svc.included_scope ? [svc.included_scope] : [],
+        not_included: svc.not_included ? [svc.not_included] : [],
+        timeline: svc.projected_timeline || null,
+      });
+    }
+  }
+
+  return { scopeItems, warnings };
+}
+
+/**
+ * Extract JSON from AI response text. Handles:
+ * - Raw JSON
+ * - JSON wrapped in ```json code fences
+ * - JSON with preamble/postamble text around code fences
+ * - Nested or multiple code fences (takes the first valid one)
+ */
+export function extractAndParseJSON<T>(text: string, label: string): T {
+  const trimmed = text.trim();
+
+  // Try 1: direct parse (cleanest case)
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // continue to fence extraction
+  }
+
+  // Try 2: extract from code fence (handles preamble text before/after fence)
+  const fenceMatch = trimmed.match(/```(?:json)?\s*\n?([\s\S]*?)\n?\s*```/);
+  if (fenceMatch?.[1]) {
+    try {
+      return JSON.parse(fenceMatch[1].trim());
+    } catch {
+      // continue to brace extraction
+    }
+  }
+
+  // Try 3: find the first { ... } or [ ... ] block (last resort)
+  const braceStart = trimmed.indexOf('{');
+  const bracketStart = trimmed.indexOf('[');
+  const start = braceStart >= 0 && (bracketStart < 0 || braceStart < bracketStart) ? braceStart : bracketStart;
+  if (start >= 0) {
+    const closer = trimmed[start] === '{' ? '}' : ']';
+    const end = trimmed.lastIndexOf(closer);
+    if (end > start) {
+      try {
+        return JSON.parse(trimmed.slice(start, end + 1));
+      } catch {
+        // fall through to error
+      }
+    }
+  }
+
+  throw new Error(`[proposal-generation] Failed to extract JSON for ${label}. Raw response (first 300 chars): ${trimmed.slice(0, 300)}`);
+}
+
 function getAnthropicClient(): Anthropic {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY environment variable is not set');
@@ -223,23 +346,13 @@ export async function generateProposalSections(
     throw new Error('No text response from Claude API');
   }
 
-  // Parse JSON from response (handle markdown code fences)
-  let jsonStr = textBlock.text.trim();
-  if (jsonStr.startsWith('```')) {
-    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-  }
-
-  let parsed: Record<string, {
+  // Parse JSON from response (handle markdown code fences + preamble text)
+  const parsed = extractAndParseJSON<Record<string, {
     title: string;
     content: string;
     scope_items?: ScopeItem[];
     timeline_phases?: TimelinePhase[];
-  }>;
-  try {
-    parsed = JSON.parse(jsonStr);
-  } catch {
-    throw new Error(`Failed to parse Claude response as JSON: ${jsonStr.slice(0, 200)}...`);
-  }
+  }>>(textBlock.text, 'proposal sections');
 
   // Validate all 4 sections exist
   const requiredKeys = ['overview_and_goals', 'scope_of_project', 'project_timeline', 'why_brik'];
@@ -249,15 +362,21 @@ export async function generateProposalSections(
     }
   }
 
-  // Validate scope_items have required fields, with safe defaults
-  const scopeItems: ScopeItem[] = (parsed.scope_of_project.scope_items || []).map(item => ({
-    service_id: item.service_id || null,
-    service_name: item.service_name || 'Unknown Service',
-    category_slug: item.category_slug || 'brand',
-    included: Array.isArray(item.included) ? item.included : [],
-    not_included: Array.isArray(item.not_included) ? item.not_included : [],
-    timeline: item.timeline || null,
-  }));
+  const { scopeItems, warnings } = validateScopeItems(
+    parsed.scope_of_project.scope_items || [],
+    input.services,
+  );
+
+  // Log any AI drift for observability
+  if (warnings.length > 0) {
+    console.warn('[proposal-generation] scope_items validation warnings:', {
+      company: input.companyName,
+      selectedCount: input.services.length,
+      aiReturnedCount: (parsed.scope_of_project.scope_items || []).length,
+      validatedCount: scopeItems.length,
+      warnings,
+    });
+  }
 
   // Validate timeline_phases have required fields
   const timelinePhases: TimelinePhase[] = (parsed.project_timeline.timeline_phases || []).map(phase => ({
@@ -332,12 +451,7 @@ ${currentContent ? `The current draft is:\n${currentContent}\n\nPlease write a f
     throw new Error('No text response from Claude API');
   }
 
-  let jsonStr = textBlock.text.trim();
-  if (jsonStr.startsWith('```')) {
-    jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
-  }
-
-  const parsed = JSON.parse(jsonStr);
+  const parsed = extractAndParseJSON<{ title?: string; content: string }>(textBlock.text, `regenerate ${sectionType}`);
 
   const sortOrders: Record<string, number> = {
     overview_and_goals: 1,

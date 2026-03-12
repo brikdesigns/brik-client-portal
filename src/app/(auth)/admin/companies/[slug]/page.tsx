@@ -96,19 +96,32 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       .select('id, type, title, status, created_at')
       .eq('company_id', client.id)
       .order('created_at', { ascending: false }),
-    // Services from active (unsigned) proposals — shown as "Pending" on services tab
-    supabase
-      .from('proposal_items')
-      .select(`
-        id, service_id,
-        services(id, name, slug, service_type, billing_frequency, base_price_cents,
-          service_categories(slug, name)
-        ),
-        proposals!inner(id, title, status, company_id)
-      `)
-      .eq('proposals.company_id', client.id)
-      .in('proposals.status', ['draft', 'sent', 'viewed'])
-      .not('service_id', 'is', null),
+    // Services from the most recent active (unsigned) proposal — shown as "Pending" on services tab
+    // Only show items from the latest active proposal to avoid stale drafts polluting the list
+    (async () => {
+      const { data: latestActiveProposal } = await supabase
+        .from('proposals')
+        .select('id')
+        .eq('company_id', client.id)
+        .in('status', ['draft', 'sent', 'viewed'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latestActiveProposal) return { data: null };
+
+      return supabase
+        .from('proposal_items')
+        .select(`
+          id, service_id,
+          services(id, name, slug, service_type, billing_frequency, base_price_cents,
+            service_categories(slug, name)
+          ),
+          proposals!inner(id, title, status, company_id)
+        `)
+        .eq('proposal_id', latestActiveProposal.id)
+        .not('service_id', 'is', null);
+    })(),
   ]);
 
   const latestProposal = proposals?.[0] || null;

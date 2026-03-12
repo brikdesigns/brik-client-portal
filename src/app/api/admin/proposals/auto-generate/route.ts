@@ -19,6 +19,7 @@ export const maxDuration = 120;
 const autoGenerateSchema = z.object({
   company_id: uuidSchema,
   meeting_note_page_id: z.string().optional(),
+  title: z.string().min(1).optional(),
 });
 
 /**
@@ -51,7 +52,7 @@ export async function POST(request: Request) {
 
   const body = await parseBody(request, autoGenerateSchema);
   if (isValidationError(body)) return body;
-  const { company_id, meeting_note_page_id } = body;
+  const { company_id, meeting_note_page_id, title: customTitle } = body;
 
   try {
     // 1. Fetch company + primary contact
@@ -191,7 +192,7 @@ export async function POST(request: Request) {
       .from('proposals')
       .insert({
         company_id,
-        title: `Proposal for ${company.name}`,
+        title: customTitle || `Proposal for ${company.name}`,
         token,
         valid_until: validUntil.toISOString().split('T')[0],
         total_amount_cents: totalAmountCents,
