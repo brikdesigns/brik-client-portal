@@ -1,16 +1,16 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Button } from '@bds/components/ui/Button/Button';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
-import { ServiceStatusBadge } from '@/components/status-badges';
+import { ServiceStatusBadge, ProjectStatusBadge } from '@/components/status-badges';
 import { font, color, gap, space, border } from '@/lib/tokens';
 import { detail } from '@/lib/styles';
 
 const tabDefs = [
   { label: 'Overview', value: 'overview' },
+  { label: 'Projects', value: 'projects' },
   { label: 'Companies', value: 'companies' },
 ];
 
@@ -59,17 +59,29 @@ interface Assignment {
   companies: { id: string; name: string; slug: string; status: string } | null;
 }
 
+interface ProjectRow {
+  id: string;
+  name: string;
+  slug: string;
+  status: string;
+  start_date: string | null;
+  end_date: string | null;
+  companies: { id: string; name: string; slug: string } | null;
+}
+
 interface Props {
   service: ServiceData;
   category: CategoryData | null;
   assignments: Assignment[];
+  projects: ProjectRow[];
 }
 
-export function ServiceDetailTabs({ service, category, assignments }: Props) {
+export function ServiceDetailTabs({ service, category, assignments, projects }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tab = searchParams.get('tab');
-  const activeTab = tab === 'companies' ? 'companies' : 'overview';
+  const validTabs = ['overview', 'projects', 'companies'];
+  const activeTab = tab && validTabs.includes(tab) ? tab : 'overview';
 
   const fieldLabelStyle = detail.label;
   const fieldValueStyle = detail.value;
@@ -223,6 +235,64 @@ export function ServiceDetailTabs({ service, category, assignments }: Props) {
             </div>
           </div>
         </div>
+      )}
+
+      {/* ── Projects Tab ───────────────────────────────────────── */}
+      {activeTab === 'projects' && (
+        <DataTable
+          data={projects}
+          rowKey={(p) => p.id}
+          emptyMessage="No projects use this service"
+          emptyDescription="Assign this service to a project from the project edit page."
+          emptyAction={{ label: 'View Projects', href: '/admin/projects' }}
+          columns={[
+            {
+              header: 'Project',
+              accessor: (p) => (
+                <a
+                  href={`/admin/projects/${p.slug}`}
+                  className="cell-link"
+                  style={{ fontWeight: font.weight.medium }}
+                >
+                  {p.name}
+                </a>
+              ),
+            },
+            {
+              header: 'Client',
+              accessor: (p) =>
+                p.companies ? (
+                  <a
+                    href={`/admin/companies/${p.companies.slug}`}
+                    className="cell-link"
+                  >
+                    {p.companies.name}
+                  </a>
+                ) : (
+                  '—'
+                ),
+            },
+            {
+              header: 'Status',
+              accessor: (p) => <ProjectStatusBadge status={p.status} />,
+            },
+            {
+              header: 'Start',
+              accessor: (p) =>
+                p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
+              style: { color: color.text.secondary },
+            },
+            {
+              header: '',
+              accessor: (p) => (
+                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                  View
+                </Button>
+              ),
+              style: { textAlign: 'right' as const },
+            },
+          ]}
+        />
       )}
 
       {/* ── Companies Tab ──────────────────────────────────────── */}

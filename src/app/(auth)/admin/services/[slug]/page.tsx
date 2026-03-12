@@ -48,6 +48,27 @@ export default async function ServiceDetailPage({ params }: Props) {
     companies: { id: string; name: string; slug: string; status: string } | null;
   }[]) ?? [];
 
+  // Fetch projects that use this service
+  const { data: projectServices } = await supabase
+    .from('project_services')
+    .select('projects(id, name, slug, status, start_date, end_date, companies(id, name, slug))')
+    .eq('service_id', service.id);
+
+  const projects = (projectServices ?? [])
+    .map((ps) => {
+      const proj = (ps as unknown as { projects: {
+        id: string; name: string; slug: string; status: string;
+        start_date: string | null; end_date: string | null;
+        companies: { id: string; name: string; slug: string } | null;
+      } | null }).projects;
+      return proj;
+    })
+    .filter(Boolean) as {
+      id: string; name: string; slug: string; status: string;
+      start_date: string | null; end_date: string | null;
+      companies: { id: string; name: string; slug: string } | null;
+    }[];
+
   return (
     <div>
       <PageHeader
@@ -107,6 +128,7 @@ export default async function ServiceDetailPage({ params }: Props) {
         }}
         category={category ? { slug: category.slug } : null}
         assignments={assignments}
+        projects={projects}
       />
     </div>
   );

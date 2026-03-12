@@ -1,5 +1,5 @@
 import { ServiceBadge } from '@/components/service-badge';
-import { font, color, gap, border, space, serviceColor } from '@/lib/tokens';
+import { font, color, gap, border, space } from '@/lib/tokens';
 
 interface ServiceCardProps {
   name: string;

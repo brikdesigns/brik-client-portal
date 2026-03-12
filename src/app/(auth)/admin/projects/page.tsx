@@ -27,9 +27,9 @@ export default async function AdminProjectsPage() {
   const { data: allProjectServices } = projectIds.length > 0
     ? await supabase
         .from('project_services')
-        .select('project_id, services(id, name, service_categories(slug))')
+        .select('project_id, services(id, name, base_price_cents, service_categories(slug))')
         .in('project_id', projectIds)
-    : { data: [] as { project_id: string; services: { id: string; name: string; service_categories: { slug: string } | null } | null }[] };
+    : { data: [] as { project_id: string; services: { id: string; name: string; base_price_cents: number | null; service_categories: { slug: string } | null } | null }[] };
 
   const all = projects ?? [];
   const inProgress = all.filter((p) => p.status === 'active').length;
@@ -37,12 +37,12 @@ export default async function AdminProjectsPage() {
   const notStarted = all.filter((p) => p.status === 'not_started').length;
 
   // Build services lookup from separate query
-  const servicesByProject = new Map<string, { id: string; name: string; category_slug: string }[]>();
+  const servicesByProject = new Map<string, { id: string; name: string; category_slug: string; base_price_cents: number | null }[]>();
   for (const ps of (allProjectServices ?? [])) {
-    const svc = ps.services as unknown as { id: string; name: string; service_categories: { slug: string } | null } | null;
+    const svc = ps.services as unknown as { id: string; name: string; base_price_cents: number | null; service_categories: { slug: string } | null } | null;
     if (!svc) continue;
     const existing = servicesByProject.get(ps.project_id) ?? [];
-    existing.push({ id: svc.id, name: svc.name, category_slug: svc.service_categories?.slug ?? 'service' });
+    existing.push({ id: svc.id, name: svc.name, base_price_cents: svc.base_price_cents, category_slug: svc.service_categories?.slug ?? 'service' });
     servicesByProject.set(ps.project_id, existing);
   }
 

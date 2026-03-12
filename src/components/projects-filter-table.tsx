@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
+import { formatCurrency } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { ProjectStatusBadge } from './status-badges';
@@ -12,6 +13,7 @@ interface ServiceInfo {
   id: string;
   name: string;
   category_slug: string;
+  base_price_cents: number | null;
 }
 
 export interface ProjectRow {
@@ -204,6 +206,18 @@ export function ProjectsFilterTable({
           {
             header: 'Status',
             accessor: (r) => <ProjectStatusBadge status={r.project.status} />,
+          },
+          {
+            header: 'Est. Total',
+            accessor: (r) => {
+              const total = r.project.services.reduce((sum, s) => sum + (s.base_price_cents ?? 0), 0);
+              return total > 0 ? (
+                <span>{formatCurrency(total)}</span>
+              ) : (
+                <span style={{ color: color.text.muted }}>—</span>
+              );
+            },
+            style: { textAlign: 'right' },
           },
           {
             header: '',

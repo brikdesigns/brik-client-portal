@@ -6,6 +6,7 @@ import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
 import { DeleteProjectButton } from '@/components/delete-project-button';
+import { formatCurrency } from '@/lib/format';
 import { color, gap, space, font, border } from '@/lib/tokens';
 import { detail, heading } from '@/lib/styles';
 
@@ -40,22 +41,33 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   // Fetch assigned services
   const { data: projectServices } = await supabase
     .from('project_services')
-    .select('services(id, name, slug, service_categories(slug, name))')
+    .select('services(id, name, slug, base_price_cents, billing_frequency, service_categories(slug, name))')
     .eq('project_id', project.id);
 
   const services = (projectServices ?? [])
     .map((ps) => {
-      const svc = (ps as unknown as { services: { id: string; name: string; slug: string; service_categories: { slug: string; name: string } | null } | null }).services;
+      const svc = (ps as unknown as { services: { id: string; name: string; slug: string; base_price_cents: number | null; billing_frequency: string | null; service_categories: { slug: string; name: string } | null } | null }).services;
       if (!svc) return null;
       return {
         id: svc.id,
         name: svc.name,
         slug: svc.slug,
+        base_price_cents: svc.base_price_cents,
+        billing_frequency: svc.billing_frequency,
         category_slug: svc.service_categories?.slug ?? 'service',
         category_name: svc.service_categories?.name ?? null,
       };
     })
-    .filter(Boolean) as { id: string; name: string; slug: string; category_slug: string; category_name: string | null }[];
+    .filter(Boolean) as { id: string; name: string; slug: string; base_price_cents: number | null; billing_frequency: string | null; category_slug: string; category_name: string | null }[];
+
+  // Aggregate pricing
+  const oneTimeCents = services
+    .filter((s) => s.billing_frequency !== 'monthly' && s.base_price_cents)
+    .reduce((sum, s) => sum + (s.base_price_cents ?? 0), 0);
+  const monthlyCents = services
+    .filter((s) => s.billing_frequency === 'monthly' && s.base_price_cents)
+    .reduce((sum, s) => sum + (s.base_price_cents ?? 0), 0);
+  const totalEstimateCents = oneTimeCents + monthlyCents;
 
   const metadataItems = [
     {
@@ -186,6 +198,33 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
             </div>
           )}
 
+          {/* Pricing */}
+          {services.length > 0 && (
+            <div>
+              <h2 style={detail.sectionHeading}>Pricing</h2>
+              <div style={{ ...detail.grid, paddingTop: space.md }}>
+                {oneTimeCents > 0 && (
+                  <div>
+                    <p style={detail.label}>One-time</p>
+                    <p style={detail.value}>{formatCurrency(oneTimeCents)}</p>
+                  </div>
+                )}
+                {monthlyCents > 0 && (
+                  <div>
+                    <p style={detail.label}>Monthly recurring</p>
+                    <p style={detail.value}>{formatCurrency(monthlyCents)}/mo</p>
+                  </div>
+                )}
+                <div>
+                  <p style={detail.label}>Estimated total</p>
+                  <p style={{ ...detail.value, fontWeight: font.weight.semibold }}>
+                    {totalEstimateCents > 0 ? formatCurrency(totalEstimateCents) : <span style={detail.empty}>—</span>}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* ClickUp */}
           {(project.clickup_task_id || hasClickupDetails) && (
             <div>
@@ -257,6 +296,14 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                 {
                   header: 'Service line',
                   accessor: (svc) => svc.category_name || <span style={detail.empty}>—</span>,
+                },
+                {
+                  header: 'Price',
+                  accessor: (svc) =>
+                    svc.base_price_cents
+                      ? `${formatCurrency(svc.base_price_cents)}${svc.billing_frequency === 'monthly' ? '/mo' : ''}`
+                      : <span style={detail.empty}>—</span>,
+                  style: { textAlign: 'right' },
                 },
                 {
                   header: '',

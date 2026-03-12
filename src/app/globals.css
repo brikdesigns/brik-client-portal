@@ -116,21 +116,7 @@ html {
   --color-system-blue: #2f80ed;
   --color-system-orange: #f2994a;
 
-  /* ---- BDS component CSS aliases (DO NOT REMOVE) ---- */
-  /* BDS compiled CSS (from the submodule) references Webflow-namespaced tokens
-     (--_color---...) internally. These aliases bridge BDS CSS → portal tokens.
-     Without them, BDS ::placeholder, focus, disabled styles break.
-     These are NOT used in portal component code — only consumed by BDS CSS. */
-  --_color---text--muted: var(--text-muted);
-  --_color---text--inverse: var(--text-inverse);
-  --_color---text--primary: var(--text-primary);
-  --_color---text--secondary: var(--text-secondary);
-  --_color---border--brand-primary: var(--border-brand-primary);
-  --_color---border--brand: var(--border-brand-primary);
-  --_color---border--primary: var(--border-primary);
-  --_color---surface--secondary: var(--surface-secondary);
-  --_color---background--brand-primary: var(--background-brand-primary);
-  --_color---background--input: var(--background-input);
+
 
   /* ---- Typography (Poppins — Brik brand font) ---- */
   --font-family-body: Poppins, sans-serif;
@@ -274,17 +260,6 @@ html {
   /* System */
   --color-system-link: #6b8aff;
 
-  /* BDS component CSS aliases — dark mode (DO NOT REMOVE, see light mode comment) */
-  --_color---text--muted: var(--text-muted);
-  --_color---text--inverse: var(--text-inverse);
-  --_color---text--primary: var(--text-primary);
-  --_color---text--secondary: var(--text-secondary);
-  --_color---border--brand-primary: var(--border-brand-primary);
-  --_color---border--brand: var(--border-brand-primary);
-  --_color---border--primary: var(--border-primary);
-  --_color---surface--secondary: var(--surface-secondary);
-  --_color---background--brand-primary: var(--background-brand-primary);
-  --_color---background--input: var(--background-input);
 
   /* Service category color primitives — dark mode (muted for dark backgrounds) */
   --services--yellow: #d4b54a;

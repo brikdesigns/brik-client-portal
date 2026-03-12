@@ -28,14 +28,14 @@ export default function GlobalError({
           }}
         >
           <div style={{ maxWidth: '480px', textAlign: 'center' }}>
-            <h1 style={{ fontSize: 'var(--_font-size---heading--h5, 1.25rem)', fontWeight: 600, marginBottom: '12px' }}>
+            <h1 style={{ fontSize: '1.25rem', fontWeight: 600, marginBottom: '12px' }}>
               Something went wrong
             </h1>
-            <p style={{ fontSize: 'var(--_font-size---body--default, 0.875rem)', color: '#666', marginBottom: '16px' }}>
+            <p style={{ fontSize: '0.875rem', color: '#666', marginBottom: '16px' }}>
               {error.message || 'An unexpected error occurred.'}
             </p>
             {error.digest && (
-              <p style={{ fontSize: 'var(--_font-size---body--small, 0.75rem)', color: '#999', marginBottom: '16px' }}>
+              <p style={{ fontSize: '0.75rem', color: '#999', marginBottom: '16px' }}>
                 Error ID: {error.digest}
               </p>
             )}
@@ -48,7 +48,7 @@ export default function GlobalError({
                 border: 'none',
                 borderRadius: '6px',
                 cursor: 'pointer',
-                fontSize: 'var(--_font-size---body--default, 0.875rem)',
+                fontSize: '0.875rem',
                 fontWeight: 500,
               }}
             >
