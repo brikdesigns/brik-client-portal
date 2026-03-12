@@ -76,12 +76,14 @@ export function EditProjectForm({ project, clientName, serviceLines, availableSe
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
+  // Include filtered services for the dropdown + all selected services for tags
   const serviceOptions = useMemo(() => {
-    const base = serviceLineFilter
-      ? availableServices.filter((s) => s.category_id === serviceLineFilter)
+    const selectedSet = new Set(selectedServiceIds);
+    const filtered = serviceLineFilter
+      ? availableServices.filter((s) => s.category_id === serviceLineFilter || selectedSet.has(s.id))
       : availableServices;
-    return base.map((s) => ({ label: s.name, value: s.id }));
-  }, [availableServices, serviceLineFilter]);
+    return filtered.map((s) => ({ label: s.name, value: s.id }));
+  }, [availableServices, serviceLineFilter, selectedServiceIds]);
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -122,16 +124,18 @@ export function EditProjectForm({ project, clientName, serviceLines, availableSe
       const toAdd = selectedServiceIds.filter((id) => !currentIds.has(id));
 
       if (toRemove.length > 0) {
-        await supabase
+        const { error: delError } = await supabase
           .from('project_services')
           .delete()
           .eq('project_id', project.id)
           .in('service_id', toRemove);
+        if (delError) console.error('Failed to remove services:', delError);
       }
       if (toAdd.length > 0) {
-        await supabase
+        const { error: addError } = await supabase
           .from('project_services')
           .insert(toAdd.map((sid) => ({ project_id: project.id, service_id: sid })));
+        if (addError) console.error('Failed to add services:', addError);
       }
 
       router.push(`/admin/projects/${newSlug}`);

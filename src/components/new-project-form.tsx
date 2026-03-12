@@ -70,12 +70,14 @@ export function NewProjectForm({ companies, serviceLines, availableServices }: N
   const [serviceLineFilter, setServiceLineFilter] = useState('');
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
 
+  // Include filtered services for the dropdown + all selected services for tags
   const serviceOptions = useMemo(() => {
-    const base = serviceLineFilter
-      ? availableServices.filter((s) => s.category_id === serviceLineFilter)
+    const selectedSet = new Set(selectedServiceIds);
+    const filtered = serviceLineFilter
+      ? availableServices.filter((s) => s.category_id === serviceLineFilter || selectedSet.has(s.id))
       : availableServices;
-    return base.map((s) => ({ label: s.name, value: s.id }));
-  }, [availableServices, serviceLineFilter]);
+    return filtered.map((s) => ({ label: s.name, value: s.id }));
+  }, [availableServices, serviceLineFilter, selectedServiceIds]);
 
   // ── ClickUp fields ─────────────────────────────────────
   const [folders, setFolders] = useState<ClickUpFolder[]>([]);
