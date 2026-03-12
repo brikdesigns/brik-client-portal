@@ -26,6 +26,14 @@ export interface ProjectRow {
   services: ServiceInfo[];
 }
 
+/** Flattened row: one row per service (or one row with no service for unassigned projects) */
+interface FlatRow {
+  /** Unique key for DataTable — combines project + service */
+  key: string;
+  project: ProjectRow;
+  service: ServiceInfo | null;
+}
+
 interface FilterOption {
   label: string;
   value: string;
@@ -47,17 +55,32 @@ export function ProjectsFilterTable({
     projects.forEach((p) => p.services.forEach((s) => slugs.add(s.category_slug)));
     return Array.from(slugs)
       .sort((a, b) => a.localeCompare(b))
-      .map((slug) => ({ id: slug, label: categoryConfig[slug]?.label ?? slug }));
+      .map((slug) => ({ id: slug, label: (categoryConfig as Record<string, { label: string }>)[slug]?.label ?? slug }));
+  }, [projects]);
+
+  /** Flatten: one row per service, or one row with null service for unassigned projects */
+  const flatRows = useMemo(() => {
+    const rows: FlatRow[] = [];
+    for (const p of projects) {
+      if (p.services.length === 0) {
+        rows.push({ key: p.id, project: p, service: null });
+      } else {
+        for (const s of p.services) {
+          rows.push({ key: `${p.id}-${s.id}`, project: p, service: s });
+        }
+      }
+    }
+    return rows;
   }, [projects]);
 
   const filtered = useMemo(() => {
-    return projects.filter((p) => {
-      if (clientFilter && p.company?.id !== clientFilter) return false;
-      if (statusFilter && p.status !== statusFilter) return false;
-      if (serviceLineFilter && !p.services.some((s) => s.category_slug === serviceLineFilter)) return false;
+    return flatRows.filter((r) => {
+      if (clientFilter && r.project.company?.id !== clientFilter) return false;
+      if (statusFilter && r.project.status !== statusFilter) return false;
+      if (serviceLineFilter && r.service?.category_slug !== serviceLineFilter) return false;
       return true;
     });
-  }, [projects, clientFilter, statusFilter, serviceLineFilter]);
+  }, [flatRows, clientFilter, statusFilter, serviceLineFilter]);
 
   return (
     <div>
@@ -79,7 +102,7 @@ export function ProjectsFilterTable({
             whiteSpace: 'nowrap',
           }}
         >
-          Showing {filtered.length} of {projects.length}
+          Showing {filtered.length} of {flatRows.length}
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
@@ -115,66 +138,64 @@ export function ProjectsFilterTable({
 
       <DataTable
         data={filtered}
-        rowKey={(p) => p.id}
+        rowKey={(r) => r.key}
         emptyMessage="No projects match your filters"
         emptyDescription="Try adjusting your filters or add a new project."
         emptyAction={{ label: 'Add Project', href: '/admin/projects/new' }}
         columns={[
           {
-            header: 'Services',
-            accessor: (p) =>
-              p.services.length > 0 ? (
-                <div style={{ display: 'flex', gap: gap.xs }}>
-                  {p.services.map((s) => (
-                    <ServiceBadge
-                      key={s.id}
-                      category={s.category_slug}
-                      serviceName={s.name}
-                      size={28}
-                    />
-                  ))}
-                </div>
+            header: '',
+            accessor: (r) =>
+              r.service ? (
+                <ServiceBadge
+                  category={r.service.category_slug}
+                  serviceName={r.service.name}
+                  size={28}
+                />
               ) : (
                 <span style={{ color: color.text.muted }}>—</span>
               ),
-            style: { width: '120px' },
+            style: { width: '44px' },
+          },
+          {
+            header: 'Service',
+            accessor: (r) =>
+              r.service ? (
+                <span>{r.service.name}</span>
+              ) : (
+                <span style={{ color: color.text.muted }}>—</span>
+              ),
           },
           {
             header: 'Service Line',
-            accessor: (p) => {
-              const uniqueCategories = Array.from(new Set(p.services.map((s) => s.category_slug)));
-              return uniqueCategories.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
-                  {uniqueCategories.map((cat) => (
-                    <ServiceCategoryLabel key={cat} category={cat} />
-                  ))}
-                </div>
+            accessor: (r) =>
+              r.service ? (
+                <ServiceCategoryLabel category={r.service.category_slug} />
               ) : (
                 <span style={{ color: color.text.muted }}>—</span>
-              );
-            },
+              ),
           },
           {
             header: 'Project',
-            accessor: (p) => (
+            accessor: (r) => (
               <a
-                href={`/admin/projects/${p.slug}`}
+                href={`/admin/projects/${r.project.slug}`}
                 className="cell-link"
                 style={{ fontWeight: font.weight.medium }}
               >
-                {p.name}
+                {r.project.name}
               </a>
             ),
           },
           {
             header: 'Client',
-            accessor: (p) =>
-              p.company ? (
+            accessor: (r) =>
+              r.project.company ? (
                 <a
-                  href={`/admin/companies/${p.company.slug}`}
+                  href={`/admin/companies/${r.project.company.slug}`}
                   className="cell-link"
                 >
-                  {p.company.name}
+                  {r.project.company.name}
                 </a>
               ) : (
                 '—'
@@ -182,26 +203,16 @@ export function ProjectsFilterTable({
           },
           {
             header: 'Status',
-            accessor: (p) => <ProjectStatusBadge status={p.status} />,
-          },
-          {
-            header: 'Start',
-            accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-            style: { color: color.text.secondary },
-          },
-          {
-            header: 'End',
-            accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-            style: { color: color.text.secondary },
+            accessor: (r) => <ProjectStatusBadge status={r.project.status} />,
           },
           {
             header: '',
-            accessor: (p) => (
+            accessor: (r) => (
               <div style={{ display: 'flex', gap: gap.xs, justifyContent: 'flex-end' }}>
-                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}/edit`}>
+                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${r.project.slug}/edit`}>
                   Edit
                 </Button>
-                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${r.project.slug}`}>
                   View
                 </Button>
               </div>

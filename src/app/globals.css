@@ -72,12 +72,16 @@ html {
   --text-on-color-light: var(--grayscale--black);
   --text-brand-primary: var(--brand--primary);
   --text-negative: #eb5757;
+  --text-warning: #634716;
+  --text-success: #2a5542;
 
   /* Surface */
   --surface-primary: var(--grayscale--white);
   --surface-secondary: var(--grayscale--lightest);
   --surface-tertiary: var(--grayscale--lighter);
   --surface-negative: #fdeaea;
+  --surface-warning: #fffee1;
+  --surface-success: #f0faf0;
   --surface-brand-primary: var(--brand--primary);
   --surface-brand-secondary: var(--grayscale--white);
 
@@ -111,7 +115,6 @@ html {
   --color-system-yellow: #f2c94c;
   --color-system-blue: #2f80ed;
   --color-system-orange: #f2994a;
-  --system--red: #eb5757;
 
   /* ---- BDS component CSS aliases ---- */
   /* BDS component .css files reference full-namespaced tokens (--_color---...).
@@ -197,6 +200,18 @@ html {
   --services--orange: #e76134;
   --services--orange-dark: #4e1400;
   --services--orange-light: #ffe8dc;
+
+  /* ---- BDS semantic service tokens (maps to colors above) ---- */
+  --background-service-brand: var(--services--yellow);
+  --text-service-brand: var(--services--yellow-dark);
+  --background-service-marketing: var(--services--green);
+  --text-service-marketing: var(--services--green-dark);
+  --background-service-information: var(--services--blue);
+  --text-service-information: var(--services--blue-dark);
+  --background-service-product: var(--services--purple);
+  --text-service-product: var(--services--purple-dark);
+  --background-service-service: var(--services--orange);
+  --text-service-service: var(--services--orange-dark);
 }
 
 /*
@@ -217,12 +232,16 @@ html {
   --text-brand-primary: var(--brand--primary);
   --text-inverse: var(--grayscale--darkest);
   --text-negative: #ff6b6b;
+  --text-warning: #f4d364;
+  --text-success: #9ada6c;
 
   /* Surface */
   --surface-primary: var(--grayscale--black);
   --surface-secondary: var(--grayscale--darkest);
   --surface-tertiary: var(--grayscale--darker);
   --surface-negative: #3d1a1a;
+  --surface-warning: #2a2110;
+  --surface-success: #1a2a14;
   --surface-brand-primary: var(--brand--primary);
   --surface-brand-secondary: var(--grayscale--darkest);
 
@@ -279,6 +298,18 @@ html {
   --services--orange: #c74e24;
   --services--orange-dark: #e76134;
   --services--orange-light: #241008;
+
+  /* BDS semantic service tokens (dark mode) */
+  --background-service-brand: var(--services--yellow);
+  --text-service-brand: var(--services--yellow-dark);
+  --background-service-marketing: var(--services--green);
+  --text-service-marketing: var(--services--green-dark);
+  --background-service-information: var(--services--blue);
+  --text-service-information: var(--services--blue-dark);
+  --background-service-product: var(--services--purple);
+  --text-service-product: var(--services--purple-dark);
+  --background-service-service: var(--services--orange);
+  --text-service-service: var(--services--orange-dark);
 }
 
 /* Bare element overrides — ensure markdown/dynamic content inherits brand tokens */

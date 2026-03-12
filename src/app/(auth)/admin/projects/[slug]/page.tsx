@@ -40,21 +40,22 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
   // Fetch assigned services
   const { data: projectServices } = await supabase
     .from('project_services')
-    .select('services(id, name, service_categories(slug, name))')
+    .select('services(id, name, slug, service_categories(slug, name))')
     .eq('project_id', project.id);
 
   const services = (projectServices ?? [])
     .map((ps) => {
-      const svc = (ps as unknown as { services: { id: string; name: string; service_categories: { slug: string; name: string } | null } | null }).services;
+      const svc = (ps as unknown as { services: { id: string; name: string; slug: string; service_categories: { slug: string; name: string } | null } | null }).services;
       if (!svc) return null;
       return {
         id: svc.id,
         name: svc.name,
+        slug: svc.slug,
         category_slug: svc.service_categories?.slug ?? 'service',
         category_name: svc.service_categories?.name ?? null,
       };
     })
-    .filter(Boolean) as { id: string; name: string; category_slug: string; category_name: string | null }[];
+    .filter(Boolean) as { id: string; name: string; slug: string; category_slug: string; category_name: string | null }[];
 
   const metadataItems = [
     {
@@ -256,6 +257,15 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                 {
                   header: 'Service line',
                   accessor: (svc) => svc.category_name || <span style={detail.empty}>—</span>,
+                },
+                {
+                  header: '',
+                  accessor: (svc) => (
+                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${svc.slug}`}>
+                      View
+                    </Button>
+                  ),
+                  style: { textAlign: 'right' },
                 },
               ]}
             />
