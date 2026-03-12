@@ -11,6 +11,28 @@ export default async function NewProjectPage() {
     .neq('status', 'archived')
     .order('name');
 
+  // Fetch service lines (categories)
+  const { data: categories } = await supabase
+    .from('service_categories')
+    .select('id, name, slug')
+    .order('name');
+
+  const serviceLines = (categories ?? []).map((c) => ({ id: c.id, name: c.name, slug: c.slug }));
+
+  // Fetch available services
+  const { data: services } = await supabase
+    .from('services')
+    .select('id, name, category_id, service_categories(slug)')
+    .eq('active', true)
+    .order('name');
+
+  const availableServices = (services ?? []).map((s) => ({
+    id: s.id,
+    name: s.name,
+    category_slug: (s.service_categories as unknown as { slug: string } | null)?.slug ?? 'service',
+    category_id: s.category_id ?? '',
+  }));
+
   return (
     <div>
       <PageHeader
@@ -26,7 +48,11 @@ export default async function NewProjectPage() {
         }
       />
 
-      <NewProjectForm companies={companies ?? []} />
+      <NewProjectForm
+        companies={companies ?? []}
+        serviceLines={serviceLines}
+        availableServices={availableServices}
+      />
     </div>
   );
 }

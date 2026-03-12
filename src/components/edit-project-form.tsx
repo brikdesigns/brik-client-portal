@@ -6,8 +6,8 @@ import { createClient } from '@/lib/supabase/client';
 import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { TextArea } from '@bds/components/ui/TextArea/TextArea';
 import { Select } from '@bds/components/ui/Select/Select';
+import { MultiSelect } from '@bds/components/ui/MultiSelect/MultiSelect';
 import { Button } from '@bds/components/ui/Button/Button';
-import { ServiceBadge } from '@/components/service-badge';
 import { font, color, space, gap } from '@/lib/tokens';
 
 const sectionHeadingStyle = {
@@ -76,16 +76,12 @@ export function EditProjectForm({ project, clientName, serviceLines, availableSe
   const [loading, setLoading] = useState(false);
   const router = useRouter();
 
-  const filteredServices = useMemo(() => {
-    if (!serviceLineFilter) return availableServices;
-    return availableServices.filter((s) => s.category_id === serviceLineFilter);
+  const serviceOptions = useMemo(() => {
+    const base = serviceLineFilter
+      ? availableServices.filter((s) => s.category_id === serviceLineFilter)
+      : availableServices;
+    return base.map((s) => ({ label: s.name, value: s.id }));
   }, [availableServices, serviceLineFilter]);
-
-  function toggleService(serviceId: string) {
-    setSelectedServiceIds((prev) =>
-      prev.includes(serviceId) ? prev.filter((id) => id !== serviceId) : [...prev, serviceId]
-    );
-  }
 
   async function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -221,39 +217,14 @@ export function EditProjectForm({ project, clientName, serviceLines, availableSe
             }))}
             fullWidth
           />
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: gap.sm }}>
-            {filteredServices.map((svc) => {
-              const selected = selectedServiceIds.includes(svc.id);
-              return (
-                <button
-                  key={svc.id}
-                  type="button"
-                  onClick={() => toggleService(svc.id)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: gap.xs,
-                    padding: `${gap.xs} ${gap.sm}`,
-                    borderRadius: space.sm,
-                    border: `1px solid ${selected ? color.brand.primary : color.border.secondary}`,
-                    backgroundColor: selected ? color.brand.primary + '10' : 'transparent',
-                    cursor: 'pointer',
-                    fontFamily: font.family.body,
-                    fontSize: font.size.body.sm,
-                    color: color.text.primary,
-                  }}
-                >
-                  <ServiceBadge category={svc.category_slug} serviceName={svc.name} size={28} />
-                  {svc.name}
-                </button>
-              );
-            })}
-            {availableServices.length === 0 && (
-              <span style={{ color: color.text.muted, fontFamily: font.family.body, fontSize: font.size.body.sm }}>
-                No services available.
-              </span>
-            )}
-          </div>
+          <MultiSelect
+            label="Services"
+            placeholder={serviceLineFilter ? 'Select a service...' : 'Select a service line first'}
+            options={serviceOptions}
+            value={selectedServiceIds}
+            onChange={setSelectedServiceIds}
+            fullWidth
+          />
 
           {/* ClickUp */}
           <p style={sectionHeadingStyle}>ClickUp</p>

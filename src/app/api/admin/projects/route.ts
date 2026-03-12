@@ -14,6 +14,7 @@ const projectSchema = z.object({
   end_date: z.string().optional(),
   clickup_list_id: z.string().optional(),
   clickup_assignee_id: z.number().optional(),
+  service_ids: z.array(uuidSchema).optional(),
 });
 
 function toSlug(text: string): string {
@@ -42,6 +43,7 @@ export async function POST(request: Request) {
     end_date,
     clickup_list_id,
     clickup_assignee_id,
+    service_ids,
   } = body;
 
   // ── Step 1: Try to create ClickUp task ─────────────────────
@@ -101,6 +103,13 @@ export async function POST(request: Request) {
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 400 });
+  }
+
+  // ── Step 3: Link services to project ─────────────────────
+  if (service_ids && service_ids.length > 0 && project) {
+    await supabase
+      .from('project_services')
+      .insert(service_ids.map((sid) => ({ project_id: project.id, service_id: sid })));
   }
 
   return NextResponse.json({

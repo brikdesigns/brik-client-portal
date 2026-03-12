@@ -75,7 +75,7 @@ export function ContactsPageContent({ contacts }: { contacts: ContactRow[] }) {
         title="Contacts"
         subtitle="People at your companies — clients, managers, and admins."
         actions={
-          <Button variant="primary" size="sm" asLink href="/admin/contacts/new">
+          <Button variant="primary" size="md" asLink href="/admin/contacts/new">
             Add Contact
           </Button>
         }

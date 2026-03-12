@@ -356,6 +356,16 @@ blockquote {
 }
 
 /*
+ * Global placeholder color — ensure all inputs use text-muted.
+ * BDS components set this via .bds-text-input-field::placeholder,
+ * but Tailwind's base reset may override. Belt-and-suspenders.
+ */
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted);
+}
+
+/*
  * Form input sizing — TextArea and Checkbox labels should use body-md (16px),
  * not body-sm (14px). Override globally so all forms are consistent.
  */

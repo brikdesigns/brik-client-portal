@@ -6,7 +6,7 @@ import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { ProjectStatusBadge } from './status-badges';
-import { ServiceBadge } from './service-badge';
+import { ServiceBadge, ServiceCategoryLabel, categoryConfig } from './service-badge';
 
 interface ServiceInfo {
   id: string;
@@ -40,14 +40,24 @@ export function ProjectsFilterTable({
 }) {
   const [clientFilter, setClientFilter] = useState<string | undefined>();
   const [statusFilter, setStatusFilter] = useState<string | undefined>();
+  const [serviceLineFilter, setServiceLineFilter] = useState<string | undefined>();
+
+  const serviceLineOptions = useMemo(() => {
+    const slugs = new Set<string>();
+    projects.forEach((p) => p.services.forEach((s) => slugs.add(s.category_slug)));
+    return Array.from(slugs)
+      .sort((a, b) => a.localeCompare(b))
+      .map((slug) => ({ id: slug, label: categoryConfig[slug]?.label ?? slug }));
+  }, [projects]);
 
   const filtered = useMemo(() => {
     return projects.filter((p) => {
       if (clientFilter && p.company?.id !== clientFilter) return false;
       if (statusFilter && p.status !== statusFilter) return false;
+      if (serviceLineFilter && !p.services.some((s) => s.category_slug === serviceLineFilter)) return false;
       return true;
     });
-  }, [projects, clientFilter, statusFilter]);
+  }, [projects, clientFilter, statusFilter, serviceLineFilter]);
 
   return (
     <div>
@@ -73,6 +83,13 @@ export function ProjectsFilterTable({
         </span>
 
         <div style={{ display: 'flex', gap: gap.xs, marginLeft: 'auto', flexWrap: 'wrap' }}>
+          <FilterButton
+            size="sm"
+            label="Service Line"
+            value={serviceLineFilter}
+            onChange={setServiceLineFilter}
+            options={serviceLineOptions}
+          />
           <FilterButton
             size="sm"
             label="Client"
@@ -123,6 +140,21 @@ export function ProjectsFilterTable({
             style: { width: '120px' },
           },
           {
+            header: 'Service Line',
+            accessor: (p) => {
+              const uniqueCategories = Array.from(new Set(p.services.map((s) => s.category_slug)));
+              return uniqueCategories.length > 0 ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xs }}>
+                  {uniqueCategories.map((cat) => (
+                    <ServiceCategoryLabel key={cat} category={cat} />
+                  ))}
+                </div>
+              ) : (
+                <span style={{ color: color.text.muted }}>—</span>
+              );
+            },
+          },
+          {
             header: 'Project',
             accessor: (p) => (
               <a
@@ -166,7 +198,7 @@ export function ProjectsFilterTable({
             header: '',
             accessor: (p) => (
               <div style={{ display: 'flex', gap: gap.xs, justifyContent: 'flex-end' }}>
-                <Button variant="ghost" size="sm" asLink href={`/admin/projects/${p.slug}/edit`}>
+                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}/edit`}>
                   Edit
                 </Button>
                 <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>

@@ -71,12 +71,10 @@ interface ClickUpListsResponse {
 
 interface ClickUpMembersResponse {
   members: Array<{
-    user: {
-      id: number;
-      username: string;
-      email: string;
-      profilePicture: string | null;
-    };
+    id: number;
+    username: string;
+    email: string;
+    profilePicture: string | null;
   }>;
 }
 
@@ -127,10 +125,10 @@ export async function getMembers(): Promise<ClickUpMember[]> {
     `/list/${lists[0].id}/member`
   );
   return data.members.map((m) => ({
-    id: m.user.id,
-    username: m.user.username,
-    email: m.user.email,
-    profilePicture: m.user.profilePicture,
+    id: m.id,
+    username: m.username,
+    email: m.email,
+    profilePicture: m.profilePicture,
   }));
 }
 
