@@ -38,6 +38,28 @@ const eventTypeLabels: Record<string, string> = {
   logout: 'Logout',
   password_reset: 'Password reset',
   invite_accepted: 'Invite accepted',
+  email_sent: 'Email sent',
+  email_delivered: 'Email delivered',
+  email_bounced: 'Email bounced',
+  email_failed: 'Email failed',
+};
+
+const eventBadgeStatus: Record<string, 'positive' | 'error' | 'neutral' | 'warning'> = {
+  login: 'positive',
+  logout: 'neutral',
+  password_reset: 'neutral',
+  invite_accepted: 'positive',
+  email_sent: 'neutral',
+  email_delivered: 'positive',
+  email_bounced: 'error',
+  email_failed: 'error',
+};
+
+const emailTemplateLabels: Record<string, string> = {
+  invite: 'Portal invite',
+  proposal_sent: 'Proposal link',
+  invoice_due: 'Invoice reminder',
+  password_reset: 'Password reset',
 };
 
 interface Contact {
@@ -78,15 +100,62 @@ interface ActivityEntry {
   created_at: string;
 }
 
+interface EmailEntry {
+  id: string;
+  to_email: string;
+  subject: string;
+  template: string | null;
+  status: string;
+  sent_at: string;
+}
+
+/** Unified timeline entry for the Activity tab */
+interface TimelineEntry {
+  id: string;
+  event_type: string;
+  detail: string | null;
+  date: string;
+  ip_address: string | null;
+  user_agent: string | null;
+}
+
 interface Props {
   contact: Contact;
   company: { id: string; name: string; slug: string; type: string } | null;
   profile: Profile | null;
   connectedCompanies: ConnectedCompany[];
   activity: ActivityEntry[];
+  emails: EmailEntry[];
 }
 
-export function ContactDetailTabs({ contact, company, profile, connectedCompanies, activity }: Props) {
+/** Merge auth activity + emails into a single timeline sorted by date desc */
+function buildTimeline(activity: ActivityEntry[], emails: EmailEntry[]): TimelineEntry[] {
+  const authEntries: TimelineEntry[] = activity.map((a) => ({
+    id: a.id,
+    event_type: a.event_type,
+    detail: null,
+    date: a.created_at,
+    ip_address: a.ip_address,
+    user_agent: a.user_agent,
+  }));
+
+  const emailEntries: TimelineEntry[] = emails.map((e) => ({
+    id: `email-${e.id}`,
+    event_type: `email_${e.status}`,
+    detail: e.template
+      ? emailTemplateLabels[e.template] ?? e.template
+      : e.subject,
+    date: e.sent_at,
+    ip_address: null,
+    user_agent: null,
+  }));
+
+  return [...authEntries, ...emailEntries].sort(
+    (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
+  );
+}
+
+export function ContactDetailTabs({ contact, company, profile, connectedCompanies, activity, emails }: Props) {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tab = searchParams.get('tab');
@@ -281,54 +350,69 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
       )}
 
       {/* ── Activity Tab ──────────────────────────────────────── */}
-      {activeTab === 'activity' && (
-        <div>
-          {!contact.user_id ? (
+      {activeTab === 'activity' && (() => {
+        const hasPortalAccess = !!contact.user_id;
+        const hasEmails = emails.length > 0;
+
+        if (!hasPortalAccess && !hasEmails) {
+          return (
             <p style={{ ...detail.value, color: color.text.muted }}>
-              This contact does not have portal access. Activity tracking requires a linked user account.
+              No activity recorded yet. Activity will appear here when the contact receives emails or logs into the portal.
             </p>
-          ) : (
-            <DataTable
-              data={activity}
-              rowKey={(a) => a.id}
-              emptyMessage="No activity recorded yet"
-              emptyDescription="Activity events will appear here as the user interacts with the portal."
-              columns={[
-                {
-                  header: 'Event',
-                  accessor: (a) => (
-                    <Badge status={a.event_type === 'login' ? 'positive' : 'neutral'}>
-                      {eventTypeLabels[a.event_type] ?? a.event_type}
-                    </Badge>
-                  ),
+          );
+        }
+
+        const timeline = buildTimeline(
+          hasPortalAccess ? activity : [],
+          emails,
+        );
+
+        return (
+          <DataTable
+            data={timeline}
+            rowKey={(t) => t.id}
+            emptyMessage="No activity recorded yet"
+            emptyDescription="Activity events will appear here as the user interacts with the portal."
+            columns={[
+              {
+                header: 'Event',
+                accessor: (t) => (
+                  <Badge status={eventBadgeStatus[t.event_type] ?? 'neutral'}>
+                    {eventTypeLabels[t.event_type] ?? t.event_type}
+                  </Badge>
+                ),
+              },
+              {
+                header: 'Detail',
+                accessor: (t) => t.detail || '—',
+                style: { color: color.text.secondary },
+              },
+              {
+                header: 'Date',
+                accessor: (t) => new Date(t.date).toLocaleString(),
+                style: { color: color.text.secondary },
+              },
+              {
+                header: 'IP address',
+                accessor: (t) => t.ip_address || '—',
+                style: { color: color.text.muted },
+              },
+              {
+                header: 'Device',
+                accessor: (t) => {
+                  if (!t.user_agent) return '—';
+                  if (t.user_agent.includes('Mobile')) return 'Mobile';
+                  if (t.user_agent.includes('Mac')) return 'Mac';
+                  if (t.user_agent.includes('Windows')) return 'Windows';
+                  if (t.user_agent.includes('Linux')) return 'Linux';
+                  return 'Desktop';
                 },
-                {
-                  header: 'Date',
-                  accessor: (a) => new Date(a.created_at).toLocaleString(),
-                  style: { color: color.text.secondary },
-                },
-                {
-                  header: 'IP address',
-                  accessor: (a) => a.ip_address || '—',
-                  style: { color: color.text.muted },
-                },
-                {
-                  header: 'Device',
-                  accessor: (a) => {
-                    if (!a.user_agent) return '—';
-                    if (a.user_agent.includes('Mobile')) return 'Mobile';
-                    if (a.user_agent.includes('Mac')) return 'Mac';
-                    if (a.user_agent.includes('Windows')) return 'Windows';
-                    if (a.user_agent.includes('Linux')) return 'Linux';
-                    return 'Desktop';
-                  },
-                  style: { color: color.text.muted },
-                },
-              ]}
-            />
-          )}
-        </div>
-      )}
+                style: { color: color.text.muted },
+              },
+            ]}
+          />
+        );
+      })()}
     </>
   );
 }

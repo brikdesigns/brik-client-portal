@@ -55,7 +55,7 @@ export async function POST(request: Request) {
 
     const { data: contact } = await supabase
       .from('contacts')
-      .select('name, email')
+      .select('full_name, first_name, email')
       .eq('company_id', company_id)
       .eq('is_primary', true)
       .single();
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     const generationInput: ProposalGenerationInput = {
       companyName: company.name,
       companyIndustry: company.industry,
-      contactName: contact?.name || 'the team',
+      contactName: contact?.first_name || contact?.full_name || 'the team',
       meetingNotes: notesResult.content,
       services: serviceDetails,
     };

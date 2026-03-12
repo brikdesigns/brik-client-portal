@@ -10,6 +10,8 @@ import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Skeleton } from '@bds/components/ui/Skeleton/Skeleton';
 import { formatCurrency } from '@/lib/format';
 import { font, color, border, space, gap } from '@/lib/tokens';
+import { ScopeOfProjectContent, ProjectTimelineContent } from '@/components/proposal-sections';
+import type { ScopeItem, TimelinePhase } from '@/lib/proposal-types';
 
 /**
  * Force dark theme on this standalone page.
@@ -74,6 +76,8 @@ interface ProposalSection {
   title: string;
   content: string | null;
   sort_order: number;
+  scope_items?: ScopeItem[];
+  timeline_phases?: TimelinePhase[];
 }
 
 interface Proposal {
@@ -411,6 +415,10 @@ export default function PublicProposalPage() {
               accepting={accepting}
               onAccept={handleAccept}
             />
+          ) : currentSection.type === 'scope_of_project' && currentSection.scope_items?.length ? (
+            <ScopeOfProjectContent items={currentSection.scope_items} />
+          ) : currentSection.type === 'project_timeline' && currentSection.timeline_phases?.length ? (
+            <ProjectTimelineContent phases={currentSection.timeline_phases} />
           ) : (
             <div style={proseStyle}>
               <ReactMarkdown

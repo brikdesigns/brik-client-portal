@@ -13,19 +13,11 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faPhone } from '@fortawesome/free-solid-svg-icons';
 import { heading, label } from '@/lib/styles';
 import { formatPhone } from '@/lib/format';
+import { uniqueSlug, checkDuplicateName } from '@/lib/slug';
 import { font, color, space, gap, border } from '@/lib/tokens';
 import { useToast } from '@/components/toast-provider';
 
 const iconSize = { width: 14, height: 14 };
-
-function toSlug(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-|-$/g, '');
-}
 
 export default function NewCompanyPage() {
   const searchParams = useSearchParams();
@@ -44,6 +36,7 @@ export default function NewCompanyPage() {
   const [websiteUrl, setWebsiteUrl] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
+  const [duplicateWarning, setDuplicateWarning] = useState<{ name: string; slug: string } | null>(null);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
   const { toastSuccess } = useToast();
@@ -55,9 +48,10 @@ export default function NewCompanyPage() {
 
   async function saveCompany(): Promise<{ id: string; slug: string } | null> {
     setError('');
+    setDuplicateWarning(null);
 
     const supabase = createClient();
-    const slug = toSlug(name);
+    const slug = await uniqueSlug(supabase, 'companies', name);
     const defaultStatus = type === 'lead' ? 'needs_qualified' : type === 'prospect' ? 'needs_proposal' : 'active';
 
     // If structured fields are empty, extract them from the address string
@@ -104,6 +98,17 @@ export default function NewCompanyPage() {
     setLoading(true);
 
     try {
+      // Check for duplicate name (warn once, allow on second submit)
+      if (!duplicateWarning) {
+        const supabase = createClient();
+        const dup = await checkDuplicateName(supabase, 'companies', name);
+        if (dup) {
+          setDuplicateWarning(dup);
+          setLoading(false);
+          return;
+        }
+      }
+
       const result = await saveCompany();
       if (!result) return;
 
@@ -127,6 +132,17 @@ export default function NewCompanyPage() {
     setAddingContact(true);
 
     try {
+      // Check for duplicate name (warn once, allow on second submit)
+      if (!duplicateWarning) {
+        const supabase = createClient();
+        const dup = await checkDuplicateName(supabase, 'companies', name);
+        if (dup) {
+          setDuplicateWarning(dup);
+          setAddingContact(false);
+          return;
+        }
+      }
+
       const result = await saveCompany();
       if (!result) return;
 
@@ -211,7 +227,7 @@ export default function NewCompanyPage() {
               type="text"
               placeholder="Enter business name"
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => { setName(e.target.value); setDuplicateWarning(null); }}
               required
               fullWidth
             />
@@ -278,6 +294,28 @@ export default function NewCompanyPage() {
               fullWidth
             />
           </div>
+
+          {duplicateWarning && (
+            <div
+              style={{
+                padding: space.md,
+                borderRadius: border.radius.md,
+                backgroundColor: color.surface.warning,
+                border: `1px solid ${color.system.yellow}`,
+                margin: `${space.lg} 0 0`,
+              }}
+            >
+              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.sm, color: color.text.primary, margin: 0 }}>
+                A company named <strong>{duplicateWarning.name}</strong> already exists.{' '}
+                <a href={`/admin/companies/${duplicateWarning.slug}`} style={{ color: color.system.link, textDecoration: 'underline' }}>
+                  View existing
+                </a>
+              </p>
+              <p style={{ fontFamily: font.family.body, fontSize: font.size.body.xs, color: color.text.secondary, margin: `${gap.xs} 0 0` }}>
+                Submit again to create anyway (e.g. for a separate location or branch).
+              </p>
+            </div>
+          )}
 
           {error && (
             <p

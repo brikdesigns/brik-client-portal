@@ -12,7 +12,6 @@ import { DataTable } from '@/components/data-table';
 import {
   CompanyStatusBadge,
   CompanyTypeTag,
-  ProjectStatusBadge,
   InvoiceStatusBadge,
   ServiceStatusBadge,
   ServiceTypeTag,
@@ -66,12 +65,13 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     notFound();
   }
 
-  // Fetch all secondary data in parallel (contacts, proposals, reportSet, agreements)
+  // Fetch all secondary data in parallel (contacts, proposals, reportSet, agreements, prospective services)
   const [
     { data: contacts },
     { data: proposals },
     { data: reportSet },
     { data: agreements },
+    { data: prospectiveItems },
   ] = await Promise.all([
     supabase
       .from('contacts')
@@ -95,6 +95,19 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       .select('id, type, title, status, created_at')
       .eq('company_id', client.id)
       .order('created_at', { ascending: false }),
+    // Services from active (unsigned) proposals — shown as "Pending" on services tab
+    supabase
+      .from('proposal_items')
+      .select(`
+        id, service_id,
+        services(id, name, slug, service_type, billing_frequency, base_price_cents,
+          service_categories(slug, name)
+        ),
+        proposals!inner(id, title, status, company_id)
+      `)
+      .eq('proposals.company_id', client.id)
+      .in('proposals.status', ['draft', 'sent', 'viewed'])
+      .not('service_id', 'is', null),
   ]);
 
   const latestProposal = proposals?.[0] || null;
@@ -131,6 +144,38 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     } | null;
   }[]) ?? [];
 
+  // Merge prospective services (from unsigned proposals) into the services list.
+  // Deduplicate: if a service already exists in company_services, skip the proposal version.
+  const assignedServiceIds = new Set(clientServices.map((cs) => cs.services?.id).filter(Boolean));
+
+  const prospectiveServices = (prospectiveItems ?? [])
+    .filter((pi) => {
+      const svc = (pi as unknown as Record<string, unknown>).services as { id: string } | null;
+      return svc && !assignedServiceIds.has(svc.id);
+    })
+    .reduce((acc, pi) => {
+      // Deduplicate by service_id across multiple proposal items
+      const svc = (pi as unknown as Record<string, unknown>).services as {
+        id: string; name: string; slug: string; service_type: string;
+        billing_frequency: string | null; base_price_cents: number | null;
+        service_categories: { slug: string; name: string } | null;
+      };
+      const proposal = (pi as unknown as Record<string, unknown>).proposals as { title: string; status: string };
+      if (!acc.has(svc.id)) {
+        acc.set(svc.id, {
+          id: `proposal-${pi.id}`,
+          status: 'pending',
+          started_at: null,
+          notes: `From proposal: ${proposal.title}`,
+          services: svc,
+          _fromProposal: true,
+        });
+      }
+      return acc;
+    }, new Map<string, typeof clientServices[number] & { _fromProposal?: boolean }>());
+
+  const allServices = [...clientServices, ...prospectiveServices.values()];
+
   const companyType = (client as unknown as { type: string }).type;
 
   const rawCity = (client as unknown as Record<string, string>).city;
@@ -149,8 +194,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     { key: 'overview', label: 'Overview', types: ['lead', 'prospect', 'client'] },
     { key: 'reporting', label: 'Reporting', types: ['lead', 'prospect', 'client'], dot: !reportSet },
     { key: 'billing', label: 'Billing', types: ['prospect', 'client'], dot: !latestProposal || invoices.some((i) => i.status === 'open') },
-    { key: 'services', label: 'Services', types: ['prospect', 'client'] },
-    { key: 'projects', label: 'Projects', types: ['client'], dot: projects.some((p) => p.status === 'in_progress') },
+    { key: 'services', label: 'Services', types: ['prospect', 'client'], dot: allServices.some((cs) => cs.status === 'pending') },
     { key: 'contacts', label: 'Contacts', types: ['lead', 'prospect', 'client'], dot: !contacts?.length },
   ];
   const tabs = allTabs.filter((t) => t.types.includes(companyType));
@@ -202,8 +246,13 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               Edit
             </Button>
             {companyType === 'lead' && <QualifyLeadButton companyId={client.id} />}
-            {companyType === 'prospect' && (!latestProposal || latestProposal.status === 'draft') && (
-              <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} label="Send Proposal" />
+            {companyType === 'prospect' && (!latestProposal || ['draft', 'declined', 'expired'].includes(latestProposal.status)) && (
+              <GenerateProposalButton
+                companyId={client.id}
+                companyName={client.name}
+                slug={client.slug}
+                label={latestProposal ? 'New Proposal' : 'Begin Proposal'}
+              />
             )}
           </div>
         }
@@ -213,23 +262,6 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           ...(client.industry ? [{ label: 'Industry', value: formatIndustry(client.industry) }] : []),
         ]}
       />
-
-      {/* Stat cards — for clients */}
-      {companyType === 'client' && (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-            gap: gap.lg,
-            marginBottom: space.lg,
-          }}
-        >
-          <CardSummary label="Services" value={clientServices.filter((cs) => cs.status === 'active').length} />
-          <CardSummary label="Projects" value={projects.length} />
-          <CardSummary label="Open invoices" value={invoices.filter((i) => i.status === 'open').length} />
-          <CardSummary label="Contacts" value={contacts?.length ?? 0} />
-        </div>
-      )}
 
       {/* Tab bar */}
       <div
@@ -251,6 +283,31 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       {/* ── Overview Tab ───────────────────────────────────────── */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
+          {/* Stat cards */}
+          {(companyType === 'client' || allServices.length > 0) && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: gap.lg,
+              }}
+            >
+              <CardSummary
+                label="Services"
+                value={allServices.length}
+                textLink={allServices.some((cs) => cs.status === 'pending')
+                  ? { label: `${allServices.filter((cs) => cs.status === 'pending').length} pending`, href: `/admin/companies/${client.slug}?tab=services` }
+                  : undefined}
+              />
+              <CardSummary label="Projects" value={projects.length} />
+              <CardSummary
+                label="Open Invoices"
+                value={invoices.filter((i) => i.status === 'open').length}
+              />
+              <CardSummary label="Contacts" value={contacts?.length ?? 0} />
+            </div>
+          )}
+
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={detail.sectionHeading}>Location</h2>
             <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
@@ -503,11 +560,12 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 action={
                   <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
                     {latestProposal && <ProposalStatusBadge status={latestProposal.status} />}
-                    {latestProposal ? (
+                    {latestProposal && (
                       <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
                         View
                       </Button>
-                    ) : (
+                    )}
+                    {(!latestProposal || ['declined', 'expired'].includes(latestProposal.status)) && (
                       <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} />
                     )}
                   </div>
@@ -626,7 +684,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
             <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/services/new`}>Assign service</Button>
           </div>
           <DataTable
-            data={clientServices}
+            data={allServices}
             rowKey={(cs) => cs.id}
             emptyMessage="No services assigned yet"
             emptyDescription="Assign a service from the catalog to this company."
@@ -642,15 +700,18 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
               {
                 header: 'Service',
-                accessor: (cs) =>
-                  cs.services ? (
-                    <a
-                      href={`/admin/services/${cs.services.slug}`}
-                      style={{ color: color.text.primary, textDecoration: 'none' }}
-                    >
+                accessor: (cs) => {
+                  if (!cs.services) return '—';
+                  const isProspective = (cs as unknown as Record<string, unknown>)._fromProposal;
+                  const href = isProspective
+                    ? `/admin/services/${cs.services.slug}`
+                    : `/admin/companies/${client.slug}/services/${cs.services.slug}`;
+                  return (
+                    <a href={href} style={{ color: color.text.primary, textDecoration: 'none' }}>
                       {cs.services.name}
                     </a>
-                  ) : '—',
+                  );
+                },
                 style: { fontWeight: font.weight.medium },
               },
               {
@@ -683,12 +744,18 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
               {
                 header: '',
-                accessor: (cs) =>
-                  cs.services ? (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${cs.services.slug}`}>
+                accessor: (cs) => {
+                  if (!cs.services) return null;
+                  const isProspective = (cs as unknown as Record<string, unknown>)._fromProposal;
+                  const href = isProspective
+                    ? `/admin/services/${cs.services.slug}`
+                    : `/admin/companies/${client.slug}/services/${cs.services.slug}`;
+                  return (
+                    <Button variant="secondary" size="sm" asLink href={href}>
                       View
                     </Button>
-                  ) : null,
+                  );
+                },
                 style: { textAlign: 'right' as const },
               },
             ]}
@@ -697,52 +764,6 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       )}
 
       {/* ── Projects Tab ──────────────────────────────────────── */}
-      {activeTab === 'projects' && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
-            <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Projects</h2>
-            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/projects/new`}>Add project</Button>
-          </div>
-          <DataTable
-            data={projects}
-            rowKey={(p) => p.id}
-            emptyMessage="No projects yet"
-            emptyDescription="Create a project to track work for this company."
-            emptyAction={{ label: 'Add Project', href: `/admin/companies/${client.slug}/projects/new` }}
-            columns={[
-              {
-                header: 'Name',
-                accessor: (p) => p.name,
-                style: { fontWeight: font.weight.medium, color: color.text.primary },
-              },
-              {
-                header: 'Status',
-                accessor: (p) => <ProjectStatusBadge status={p.status} />,
-              },
-              {
-                header: 'Start',
-                accessor: (p) => p.start_date ? new Date(p.start_date).toLocaleDateString() : '—',
-                style: { color: color.text.secondary },
-              },
-              {
-                header: 'End',
-                accessor: (p) => p.end_date ? new Date(p.end_date).toLocaleDateString() : '—',
-                style: { color: color.text.secondary },
-              },
-              {
-                header: '',
-                accessor: (p) => (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
-                    View
-                  </Button>
-                ),
-                style: { textAlign: 'right' },
-              },
-            ]}
-          />
-        </div>
-      )}
-
       {/* ── Contacts Tab ──────────────────────────────────────── */}
       {activeTab === 'contacts' && (
         <div>

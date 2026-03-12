@@ -202,11 +202,6 @@ const proposalStatusMap: Record<string, StatusConfig> = {
     variant: 'positive',
     icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
   },
-  accepted: {
-    label: 'Accepted',
-    variant: 'positive',
-    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
-  },
   declined: {
     label: 'Declined',
     variant: 'error',

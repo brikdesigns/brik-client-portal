@@ -40,8 +40,8 @@ export default async function ContactDetailPage({ params }: Props) {
 
   const company = contact.companies as unknown as { id: string; name: string; slug: string; type: string } | null;
 
-  // Fetch profile, connected companies, and activity in parallel
-  const [profileResult, companiesResult, activityResult] = await Promise.all([
+  // Fetch profile, connected companies, activity, and email history in parallel
+  const [profileResult, companiesResult, activityResult, emailResult] = await Promise.all([
     contact.user_id
       ? supabase
           .from('profiles')
@@ -63,6 +63,14 @@ export default async function ContactDetailPage({ params }: Props) {
           .order('created_at', { ascending: false })
           .limit(50)
       : Promise.resolve({ data: null }),
+    contact.email
+      ? supabase
+          .from('email_log')
+          .select('id, to_email, subject, template, status, sent_at')
+          .eq('to_email', contact.email)
+          .order('sent_at', { ascending: false })
+          .limit(50)
+      : Promise.resolve({ data: null }),
   ]);
 
   const profile = profileResult.data;
@@ -78,6 +86,7 @@ export default async function ContactDetailPage({ params }: Props) {
   }
 
   const activity = activityResult.data ?? [];
+  const emails = emailResult.data ?? [];
 
   return (
     <div>
@@ -107,6 +116,7 @@ export default async function ContactDetailPage({ params }: Props) {
         profile={profile}
         connectedCompanies={connectedCompanies}
         activity={activity}
+        emails={emails}
       />
     </div>
   );

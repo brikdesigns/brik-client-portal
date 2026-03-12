@@ -15,6 +15,7 @@ const projectSchema = z.object({
   clickup_list_id: z.string().optional(),
   clickup_assignee_id: z.number().optional(),
   service_ids: z.array(uuidSchema).optional(),
+  company_service_id: uuidSchema.optional(),
 });
 
 function toSlug(text: string): string {
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
     clickup_list_id,
     clickup_assignee_id,
     service_ids,
+    company_service_id,
   } = body;
 
   // ── Step 1: Try to create ClickUp task ─────────────────────
@@ -97,6 +99,7 @@ export async function POST(request: Request) {
       start_date: start_date || null,
       end_date: end_date || null,
       clickup_task_id: clickupTaskId,
+      company_service_id: company_service_id || null,
     })
     .select('id, slug')
     .single();

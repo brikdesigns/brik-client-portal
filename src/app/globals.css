@@ -354,6 +354,9 @@ blockquote {
 .bds-page-header-tabs {
   border-bottom: var(--border-width-md) solid var(--border-secondary);
 }
+.bds-tab-bar--tab .bds-tab-bar-item {
+  border-bottom-width: var(--border-width-md);
+}
 .bds-page-header-tabs .bds-tab-bar--tab .bds-tab-bar-item {
   margin-bottom: calc(-1 * var(--border-width-md));
 }
@@ -365,6 +368,16 @@ blockquote {
  */
 .bds-filter-button-dropdown {
   --padding-xl: var(--space-400);
+}
+
+/*
+ * Nested accordion — remove the last child's bottom border when an
+ * accordion lives inside another accordion's content panel. This
+ * prevents a double border where the inner last-item border meets the
+ * outer item's border.
+ */
+.bds-accordion-content > .bds-accordion > .bds-accordion-item:last-child {
+  border-bottom: none;
 }
 
 /*
