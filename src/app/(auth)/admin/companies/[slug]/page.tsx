@@ -24,6 +24,7 @@ import { QualifyLeadButton } from '@/components/qualify-lead-button';
 import { GenerateProposalButton } from '@/components/generate-proposal-button';
 import { RunAnalysisButton } from '@/components/run-analysis-button';
 import { GHLSyncButton } from '@/components/ghl-sync-button';
+import { ResendWelcomeButton } from '@/components/resend-welcome-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
@@ -75,7 +76,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
   ] = await Promise.all([
     supabase
       .from('contacts')
-      .select('id, full_name, email, phone, title, role, is_primary, user_id')
+      .select('id, full_name, email, phone, title, role, is_primary, user_id, setup_completed_at')
       .eq('company_id', client.id)
       .order('is_primary', { ascending: false }),
     supabase
@@ -817,9 +818,14 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               {
                 header: '',
                 accessor: (c) => (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
-                    View
-                  </Button>
+                  <span style={{ display: 'inline-flex', gap: gap.xs, justifyContent: 'flex-end' }}>
+                    {c.email && !c.setup_completed_at && (
+                      <ResendWelcomeButton contactId={c.id} contactName={c.full_name ?? c.email} />
+                    )}
+                    <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
+                      View
+                    </Button>
+                  </span>
                 ),
                 style: { textAlign: 'right' },
               },

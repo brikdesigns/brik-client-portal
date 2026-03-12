@@ -328,22 +328,32 @@ export async function sendProposalAcceptedEmail({
   companyName,
   companySlug,
   proposalId,
+  promoted,
+  warnings,
 }: {
   to: string;
   recipientName?: string;
   companyName: string;
   companySlug: string;
   proposalId: string;
+  promoted?: boolean;
+  warnings?: string[];
 }) {
+  const subject = warnings?.length
+    ? `⚠️ Proposal signed (needs attention): ${companyName}`
+    : `Proposal signed: ${companyName}`;
+
   const { data, error } = await getResend().emails.send({
     from: FROM_EMAIL,
     to,
-    subject: `Proposal signed: ${companyName}`,
+    subject,
     react: ProposalAcceptedEmail({
       recipientName,
       companyName,
       companySlug,
       proposalId,
+      promoted,
+      warnings,
     }),
   });
 
