@@ -1,3 +1,6 @@
+echo "🔍 Running tests before commit..."
+npm run test
+
 echo "🔍 Running linter before commit..."
 npm run lint
 

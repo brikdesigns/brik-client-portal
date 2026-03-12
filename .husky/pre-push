@@ -56,6 +56,10 @@ if [ -n "$MERGE_BASE" ]; then
 fi
 echo "No migration conflicts."
 
+echo "Running tests before push..."
+npx vitest run --reporter=verbose
+echo "Tests passed."
+
 echo "Running clean build check before push..."
 
 # Build into a separate directory so we don't destroy the running dev server's .next cache.

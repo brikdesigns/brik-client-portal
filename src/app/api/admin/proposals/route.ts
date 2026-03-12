@@ -19,6 +19,18 @@ const sectionSchema = z.object({
   title: z.string(),
   content: z.string().nullable(),
   sort_order: z.number().int(),
+  scope_items: z.array(z.object({
+    service_id: z.string().nullable().optional(),
+    service_name: z.string(),
+    category_slug: z.string(),
+    included: z.array(z.string()),
+    not_included: z.array(z.string()),
+    timeline: z.string().nullable().optional(),
+  })).optional(),
+  timeline_phases: z.array(z.object({
+    phase_label: z.string(),
+    deliverables: z.array(z.string()),
+  })).optional(),
 });
 
 const proposalSchema = z.object({
@@ -41,6 +53,50 @@ export async function POST(request: Request) {
   const body = await parseBody(request, proposalSchema);
   if (isValidationError(body)) return body;
   const { company_id, title, valid_until, notes, items, sections, meeting_notes_url, meeting_notes_content } = body;
+
+  // Validate: all service_ids in items actually exist in the services table
+  const itemServiceIds = items.map(i => i.service_id).filter((id): id is string => !!id);
+  if (itemServiceIds.length > 0) {
+    const { data: validServices, error: svcErr } = await supabase
+      .from('services')
+      .select('id')
+      .in('id', itemServiceIds);
+
+    if (svcErr) {
+      console.error('[proposal-save] Service validation query failed:', svcErr.message);
+      return NextResponse.json({ error: 'Failed to validate services' }, { status: 500 });
+    }
+
+    const validIds = new Set((validServices ?? []).map(s => s.id));
+    const invalid = itemServiceIds.filter(id => !validIds.has(id));
+    if (invalid.length > 0) {
+      console.warn('[proposal-save] Rejected: invalid service_ids in items:', invalid);
+      return NextResponse.json(
+        { error: `Invalid service IDs in line items: ${invalid.join(', ')}` },
+        { status: 400 }
+      );
+    }
+  }
+
+  // Validate: scope_items in sections only reference services that are in the line items
+  if (sections && sections.length > 0) {
+    const lineItemServiceIds = new Set(itemServiceIds);
+    const scopeSection = sections.find(s => s.type === 'scope_of_project');
+    if (scopeSection) {
+      const rawSections = scopeSection as unknown as { scope_items?: { service_id?: string; service_name?: string }[] };
+      const scopeServiceIds = (rawSections.scope_items ?? [])
+        .map(si => si.service_id)
+        .filter((id): id is string => !!id);
+      const orphanedScope = scopeServiceIds.filter(id => !lineItemServiceIds.has(id));
+      if (orphanedScope.length > 0) {
+        console.warn('[proposal-save] Scope/line-item mismatch:', {
+          scopeServiceIds,
+          lineItemServiceIds: [...lineItemServiceIds],
+          orphaned: orphanedScope,
+        });
+      }
+    }
+  }
 
   const token = crypto.randomUUID();
   const total_amount_cents = items.reduce(

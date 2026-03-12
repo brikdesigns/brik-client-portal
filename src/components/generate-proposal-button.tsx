@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { Button } from '@bds/components/ui/Button/Button';
 import { Modal } from '@bds/components/ui/Modal/Modal';
 import { Select } from '@bds/components/ui/Select/Select';
+import { TextInput } from '@bds/components/ui/TextInput/TextInput';
 import { color, space } from '@/lib/tokens';
 import { text } from '@/lib/styles';
 
@@ -29,12 +30,14 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
   const [error, setError] = useState('');
   const [meetingNotes, setMeetingNotes] = useState<MeetingNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState('');
+  const [proposalTitle, setProposalTitle] = useState('');
   const [loadingNotes, setLoadingNotes] = useState(false);
 
   const fetchAndOpen = useCallback(async () => {
     setLoadingNotes(true);
     setError('');
     setSelectedNoteId('');
+    setProposalTitle(`Proposal for ${companyName}`);
     setMeetingNotes([]);
 
     try {
@@ -73,6 +76,7 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
         body: JSON.stringify({
           company_id: companyId,
           meeting_note_page_id: selectedNoteId,
+          title: proposalTitle.trim() || undefined,
         }),
       });
 
@@ -147,6 +151,14 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
             Select the discovery call note for <strong>{companyName}</strong>. The AI will
             analyze the conversation, recommend services, and draft the full proposal.
           </p>
+
+          <TextInput
+            label="Proposal title"
+            value={proposalTitle}
+            onChange={(e) => setProposalTitle(e.target.value)}
+            placeholder={`Proposal for ${companyName}`}
+            size="md"
+          />
 
           <Select
             label="Meeting note"
