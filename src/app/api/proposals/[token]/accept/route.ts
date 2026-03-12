@@ -87,8 +87,11 @@ export async function POST(
     return NextResponse.json({ error: updateError.message }, { status: 500 });
   }
 
+  // Track issues that occur during post-acceptance steps.
+  // These don't block acceptance but admin needs to know about them.
+  const warnings: string[] = [];
+
   // Auto-create company_services from proposal line items linked to catalog services.
-  // Status 'pending' gives admin a review gate before activation.
   try {
     const { data: items } = await supabase
       .from('proposal_items')
@@ -97,7 +100,6 @@ export async function POST(
       .not('service_id', 'is', null);
 
     if (items && items.length > 0) {
-      // Deduplicate service_ids (a proposal could have multiple items for the same service)
       const uniqueServiceIds = [...new Set(items.map((i) => i.service_id as string))];
 
       for (const serviceId of uniqueServiceIds) {
@@ -116,26 +118,33 @@ export async function POST(
     }
   } catch (err) {
     console.error('Failed to auto-assign services:', err);
+    warnings.push(`Service assignment failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
   }
 
   // Auto-generate + auto-sign agreement(s) with the same ESIGN audit trail.
   // The client agreed to all terms (proposal + agreements) in one action.
+  let agreementsGenerated = false;
   try {
     await generateAgreementsForProposal(proposal.id, proposal.company_id, {
       email,
       ip,
       userAgent,
     });
+    agreementsGenerated = true;
   } catch (err) {
-    // Log but don't fail — proposal acceptance is the critical path
     console.error('Failed to auto-generate agreements:', err);
+    warnings.push(`Agreement generation failed: ${err instanceof Error ? err.message : 'Unknown error'}. Company will not auto-promote to client.`);
   }
 
   // Promote company to client/active if proposal + all agreements are signed
-  try {
-    await tryPromoteCompany(proposal.company_id);
-  } catch (err) {
-    console.error('Failed to promote company:', err);
+  let promoted = false;
+  if (agreementsGenerated) {
+    try {
+      promoted = await tryPromoteCompany(proposal.company_id);
+    } catch (err) {
+      console.error('Failed to promote company:', err);
+      warnings.push(`Company promotion failed: ${err instanceof Error ? err.message : 'Unknown error'}`);
+    }
   }
 
   // Fetch company details for email notifications
@@ -153,7 +162,7 @@ export async function POST(
     .eq('email', email)
     .single();
 
-  // Notify admin(s) that proposal was accepted (non-blocking)
+  // Notify admin(s) that proposal was accepted — include any warnings
   try {
     const adminEmail = await getPrimaryAdminEmail();
     if (company && adminEmail) {
@@ -162,6 +171,8 @@ export async function POST(
         companyName: company.name,
         companySlug: company.slug,
         proposalId: proposal.id,
+        promoted,
+        warnings: warnings.length > 0 ? warnings : undefined,
       });
 
       await logEmail(supabase, {
@@ -176,10 +187,10 @@ export async function POST(
     console.error('Failed to send proposal accepted notification:', err);
   }
 
-  // Send "Welcome to Brik" email to the prospect with setup link (non-blocking)
+  // Send "Welcome to Brik" email to the prospect with setup link
+  let welcomeEmailSent = false;
   try {
     if (company) {
-      // Generate a setup token for the contact so the welcome email links to /welcome/[token]
       let setupUrl: string | undefined;
       const signerContact = await supabase
         .from('contacts')
@@ -215,10 +226,17 @@ export async function POST(
         resendId: result?.id,
         companyId: proposal.company_id,
       });
+
+      welcomeEmailSent = true;
     }
   } catch (err) {
     console.error('Failed to send welcome email:', err);
   }
 
-  return NextResponse.json({ success: true });
+  return NextResponse.json({
+    success: true,
+    promoted,
+    welcomeEmailSent,
+    warnings: warnings.length > 0 ? warnings : undefined,
+  });
 }
