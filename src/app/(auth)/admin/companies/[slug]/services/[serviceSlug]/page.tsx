@@ -9,9 +9,12 @@ import {
   ProjectStatusBadge,
 } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
+import { TaskList } from '@/components/task-list';
 import { formatCurrency } from '@/lib/format';
 import { font, color, gap, space } from '@/lib/tokens';
 import { detail, heading } from '@/lib/styles';
+import { getWorkflowConfig } from '@/lib/tasks/task-config';
+import type { ServiceTask } from '@/lib/tasks/task-utils';
 
 interface Props {
   params: Promise<{ slug: string; serviceSlug: string }>;
@@ -38,6 +41,7 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
     .select(`
       id, status, started_at, notes, proposal_id,
       services(id, name, slug, service_type, billing_frequency, base_price_cents, description,
+        offering_structure, included_scope,
         service_categories(slug, name)
       )
     `)
@@ -59,8 +63,35 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
     billing_frequency: string | null;
     base_price_cents: number | null;
     description: string | null;
+    offering_structure: string | null;
+    included_scope: string | null;
     service_categories: { slug: string; name: string } | null;
   };
+
+  const isBundled = service.offering_structure === 'bundled';
+
+  // Fetch bundle child services if this is a bundled service
+  const { data: bundleItems } = isBundled
+    ? await supabase
+        .from('service_bundle_items')
+        .select(`
+          sort_order,
+          services!service_bundle_items_child_service_id_fkey(
+            id, name, slug, service_type, base_price_cents, billing_frequency,
+            service_categories(slug, name)
+          )
+        `)
+        .eq('parent_service_id', service.id)
+        .order('sort_order', { ascending: true })
+    : { data: null };
+
+  const childServices = (bundleItems ?? []).map((item) => {
+    return (item as unknown as Record<string, unknown>).services as {
+      id: string; name: string; slug: string; service_type: string;
+      base_price_cents: number | null; billing_frequency: string | null;
+      service_categories: { slug: string; name: string } | null;
+    };
+  }).filter(Boolean);
 
   // Fetch projects linked to this company_service
   const { data: linkedProjects } = await supabase
@@ -89,8 +120,23 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
     ...unlinkedProjects.filter((up) => !(linkedProjects ?? []).some((lp) => lp.id === up.id)),
   ];
 
+  // Check if this service has a workflow config (for the Tasks tab)
+  const workflow = getWorkflowConfig(service.slug);
+
+  // Fetch service tasks if workflow exists
+  let serviceTasks: ServiceTask[] = [];
+  if (workflow) {
+    const { data: taskRows } = await supabase
+      .from('service_tasks')
+      .select('*')
+      .eq('company_service_id', assignment.id)
+      .order('sort_order', { ascending: true });
+    serviceTasks = (taskRows ?? []) as ServiceTask[];
+  }
+
   const categorySlug = service.service_categories?.slug ?? 'service';
-  const activeTab = tab === 'projects' ? 'projects' : 'overview';
+  const validTabs = ['overview', 'projects', ...(isBundled ? ['services'] : []), ...(workflow ? ['tasks'] : [])];
+  const activeTab = tab && validTabs.includes(tab) ? tab : 'overview';
 
   const tabStyle = (active: boolean) => ({
     fontFamily: font.family.label,
@@ -149,6 +195,20 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
       {/* Tabs */}
       <div style={{ display: 'flex', gap: gap.lg, borderBottom: `1px solid ${color.border.secondary}`, marginBottom: space.xl }}>
         <a href={basePath} style={tabStyle(activeTab === 'overview')}>Overview</a>
+        {isBundled && (
+          <a href={`${basePath}?tab=services`} style={tabStyle(activeTab === 'services')}>
+            Services
+            {childServices.length > 0 && (
+              <span style={{
+                fontFamily: font.family.label,
+                fontSize: font.size.body.xs,
+                color: activeTab === 'services' ? color.text.brand : color.text.muted,
+              }}>
+                {childServices.length}
+              </span>
+            )}
+          </a>
+        )}
         <a href={`${basePath}?tab=projects`} style={tabStyle(activeTab === 'projects')}>
           Projects
           {allProjects.length > 0 && (
@@ -161,6 +221,20 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
             </span>
           )}
         </a>
+        {workflow && (
+          <a href={`${basePath}?tab=tasks`} style={tabStyle(activeTab === 'tasks')}>
+            Tasks
+            {serviceTasks.length > 0 && (
+              <span style={{
+                fontFamily: font.family.label,
+                fontSize: font.size.body.xs,
+                color: activeTab === 'tasks' ? color.text.brand : color.text.muted,
+              }}>
+                {serviceTasks.filter((t) => t.status === 'completed').length}/{serviceTasks.length}
+              </span>
+            )}
+          </a>
+        )}
       </div>
 
       {activeTab === 'overview' && (
@@ -209,6 +283,61 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
               </p>
             </div>
           )}
+
+          {service.included_scope && (
+            <div>
+              <p style={detail.label}>What&apos;s Included</p>
+              <p style={{ ...detail.value, lineHeight: font.lineHeight.relaxed, whiteSpace: 'pre-wrap', color: color.text.secondary }}>
+                {service.included_scope}
+              </p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {activeTab === 'services' && isBundled && (
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
+            <h2 style={{ ...heading.section, margin: 0 }}>Included Services ({childServices.length})</h2>
+          </div>
+
+          <DataTable
+            data={childServices}
+            rowKey={(c) => c.id}
+            emptyMessage="No included services"
+            emptyDescription="This bundle has no child services configured."
+            columns={[
+              {
+                header: '',
+                accessor: (c) => {
+                  const catSlug = c.service_categories?.slug;
+                  return catSlug ? <ServiceBadge category={catSlug} serviceName={c.name} size={24} /> : null;
+                },
+                style: { width: '28px', padding: `${space.xs} ${gap.xs} ${space.xs} ${space.sm}` },
+              },
+              {
+                header: 'Service',
+                accessor: (c) => (
+                  <a href={`/admin/services/${c.slug}`} style={{ color: color.text.primary, textDecoration: 'none' }}>
+                    {c.name}
+                  </a>
+                ),
+                style: { fontWeight: font.weight.medium },
+              },
+              {
+                header: 'Type',
+                accessor: (c) => <ServiceTypeTag type={c.service_type} />,
+              },
+              {
+                header: 'Price',
+                accessor: (c) =>
+                  c.base_price_cents
+                    ? `${formatCurrency(c.base_price_cents)}${c.billing_frequency === 'monthly' ? '/mo' : ''}`
+                    : '—',
+                style: { color: color.text.secondary },
+              },
+            ]}
+          />
         </div>
       )}
 
@@ -276,6 +405,15 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
             ]}
           />
         </div>
+      )}
+
+      {activeTab === 'tasks' && workflow && (
+        <TaskList
+          companyServiceId={assignment.id}
+          serviceSlug={service.slug}
+          workflow={workflow}
+          tasks={serviceTasks}
+        />
       )}
     </div>
   );
