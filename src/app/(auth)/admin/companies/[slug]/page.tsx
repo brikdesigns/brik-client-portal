@@ -55,6 +55,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       company_services(
         id, status, started_at, notes,
         services(id, name, slug, service_type, billing_frequency, base_price_cents,
+          offering_structure, included_scope,
           service_categories(slug, name)
         )
       )
@@ -154,9 +155,48 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       service_type: string;
       billing_frequency: string | null;
       base_price_cents: number | null;
+      offering_structure: string | null;
+      included_scope: string | null;
       service_categories: { slug: string; name: string } | null;
     } | null;
   }[]) ?? [];
+
+  // Fetch bundle items for any bundled services assigned to this company
+  const bundledServiceIds = clientServices
+    .filter((cs) => cs.services?.offering_structure === 'bundled')
+    .map((cs) => cs.services!.id);
+
+  const { data: bundleItems } = bundledServiceIds.length > 0
+    ? await supabase
+        .from('service_bundle_items')
+        .select(`
+          parent_service_id, sort_order,
+          services!service_bundle_items_child_service_id_fkey(
+            id, name, slug, service_type, base_price_cents, billing_frequency,
+            service_categories(slug, name)
+          )
+        `)
+        .in('parent_service_id', bundledServiceIds)
+        .order('sort_order', { ascending: true })
+    : { data: null };
+
+  // Group bundle items by parent service ID
+  const bundleItemsByParent = new Map<string, {
+    name: string; slug: string; service_type: string;
+    base_price_cents: number | null; billing_frequency: string | null;
+    service_categories: { slug: string; name: string } | null;
+  }[]>();
+  for (const item of bundleItems ?? []) {
+    const child = (item as unknown as Record<string, unknown>).services as {
+      name: string; slug: string; service_type: string;
+      base_price_cents: number | null; billing_frequency: string | null;
+      service_categories: { slug: string; name: string } | null;
+    } | null;
+    if (!child) continue;
+    const list = bundleItemsByParent.get(item.parent_service_id) ?? [];
+    list.push(child);
+    bundleItemsByParent.set(item.parent_service_id, list);
+  }
 
   // Merge prospective services (from unsigned proposals) into the services list.
   // Deduplicate: if a service already exists in company_services, skip the proposal version.
@@ -172,6 +212,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       const svc = (pi as unknown as Record<string, unknown>).services as {
         id: string; name: string; slug: string; service_type: string;
         billing_frequency: string | null; base_price_cents: number | null;
+        offering_structure: string | null; included_scope: string | null;
         service_categories: { slug: string; name: string } | null;
       };
       const proposal = (pi as unknown as Record<string, unknown>).proposals as { title: string; status: string };
@@ -321,6 +362,22 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <CardSummary label="Contacts" value={contacts?.length ?? 0} />
             </div>
           )}
+
+          {/* Active bundled services — included scope summary */}
+          {clientServices
+            .filter((cs) => cs.services?.offering_structure === 'bundled' && cs.services?.included_scope && cs.status === 'active')
+            .map((cs) => (
+              <div key={cs.id}>
+                <h2 style={detail.sectionHeading}>
+                  <a href={`/admin/companies/${client.slug}/services/${cs.services!.slug}`} style={{ color: 'inherit', textDecoration: 'none' }}>
+                    {cs.services!.name}
+                  </a>
+                </h2>
+                <p style={{ ...fieldValueStyle, lineHeight: font.lineHeight.relaxed, whiteSpace: 'pre-wrap', color: color.text.secondary }}>
+                  {cs.services!.included_scope}
+                </p>
+              </div>
+            ))}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={detail.sectionHeading}>Location</h2>
@@ -608,26 +665,26 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {companyType === 'client' && (() => {
             const billingRows: { id: string; name: string; type: string; status: React.ReactNode; href: string }[] = [];
 
-            // Add proposals as Marketing Analysis
+            // Add proposals
             if (proposals?.length) {
               for (const p of proposals) {
                 billingRows.push({
                   id: `proposal-${p.id}`,
                   name: p.title || 'Proposal',
-                  type: 'Marketing Analysis',
+                  type: 'Proposal',
                   status: <ProposalStatusBadge status={p.status} />,
                   href: `/admin/companies/${client.slug}/proposals/${p.id}`,
                 });
               }
             }
 
-            // Add BAAs as Marketing Analysis
+            // Add agreements
             if (agreements?.length) {
               for (const a of agreements.filter((ag) => ag.type === 'baa')) {
                 billingRows.push({
                   id: `agreement-${a.id}`,
                   name: a.title || 'Business Associate Agreement',
-                  type: 'Marketing Analysis',
+                  type: 'Agreement',
                   status: <AgreementStatusBadge status={a.status} />,
                   href: `/admin/companies/${client.slug}/agreements/${a.id}`,
                 });
@@ -774,6 +831,56 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
             ]}
           />
+
+          {/* Bundle child services — one section per bundled service */}
+          {clientServices
+            .filter((cs) => cs.services?.offering_structure === 'bundled' && bundleItemsByParent.has(cs.services!.id))
+            .map((cs) => {
+              const children = bundleItemsByParent.get(cs.services!.id) ?? [];
+              return (
+                <div key={`bundle-${cs.id}`} style={{ marginTop: space.lg }}>
+                  <h3 style={{ ...sectionHeadingStyle, margin: `0 0 ${space.sm} 0` }}>
+                    {cs.services!.name} — included services ({children.length})
+                  </h3>
+                  <DataTable
+                    data={children}
+                    rowKey={(c) => c.slug}
+                    emptyMessage="No included services"
+                    columns={[
+                      {
+                        header: '',
+                        accessor: (c) => {
+                          const catSlug = c.service_categories?.slug;
+                          return catSlug ? <ServiceBadge category={catSlug} serviceName={c.name} size={24} /> : null;
+                        },
+                        style: { width: '28px', padding: `${space.xs} ${gap.xs} ${space.xs} ${space.sm}` },
+                      },
+                      {
+                        header: 'Service',
+                        accessor: (c) => (
+                          <a href={`/admin/services/${c.slug}`} style={{ color: color.text.primary, textDecoration: 'none' }}>
+                            {c.name}
+                          </a>
+                        ),
+                        style: { fontWeight: font.weight.medium },
+                      },
+                      {
+                        header: 'Type',
+                        accessor: (c) => <ServiceTypeTag type={c.service_type} />,
+                      },
+                      {
+                        header: 'Price',
+                        accessor: (c) =>
+                          c.base_price_cents
+                            ? `${formatCurrency(c.base_price_cents)}${c.billing_frequency === 'monthly' ? '/mo' : ''}`
+                            : '—',
+                        style: { color: color.text.secondary },
+                      },
+                    ]}
+                  />
+                </div>
+              );
+            })}
         </div>
       )}
 
