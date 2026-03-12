@@ -13,6 +13,9 @@ import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
+// Netlify Pro: allow up to 120s for AI generation (2 Claude calls + Notion fetch)
+export const maxDuration = 120;
+
 const autoGenerateSchema = z.object({
   company_id: uuidSchema,
   meeting_note_page_id: z.string().optional(),

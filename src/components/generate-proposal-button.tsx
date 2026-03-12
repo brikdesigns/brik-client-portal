@@ -76,6 +76,16 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
         }),
       });
 
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        setError(
+          res.status === 504 || res.status === 502
+            ? 'Generation timed out. The AI pipeline may need more time — try again or use Manual mode.'
+            : `Server error (${res.status}). Try again or use Manual mode.`
+        );
+        return;
+      }
+
       const data = await res.json();
 
       if (!res.ok) {

@@ -11,6 +11,9 @@ import {
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
+// Netlify Pro: allow up to 120s for AI generation (Claude API + Notion fetch)
+export const maxDuration = 120;
+
 const generateSchema = z.object({
   company_id: uuidSchema,
   meeting_notes_url: z.string().url().optional(),
