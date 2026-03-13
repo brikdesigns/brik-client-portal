@@ -23,6 +23,17 @@ export type TaskStatus =
   | 'blocked'
   | 'skipped';
 
+export interface TaskActionConfig {
+  /** Action type — expandable for future types (ai_action, external_link, etc.) */
+  type: 'notion_select';
+  /** Notion data source ID to query for options */
+  notionDataSourceId: string;
+  /** Modal title */
+  label: string;
+  /** Modal body description */
+  description: string;
+}
+
 export interface TaskTemplate {
   key: string;
   phase: TaskPhase;
