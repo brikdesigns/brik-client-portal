@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Counter } from '@bds/components/ui/Counter/Counter';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import {
@@ -10,6 +11,7 @@ import {
 } from '@/components/status-badges';
 import { ServiceBadge } from '@/components/service-badge';
 import { TaskList } from '@/components/task-list';
+import { RemoveServiceButton } from '@/components/remove-service-button';
 import { formatCurrency } from '@/lib/format';
 import { font, color, gap, space } from '@/lib/tokens';
 import { detail, heading } from '@/lib/styles';
@@ -29,7 +31,7 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
   // Fetch the company
   const { data: company, error: companyError } = await supabase
     .from('companies')
-    .select('id, name, slug')
+    .select('id, name, slug, type')
     .eq('slug', slug)
     .single();
 
@@ -123,7 +125,7 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
   // Check if this service has a workflow config (for the Tasks tab)
   const workflow = getWorkflowConfig(service.slug);
 
-  // Fetch service tasks if workflow exists
+  // Fetch service tasks if workflow exists; auto-initialize on first visit
   let serviceTasks: ServiceTask[] = [];
   if (workflow) {
     const { data: taskRows } = await supabase
@@ -132,6 +134,100 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
       .eq('company_service_id', assignment.id)
       .order('sort_order', { ascending: true });
     serviceTasks = (taskRows ?? []) as ServiceTask[];
+
+    // Auto-initialize tasks from workflow template if none exist yet
+    if (serviceTasks.length === 0) {
+      const rows: Array<{
+        company_service_id: string;
+        task_key: string;
+        phase: string;
+        sort_order: number;
+        status: 'not_started';
+        metadata: Record<string, never>;
+        parent_task_key: string | null;
+        is_required: boolean;
+      }> = [];
+
+      for (const t of workflow.tasks) {
+        rows.push({
+          company_service_id: assignment.id,
+          task_key: t.key,
+          phase: t.phase,
+          sort_order: t.sortOrder,
+          status: 'not_started',
+          metadata: {},
+          parent_task_key: null,
+          is_required: true,
+        });
+        if (t.subtasks) {
+          for (const st of t.subtasks) {
+            rows.push({
+              company_service_id: assignment.id,
+              task_key: st.key,
+              phase: t.phase,
+              sort_order: st.sortOrder,
+              status: 'not_started',
+              metadata: {},
+              parent_task_key: t.key,
+              is_required: st.required !== false,
+            });
+          }
+        }
+      }
+
+      const { data: inserted } = await supabase
+        .from('service_tasks')
+        .insert(rows)
+        .select('*');
+      serviceTasks = ((inserted ?? []) as ServiceTask[]).sort((a, b) => a.sort_order - b.sort_order);
+    } else {
+      // Reconcile: insert any subtask rows that are defined in the template but missing in DB
+      // (handles template evolution — adding subtasks to an already-initialized workflow)
+      const missingRows: Array<{
+        company_service_id: string;
+        task_key: string;
+        phase: string;
+        sort_order: number;
+        status: 'not_started';
+        metadata: Record<string, never>;
+        parent_task_key: string;
+        is_required: boolean;
+      }> = [];
+
+      for (const t of workflow.tasks) {
+        if (!t.subtasks) continue;
+        const parentExists = serviceTasks.some((st) => st.task_key === t.key && !st.parent_task_key);
+        if (!parentExists) continue;
+        for (const sub of t.subtasks) {
+          const exists = serviceTasks.some(
+            (st) => st.task_key === sub.key && st.parent_task_key === t.key,
+          );
+          if (!exists) {
+            missingRows.push({
+              company_service_id: assignment.id,
+              task_key: sub.key,
+              phase: t.phase,
+              sort_order: sub.sortOrder,
+              status: 'not_started',
+              metadata: {},
+              parent_task_key: t.key,
+              is_required: sub.required !== false,
+            });
+          }
+        }
+      }
+
+      if (missingRows.length > 0) {
+        await supabase.from('service_tasks').insert(missingRows);
+        // Re-fetch all tasks after reconciliation
+        const { data: refreshed } = await supabase
+          .from('service_tasks')
+          .select('*')
+          .eq('company_service_id', assignment.id)
+          .order('sort_order', { ascending: true });
+        serviceTasks = (refreshed ?? []) as ServiceTask[];
+      }
+    }
   }
 
   const categorySlug = service.service_categories?.slug ?? 'service';
@@ -167,14 +263,24 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
           />
         }
         actions={
-          <Button
-            variant="primary"
-            size="sm"
-            asLink
-            href={`/admin/companies/${company.slug}/projects/new?company_service_id=${assignment.id}`}
-          >
-            Add Project
-          </Button>
+          <div style={{ display: 'flex', gap: gap.md, alignItems: 'center' }}>
+            {service.billing_frequency === 'monthly' && assignment.status !== 'cancelled' && (
+              <RemoveServiceButton
+                assignmentId={assignment.id}
+                serviceName={service.name}
+                companySlug={company.slug}
+                companyType={(company as unknown as { type: string }).type}
+              />
+            )}
+            <Button
+              variant="primary"
+              size="sm"
+              asLink
+              href={`/admin/companies/${company.slug}/projects/new?company_service_id=${assignment.id}`}
+            >
+              Add Project
+            </Button>
+          </div>
         }
         metadata={[
           {
@@ -199,42 +305,33 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
           <a href={`${basePath}?tab=services`} style={tabStyle(activeTab === 'services')}>
             Services
             {childServices.length > 0 && (
-              <span style={{
-                fontFamily: font.family.label,
-                fontSize: font.size.body.xs,
-                color: activeTab === 'services' ? color.text.brand : color.text.muted,
-              }}>
-                {childServices.length}
-              </span>
+              <Counter count={childServices.length} status="neutral" size="sm" />
             )}
           </a>
         )}
         <a href={`${basePath}?tab=projects`} style={tabStyle(activeTab === 'projects')}>
           Projects
           {allProjects.length > 0 && (
-            <span style={{
-              fontFamily: font.family.label,
-              fontSize: font.size.body.xs,
-              color: activeTab === 'projects' ? color.text.brand : color.text.muted,
-            }}>
-              {allProjects.length}
-            </span>
+            <Counter count={allProjects.length} status="neutral" size="sm" />
           )}
         </a>
-        {workflow && (
-          <a href={`${basePath}?tab=tasks`} style={tabStyle(activeTab === 'tasks')}>
-            Tasks
-            {serviceTasks.length > 0 && (
-              <span style={{
-                fontFamily: font.family.label,
-                fontSize: font.size.body.xs,
-                color: activeTab === 'tasks' ? color.text.brand : color.text.muted,
-              }}>
-                {serviceTasks.filter((t) => t.status === 'completed').length}/{serviceTasks.length}
-              </span>
-            )}
-          </a>
-        )}
+        {workflow && (() => {
+          const parentTasks = serviceTasks.filter((t) => !t.parent_task_key);
+          const completedCount = parentTasks.filter((t) => t.status === 'completed').length;
+          const allDone = parentTasks.length > 0 && completedCount === parentTasks.length;
+          return (
+            <a href={`${basePath}?tab=tasks`} style={tabStyle(activeTab === 'tasks')}>
+              Tasks
+              {parentTasks.length > 0 && (
+                <Counter
+                  count={parentTasks.length}
+                  status={allDone ? 'success' : completedCount > 0 ? 'progress' : 'neutral'}
+                  size="sm"
+                />
+              )}
+            </a>
+          );
+        })()}
       </div>
 
       {activeTab === 'overview' && (
@@ -409,8 +506,6 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
 
       {activeTab === 'tasks' && workflow && (
         <TaskList
-          companyServiceId={assignment.id}
-          serviceSlug={service.slug}
           workflow={workflow}
           tasks={serviceTasks}
         />

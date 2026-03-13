@@ -17,6 +17,7 @@ import {
   faUser,
   faForward,
   faLock,
+  faFileSignature,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle as faCircleRegular } from '@fortawesome/free-regular-svg-icons';
 import { color } from '@/lib/tokens';
@@ -55,6 +56,11 @@ const companyStatusMap: Record<string, StatusConfig> = {
     variant: 'warning',
     icon: <FontAwesomeIcon icon={faClipboardList} style={iconSize} />,
   },
+  needs_signature: {
+    label: 'Needs Signature',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faFileSignature} style={iconSize} />,
+  },
   active: {
     label: 'Active',
     variant: 'positive',
@@ -69,6 +75,11 @@ const companyStatusMap: Record<string, StatusConfig> = {
 
 // ── Service Status ──────────────────────────────────────────────────
 const serviceStatusMap: Record<string, StatusConfig> = {
+  not_started: {
+    label: 'Not Started',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
+  },
   pending: {
     label: 'Pending',
     variant: 'warning',

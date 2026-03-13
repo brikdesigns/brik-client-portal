@@ -11,13 +11,14 @@ import { text } from '@/lib/styles';
 
 interface ProposalActionsProps {
   proposalId: string;
+  companyId: string;
   status: string;
   shareableLink: string;
   clientSlug: string;
   companyName: string;
 }
 
-export function ProposalActions({ proposalId, status, shareableLink, clientSlug, companyName }: ProposalActionsProps) {
+export function ProposalActions({ proposalId, companyId, status, shareableLink, clientSlug, companyName }: ProposalActionsProps) {
   const [copied, setCopied] = useState(false);
   const router = useRouter();
   const { toastSuccess, toastError } = useToast();
@@ -42,6 +43,12 @@ export function ProposalActions({ proposalId, status, shareableLink, clientSlug,
         toastError(`Failed to send: ${error.message}`);
         return;
       }
+
+      // Update company status to needs_signature
+      await supabase
+        .from('companies')
+        .update({ status: 'needs_signature' })
+        .eq('id', companyId);
 
       // Send email to primary contact
       let emailWarning = '';

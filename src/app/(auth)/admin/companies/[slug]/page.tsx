@@ -7,6 +7,7 @@ import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Button } from '@bds/components/ui/Button/Button';
+import { Dot } from '@bds/components/ui/Dot/Dot';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import {
@@ -25,6 +26,7 @@ import { GenerateProposalButton } from '@/components/generate-proposal-button';
 import { RunAnalysisButton } from '@/components/run-analysis-button';
 import { GHLSyncButton } from '@/components/ghl-sync-button';
 import { ResendWelcomeButton } from '@/components/resend-welcome-button';
+import { RemoveServiceButton } from '@/components/remove-service-button';
 import { ReportStatusBadge, ScoreTierBadge } from '@/components/report-badges';
 import { REPORT_TYPE_LABELS, type ReportType } from '@/lib/analysis/report-config';
 import { formatCurrency } from '@/lib/format';
@@ -179,18 +181,20 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         service_categories: { slug: string; name: string } | null;
       };
       const proposal = (pi as unknown as Record<string, unknown>).proposals as { title: string; status: string };
+      const serviceStatus = proposal.status === 'draft' ? 'not_started' : 'pending';
       if (!acc.has(svc.id)) {
         acc.set(svc.id, {
           id: `proposal-${pi.id}`,
-          status: 'pending',
+          status: serviceStatus,
           started_at: null,
           notes: `From proposal: ${proposal.title}`,
           services: svc,
           _fromProposal: true,
+          _proposalStatus: proposal.status,
         });
       }
       return acc;
-    }, new Map<string, typeof clientServices[number] & { _fromProposal?: boolean }>());
+    }, new Map<string, typeof clientServices[number] & { _fromProposal?: boolean; _proposalStatus?: string }>());
 
   const allServices = [...clientServices, ...prospectiveServices.values()];
 
@@ -230,14 +234,6 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
     alignItems: 'center' as const,
     gap: '6px',
   });
-
-  const notificationDotStyle: React.CSSProperties = {
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    backgroundColor: color.background.brandPrimary,
-    flexShrink: 0,
-  };
 
   const sectionHeadingStyle = heading.section;
 
@@ -293,7 +289,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         {tabs.map((t) => (
           <a key={t.key} href={`/admin/companies/${client.slug}?tab=${t.key}`} style={tabStyle(activeTab === t.key)}>
             {t.label}
-            {t.dot && <span style={notificationDotStyle} />}
+            {t.dot && <Dot status="default" size="sm" />}
           </a>
         ))}
       </div>
@@ -516,7 +512,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {!reportSet ? (
             <CardControl
               title="Marketing Analysis"
-              description="Evaluate the prospect's current marketing presence, competitors, and opportunities for growth."
+              description="Evaluate the company's current marketing presence, competitors, and opportunities for growth."
               action={<RunAnalysisButton clientId={client.id} slug={client.slug} />}
               style={{ boxShadow: shadow.sm }}
             />
@@ -653,7 +649,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
                   <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Billing</h2>
-                  <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add invoice</Button>
+                  <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add Invoice</Button>
                 </div>
                 <DataTable
                   data={billingRows}
@@ -699,7 +695,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
-            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/services/new`}>Assign service</Button>
+            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/services/new`}>Assign Service</Button>
           </div>
           <DataTable
             data={allServices}
@@ -765,13 +761,32 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 accessor: (cs) => {
                   if (!cs.services) return null;
                   const isProspective = (cs as unknown as Record<string, unknown>)._fromProposal;
+                  const isProspectCompany = companyType === 'lead' || companyType === 'prospect';
                   const href = isProspective
                     ? `/admin/services/${cs.services.slug}`
                     : `/admin/companies/${client.slug}/services/${cs.services.slug}`;
                   return (
-                    <Button variant="secondary" size="sm" asLink href={href}>
-                      View
-                    </Button>
+                    <span style={{ display: 'inline-flex', gap: gap.xs, justifyContent: 'flex-end' }}>
+                      {isProspectCompany && (() => {
+                        // Only allow removal when proposal is still in draft (editable)
+                        const proposalStatus = isProspective
+                          ? (cs as unknown as Record<string, unknown>)._proposalStatus as string
+                          : latestProposal?.status;
+                        const canRemove = !proposalStatus || proposalStatus === 'draft';
+                        return canRemove ? (
+                          <RemoveServiceButton
+                            assignmentId={isProspective ? undefined : cs.id}
+                            proposalItemId={isProspective ? cs.id.replace('proposal-', '') : undefined}
+                            serviceName={cs.services.name}
+                            companySlug={client.slug}
+                            companyType={companyType}
+                          />
+                        ) : null;
+                      })()}
+                      <Button variant="secondary" size="sm" asLink href={href}>
+                        View
+                      </Button>
+                    </span>
                   );
                 },
                 style: { textAlign: 'right' as const },

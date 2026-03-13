@@ -84,7 +84,7 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
   const { data: proposal, error } = await supabase
     .from('proposals')
     .select(`
-      id, title, status, token, valid_until, total_amount_cents, notes,
+      id, company_id, title, status, token, valid_until, total_amount_cents, notes,
       first_viewed_at, view_count, sent_at, accepted_at,
       accepted_by_email, accepted_by_ip, accepted_by_user_agent,
       sections, generation_status, generated_at, meeting_notes_url,
@@ -160,6 +160,7 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
             </Button>
             <ProposalActions
               proposalId={proposal.id}
+              companyId={proposal.company_id}
               status={proposal.status}
               shareableLink={shareableLink}
               clientSlug={slug}
@@ -213,7 +214,7 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
           {/* Internal notes */}
           {proposal.notes && (
             <div style={{ marginTop: space.lg }}>
-              <h2 style={heading.section}>Internal notes</h2>
+              <h2 style={heading.section}>Internal Notes</h2>
               <p
                 style={{
                   ...text.muted,
@@ -233,17 +234,17 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
           <div style={detail.grid}>
             <div>
-              <p style={detail.label}>Signed by</p>
+              <p style={detail.label}>Signed By</p>
               <p style={detail.value}>{proposal.accepted_by_email || '—'}</p>
             </div>
             <div>
-              <p style={detail.label}>Signed at</p>
+              <p style={detail.label}>Signed At</p>
               <p style={detail.value}>
                 {proposal.accepted_at ? new Date(proposal.accepted_at).toLocaleString() : '—'}
               </p>
             </div>
             <div>
-              <p style={detail.label}>IP address</p>
+              <p style={detail.label}>IP Address</p>
               <p style={detail.value}>{proposal.accepted_by_ip || '—'}</p>
             </div>
           </div>
@@ -258,7 +259,7 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
                   <p style={detail.value}>{parsed.browser}</p>
                 </div>
                 <div>
-                  <p style={detail.label}>Operating system</p>
+                  <p style={detail.label}>Operating System</p>
                   <p style={detail.value}>{parsed.os}</p>
                 </div>
                 <div>
