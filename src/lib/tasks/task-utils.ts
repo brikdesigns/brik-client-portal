@@ -2,7 +2,7 @@
  * Helpers for service task workflows.
  */
 
-import type { TaskPhase, TaskStatus, TaskTemplate, ServiceWorkflowConfig } from './task-config';
+import type { TaskPhase, TaskStatus, TaskTemplate, SubtaskTemplate, ServiceWorkflowConfig } from './task-config';
 
 // ── Types matching DB rows ───────────────────────────────────
 
@@ -17,8 +17,78 @@ export interface ServiceTask {
   completed_at: string | null;
   notes: string | null;
   metadata: Record<string, unknown>;
+  parent_task_key: string | null;
+  is_required: boolean;
   created_at: string;
   updated_at: string;
+}
+
+// ── Subtask helpers ─────────────────────────────────────────
+
+/**
+ * Get subtasks for a given parent task.
+ */
+export function getSubtasks(
+  parentTask: ServiceTask,
+  allTasks: ServiceTask[],
+): ServiceTask[] {
+  return allTasks
+    .filter((t) => t.parent_task_key === parentTask.task_key)
+    .sort((a, b) => a.sort_order - b.sort_order);
+}
+
+/**
+ * Get the subtask template for a subtask instance.
+ */
+export function getSubtaskTemplate(
+  subtask: ServiceTask,
+  workflow: ServiceWorkflowConfig,
+): SubtaskTemplate | undefined {
+  const parentTemplate = workflow.tasks.find((t) => t.key === subtask.parent_task_key);
+  return parentTemplate?.subtasks?.find((st) => st.key === subtask.task_key);
+}
+
+/**
+ * Derive parent status from subtask states.
+ * - All required done → completed
+ * - Any blocked → blocked
+ * - Any started → in_progress
+ * - Otherwise → not_started
+ */
+export function deriveParentStatus(subtasks: ServiceTask[]): TaskStatus {
+  if (subtasks.length === 0) return 'not_started';
+
+  const required = subtasks.filter((s) => s.is_required);
+  const allRequiredDone = required.every(
+    (s) => s.status === 'completed' || s.status === 'skipped',
+  );
+
+  if (allRequiredDone) return 'completed';
+
+  const anyBlocked = subtasks.some((s) => s.status === 'blocked');
+  if (anyBlocked) return 'blocked';
+
+  const anyStarted = subtasks.some((s) => s.status !== 'not_started');
+  if (anyStarted) return 'in_progress';
+
+  return 'not_started';
+}
+
+/**
+ * Get subtask progress for display (e.g. "3/7").
+ */
+export function getSubtaskProgress(subtasks: ServiceTask[]): {
+  completed: number;
+  total: number;
+  requiredRemaining: number;
+} {
+  const completed = subtasks.filter(
+    (s) => s.status === 'completed' || s.status === 'skipped',
+  ).length;
+  const requiredRemaining = subtasks.filter(
+    (s) => s.is_required && s.status !== 'completed' && s.status !== 'skipped',
+  ).length;
+  return { completed, total: subtasks.length, requiredRemaining };
 }
 
 // ── Dependency checks ────────────────────────────────────────
@@ -75,7 +145,7 @@ export function getPhaseProgress(
   workflow: ServiceWorkflowConfig,
 ): PhaseProgress[] {
   return workflow.phases.map(({ key, label }) => {
-    const phaseTasks = tasks.filter((t) => t.phase === key);
+    const phaseTasks = tasks.filter((t) => t.phase === key && t.parent_task_key === null);
     return {
       phase: key,
       label,
@@ -98,7 +168,8 @@ export function groupTasksByPhase(
   for (const phase of workflow.phases) {
     grouped.set(
       phase.key,
-      tasks.filter((t) => t.phase === phase.key).sort((a, b) => a.sort_order - b.sort_order),
+      tasks.filter((t) => t.phase === phase.key && t.parent_task_key === null)
+        .sort((a, b) => a.sort_order - b.sort_order),
     );
   }
   return grouped;
@@ -111,7 +182,7 @@ export function groupTasksByPhase(
  */
 export function isValidTransition(from: TaskStatus, to: TaskStatus): boolean {
   const allowed: Record<TaskStatus, TaskStatus[]> = {
-    not_started: ['in_progress', 'skipped'],
+    not_started: ['in_progress', 'completed', 'skipped'],
     in_progress: ['completed', 'blocked', 'not_started'],
     completed: ['in_progress'], // Allow reopening
     blocked: ['in_progress', 'skipped'],

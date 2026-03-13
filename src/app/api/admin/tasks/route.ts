@@ -47,15 +47,45 @@ export async function POST(request: Request) {
     );
   }
 
-  // Create all task instances from the template
-  const rows = workflow.tasks.map((t) => ({
-    company_service_id,
-    task_key: t.key,
-    phase: t.phase,
-    sort_order: t.sortOrder,
-    status: 'not_started' as const,
-    metadata: {},
-  }));
+  // Create all task instances from the template (parents + subtasks)
+  const rows: Array<{
+    company_service_id: string;
+    task_key: string;
+    phase: string;
+    sort_order: number;
+    status: 'not_started';
+    metadata: Record<string, never>;
+    parent_task_key: string | null;
+    is_required: boolean;
+  }> = [];
+
+  for (const t of workflow.tasks) {
+    rows.push({
+      company_service_id,
+      task_key: t.key,
+      phase: t.phase,
+      sort_order: t.sortOrder,
+      status: 'not_started',
+      metadata: {},
+      parent_task_key: null,
+      is_required: true,
+    });
+
+    if (t.subtasks) {
+      for (const st of t.subtasks) {
+        rows.push({
+          company_service_id,
+          task_key: st.key,
+          phase: t.phase,
+          sort_order: st.sortOrder,
+          status: 'not_started',
+          metadata: {},
+          parent_task_key: t.key,
+          is_required: st.required !== false,
+        });
+      }
+    }
+  }
 
   const { data, error } = await supabase
     .from('service_tasks')

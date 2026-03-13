@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { parseBody, isValidationError } from '@/lib/validation';
-import { isValidTransition, isTaskUnlocked } from '@/lib/tasks/task-utils';
+import { isValidTransition, isTaskUnlocked, deriveParentStatus } from '@/lib/tasks/task-utils';
 import { getWorkflowConfig } from '@/lib/tasks/task-config';
 import type { TaskStatus } from '@/lib/tasks/task-config';
 import type { ServiceTask } from '@/lib/tasks/task-utils';
@@ -58,30 +58,73 @@ export async function PATCH(
       );
     }
 
+    // Block manual "Complete" on parent tasks that have subtasks — completion must come from substeps
+    if (newStatus === 'completed' && !currentTask.parent_task_key) {
+      const { count: subtaskCount } = await supabase
+        .from('service_tasks')
+        .select('id', { count: 'exact', head: true })
+        .eq('company_service_id', currentTask.company_service_id)
+        .eq('parent_task_key', currentTask.task_key);
+
+      if (subtaskCount && subtaskCount > 0) {
+        return NextResponse.json(
+          { error: 'Complete all required substeps to finish this task' },
+          { status: 400 },
+        );
+      }
+    }
+
     // For starting a task, check dependencies
     if (newStatus === 'in_progress') {
-      // Fetch the service slug to look up workflow
-      const { data: cs } = await supabase
-        .from('company_services')
-        .select('services(slug)')
-        .eq('id', currentTask.company_service_id)
-        .single();
-
-      const serviceSlug = (cs as unknown as Record<string, { slug: string }>)?.services?.slug;
-      const workflow = serviceSlug ? getWorkflowConfig(serviceSlug) : null;
-
-      if (workflow) {
-        // Fetch all tasks for this assignment
-        const { data: allTasks } = await supabase
+      if (currentTask.parent_task_key) {
+        // Subtasks: auto-start the parent if it's still not_started
+        const { data: parent } = await supabase
           .from('service_tasks')
-          .select('*')
-          .eq('company_service_id', currentTask.company_service_id);
+          .select('id, status, started_at')
+          .eq('company_service_id', currentTask.company_service_id)
+          .eq('task_key', currentTask.parent_task_key)
+          .is('parent_task_key', null)
+          .single();
 
-        if (!isTaskUnlocked(currentTask, (allTasks ?? []) as ServiceTask[], workflow)) {
+        if (!parent) {
           return NextResponse.json(
-            { error: 'Dependencies not met — complete prerequisite tasks first' },
+            { error: 'Parent task not found' },
             { status: 400 },
           );
+        }
+
+        if (parent.status === 'not_started') {
+          await supabase
+            .from('service_tasks')
+            .update({
+              status: 'in_progress',
+              started_at: new Date().toISOString(),
+            })
+            .eq('id', parent.id);
+        }
+      } else {
+        // Top-level tasks: check workflow dependencies
+        const { data: cs } = await supabase
+          .from('company_services')
+          .select('services(slug)')
+          .eq('id', currentTask.company_service_id)
+          .single();
+
+        const serviceSlug = (cs as unknown as Record<string, { slug: string }>)?.services?.slug;
+        const workflow = serviceSlug ? getWorkflowConfig(serviceSlug) : null;
+
+        if (workflow) {
+          const { data: allTasks } = await supabase
+            .from('service_tasks')
+            .select('*')
+            .eq('company_service_id', currentTask.company_service_id);
+
+          if (!isTaskUnlocked(currentTask, (allTasks ?? []) as ServiceTask[], workflow)) {
+            return NextResponse.json(
+              { error: 'Dependencies not met — complete prerequisite tasks first' },
+              { status: 400 },
+            );
+          }
         }
       }
     }
@@ -97,6 +140,10 @@ export async function PATCH(
     }
     if (body.status === 'completed') {
       updates.completed_at = new Date().toISOString();
+      // Direct not_started → completed (manual "Mark Done"): also set started_at
+      if (!currentTask.started_at) {
+        updates.started_at = new Date().toISOString();
+      }
     }
     if (body.status === 'not_started') {
       updates.completed_at = null;
@@ -118,6 +165,48 @@ export async function PATCH(
 
   if (updateError) {
     return NextResponse.json({ error: updateError.message }, { status: 500 });
+  }
+
+  // Auto-complete parent when a subtask finishes
+  if (body.status && currentTask.parent_task_key) {
+    const { data: siblings } = await supabase
+      .from('service_tasks')
+      .select('*')
+      .eq('company_service_id', currentTask.company_service_id)
+      .eq('parent_task_key', currentTask.parent_task_key);
+
+    // Use the just-updated status for the current task
+    const updatedSiblings = ((siblings ?? []) as ServiceTask[]).map((s) =>
+      s.id === id ? { ...s, status: body.status as TaskStatus } : s,
+    );
+
+    const derivedStatus = deriveParentStatus(updatedSiblings);
+
+    const { data: parent } = await supabase
+      .from('service_tasks')
+      .select('*')
+      .eq('company_service_id', currentTask.company_service_id)
+      .eq('task_key', currentTask.parent_task_key)
+      .is('parent_task_key', null)
+      .single();
+
+    if (parent && (parent as ServiceTask).status !== derivedStatus) {
+      const parentUpdates: Record<string, unknown> = { status: derivedStatus };
+      if (derivedStatus === 'completed') {
+        parentUpdates.completed_at = new Date().toISOString();
+      }
+      if (derivedStatus === 'in_progress' && !(parent as ServiceTask).started_at) {
+        parentUpdates.started_at = new Date().toISOString();
+      }
+      if (derivedStatus === 'not_started') {
+        parentUpdates.completed_at = null;
+      }
+
+      await supabase
+        .from('service_tasks')
+        .update(parentUpdates)
+        .eq('id', parent.id);
+    }
   }
 
   return NextResponse.json({ task: updated });

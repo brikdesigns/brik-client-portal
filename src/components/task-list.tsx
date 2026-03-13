@@ -1,12 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { CardControl } from '@bds/components/ui/CardControl/CardControl';
-import { Button } from '@bds/components/ui/Button/Button';
 import { Counter } from '@bds/components/ui/Counter/Counter';
 import { TaskCard } from '@/components/task-card';
-import { font, color, gap, space, shadow } from '@/lib/tokens';
+import { font, color, gap, space } from '@/lib/tokens';
 import { heading } from '@/lib/styles';
 import type { ServiceWorkflowConfig } from '@/lib/tasks/task-config';
 import {
@@ -14,59 +10,16 @@ import {
   getTaskTemplate,
   getPhaseProgress,
   groupTasksByPhase,
+  getSubtasks,
   type ServiceTask,
 } from '@/lib/tasks/task-utils';
 
 interface TaskListProps {
-  companyServiceId: string;
-  serviceSlug: string;
   workflow: ServiceWorkflowConfig;
   tasks: ServiceTask[];
 }
 
-export function TaskList({ companyServiceId, serviceSlug, workflow, tasks }: TaskListProps) {
-  const router = useRouter();
-  const [initializing, setInitializing] = useState(false);
-
-  // Not initialized yet — show the "Initialize Tasks" card
-  if (tasks.length === 0) {
-    return (
-      <CardControl
-        title="Service Tasks"
-        description={`${workflow.tasks.length} steps across ${workflow.phases.map((p) => p.label).join(', ')} phases. Initialize to start tracking progress.`}
-        action={
-          <Button
-            variant="primary"
-            size="sm"
-            disabled={initializing}
-            onClick={async () => {
-              setInitializing(true);
-              try {
-                const res = await fetch('/api/admin/tasks', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ company_service_id: companyServiceId, service_slug: serviceSlug }),
-                });
-                if (!res.ok) {
-                  const data = await res.json();
-                  alert(data.error || 'Failed to initialize tasks');
-                  return;
-                }
-                router.refresh();
-              } finally {
-                setInitializing(false);
-              }
-            }}
-          >
-            {initializing ? 'Initializing...' : 'Initialize Tasks'}
-          </Button>
-        }
-        style={{ boxShadow: shadow.sm }}
-      />
-    );
-  }
-
-  // Tasks exist — render phase-grouped card stack
+export function TaskList({ workflow, tasks }: TaskListProps) {
   const phaseProgress = getPhaseProgress(tasks, workflow);
   const grouped = groupTasksByPhase(tasks, workflow);
 
@@ -128,6 +81,8 @@ export function TaskList({ companyServiceId, serviceSlug, workflow, tasks }: Tas
                 if (!template) return null;
 
                 const locked = !isTaskUnlocked(task, tasks, workflow);
+                const subtasks = getSubtasks(task, tasks);
+                const subtaskTemplates = template.subtasks ?? [];
 
                 return (
                   <TaskCard
@@ -139,6 +94,10 @@ export function TaskList({ companyServiceId, serviceSlug, workflow, tasks }: Tas
                     notes={task.notes}
                     startedAt={task.started_at}
                     completedAt={task.completed_at}
+                    subtasks={subtasks}
+                    subtaskTemplates={subtaskTemplates}
+                    allTasks={tasks}
+                    workflow={workflow}
                   />
                 );
               })}

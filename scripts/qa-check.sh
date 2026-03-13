@@ -178,6 +178,22 @@ if [ "$DATA_ONLY" = false ]; then
     pass "All migrations contain SQL"
   fi
 
+  # Check for orphaned migrations (exist locally but not in git)
+  ORPHAN_MIGRATIONS=""
+  for file in supabase/migrations/*.sql; do
+    [ -f "$file" ] || continue
+    if ! git ls-files --error-unmatch "$file" > /dev/null 2>&1; then
+      ORPHAN_MIGRATIONS="$ORPHAN_MIGRATIONS $(basename "$file")"
+    fi
+  done
+
+  if [ -z "$ORPHAN_MIGRATIONS" ]; then
+    pass "All migration files are tracked in git"
+  else
+    fail "Orphaned migration(s) not in git:$ORPHAN_MIGRATIONS"
+    dim "These may be applied to the DB but CI will never know. Stage and commit them."
+  fi
+
   # ══════════════════════════════════════════════
   # 3. STATUS CONSTRAINT SYNC
   # ══════════════════════════════════════════════

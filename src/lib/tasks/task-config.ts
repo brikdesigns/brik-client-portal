@@ -8,7 +8,7 @@
 
 // ── Types ────────────────────────────────────────────────────
 
-export type TaskPhase = 'content' | 'design' | 'development';
+export type TaskPhase = 'content' | 'design' | 'development' | 'deployment';
 
 export type TriggerType =
   | 'manual'         // Admin checks off
@@ -23,6 +23,30 @@ export type TaskStatus =
   | 'blocked'
   | 'skipped';
 
+export interface TaskActionConfig {
+  /** Action type — expandable for future types (ai_action, external_link, etc.) */
+  type: 'notion_select';
+  /** Notion data source ID to query for options */
+  notionDataSourceId: string;
+  /** Modal title */
+  label: string;
+  /** Modal body description */
+  description: string;
+}
+
+export interface SubtaskTemplate {
+  key: string;
+  label: string;
+  description: string;
+  /** Whether this substep must complete for parent auto-completion. Default true. */
+  required?: boolean;
+  sortOrder: number;
+  /** Optional: reference to brik-llm script or automation */
+  automationRef?: string;
+  /** Optional: action config for modal-based subtask start (e.g., Notion select) */
+  actionConfig?: TaskActionConfig;
+}
+
 export interface TaskTemplate {
   key: string;
   phase: TaskPhase;
@@ -34,6 +58,10 @@ export interface TaskTemplate {
   dependsOn: string[];
   /** Optional: reference to brik-llm script or API endpoint */
   automationRef?: string;
+  /** Optional: action config for modal-based task start (e.g., Notion select) */
+  actionConfig?: TaskActionConfig;
+  /** Optional: ordered substeps within this task */
+  subtasks?: SubtaskTemplate[];
 }
 
 export interface PhaseConfig {
@@ -54,6 +82,7 @@ export const PHASE_LABELS: Record<TaskPhase, string> = {
   content: 'Content',
   design: 'Design',
   development: 'Development',
+  deployment: 'Deployment',
 };
 
 // ── Status Labels & Colors ───────────────────────────────────
@@ -78,6 +107,66 @@ const WEB_DEV_TASKS: TaskTemplate[] = [
     triggerType: 'manual',
     sortOrder: 1,
     dependsOn: [],
+    subtasks: [
+      {
+        key: 'intake_form',
+        label: 'Select intake form',
+        description: 'Choose the web intake form for this client from Notion.',
+        sortOrder: 1,
+        actionConfig: {
+          type: 'notion_select',
+          notionDataSourceId: '2e597d34-ed28-809a-b7d6-000b3504c5c2',
+          label: 'Select intake form',
+          description: 'Choose the web intake form for this client. The intake data will be linked to this task for downstream automation.',
+        },
+      },
+      {
+        key: 'automated_setup',
+        label: 'Automated project setup',
+        description: 'Run new-client.sh to create folder structure, .env, project.json, sitemap.json, CLAUDE.md.',
+        sortOrder: 2,
+        automationRef: 'brik-llm/scripts/new-client.sh',
+      },
+      {
+        key: 'figma_setup',
+        label: 'Figma project setup',
+        description: 'Create Figma project from template, set up page structure.',
+        sortOrder: 3,
+      },
+      {
+        key: 'notion_setup',
+        label: 'Notion teamspace setup',
+        description: 'Duplicate client teamspace template in Notion.',
+        sortOrder: 4,
+      },
+      {
+        key: 'ga4_setup',
+        label: 'GA4 & tracking setup',
+        description: 'Create GTM container, GA4 property, and Microsoft Clarity project.',
+        sortOrder: 5,
+      },
+      {
+        key: 'brand_extraction',
+        label: 'Brand guide extraction',
+        description: 'Run brand_guide_extractor.py to produce brand-tokens.json with BDS semantic mapping.',
+        sortOrder: 6,
+        automationRef: 'brik-llm/scripts/brand_guide_extractor.py',
+      },
+      {
+        key: 'webflow_api_token',
+        label: 'Webflow API token',
+        description: 'Generate Webflow API token, store in 1Password, .env, and Notion API Keys.',
+        sortOrder: 7,
+        required: false,
+      },
+      {
+        key: 'gcp_project',
+        label: 'Google Cloud project',
+        description: 'Create GCP project for service accounts and API access.',
+        sortOrder: 8,
+        required: false,
+      },
+    ],
   },
   {
     key: 'content_sitemap',
@@ -86,7 +175,7 @@ const WEB_DEV_TASKS: TaskTemplate[] = [
     description: 'Define page structure, navigation hierarchy, and URL routes.',
     triggerType: 'manual',
     sortOrder: 2,
-    dependsOn: ['content_intake'],
+    dependsOn: [],
   },
   {
     key: 'content_homepage',
@@ -223,7 +312,7 @@ const WEB_DEV_TASKS: TaskTemplate[] = [
     dependsOn: ['design_token_extraction'],
   },
 
-  // Phase: Development (12 tasks)
+  // Phase: Development (10 tasks)
   {
     key: 'dev_project_setup',
     phase: 'development',
@@ -315,22 +404,73 @@ const WEB_DEV_TASKS: TaskTemplate[] = [
     sortOrder: 26,
     dependsOn: ['dev_cms_setup'],
   },
+  // Phase: Deployment (7 tasks)
+  {
+    key: 'dev_ga4_property',
+    phase: 'deployment',
+    label: 'GA4 property setup',
+    description: 'Find GA4 property from measurement ID, grant service account viewer access, and configure timezone.',
+    triggerType: 'ai_assisted',
+    sortOrder: 27,
+    dependsOn: ['dev_project_setup'],
+    automationRef: 'google-analytics/scripts/new-client-ga4.py',
+  },
+  {
+    key: 'dev_gtm_variables',
+    phase: 'deployment',
+    label: 'GTM variables setup',
+    description: 'Locate GTM container and create GA4 Measurement ID and screen resolution variables.',
+    triggerType: 'ai_assisted',
+    sortOrder: 28,
+    dependsOn: ['dev_ga4_property'],
+    automationRef: 'google-analytics/scripts/new-client-ga4.py',
+  },
+  {
+    key: 'dev_gtm_triggers',
+    phase: 'deployment',
+    label: 'GTM triggers setup',
+    description: 'Create bot filter, All Pages, form submission, phone click, and email click triggers.',
+    triggerType: 'ai_assisted',
+    sortOrder: 29,
+    dependsOn: ['dev_gtm_variables'],
+    automationRef: 'google-analytics/scripts/new-client-ga4.py',
+  },
+  {
+    key: 'dev_gtm_tags',
+    phase: 'deployment',
+    label: 'GTM tags setup',
+    description: 'Create GA4 config tag with bot blocking exception and event tags for form, phone, and email tracking.',
+    triggerType: 'ai_assisted',
+    sortOrder: 30,
+    dependsOn: ['dev_gtm_triggers'],
+    automationRef: 'google-analytics/scripts/new-client-ga4.py',
+  },
+  {
+    key: 'dev_gtm_publish',
+    phase: 'deployment',
+    label: 'Publish GTM & verify data flow',
+    description: 'Publish the GTM container version and verify GA4 data flow via realtime report.',
+    triggerType: 'ai_assisted',
+    sortOrder: 31,
+    dependsOn: ['dev_gtm_tags'],
+    automationRef: 'google-analytics/scripts/new-client-ga4.py',
+  },
   {
     key: 'dev_responsive_qa',
-    phase: 'development',
+    phase: 'deployment',
     label: 'Responsive QA',
     description: 'Test all pages across desktop, tablet, and mobile breakpoints.',
     triggerType: 'manual',
-    sortOrder: 27,
-    dependsOn: ['dev_homepage', 'dev_interior_pages', 'dev_sub_pages', 'dev_legal_pages', 'dev_cms_templates'],
+    sortOrder: 32,
+    dependsOn: ['dev_homepage', 'dev_interior_pages', 'dev_sub_pages', 'dev_legal_pages', 'dev_cms_templates', 'dev_gtm_publish'],
   },
   {
     key: 'dev_launch',
-    phase: 'development',
+    phase: 'deployment',
     label: 'Staging review & production launch',
     description: 'Deploy to staging for final review, then publish to production.',
     triggerType: 'approval_gate',
-    sortOrder: 28,
+    sortOrder: 33,
     dependsOn: ['dev_responsive_qa'],
   },
 ];
@@ -342,6 +482,7 @@ export const WEB_DEV_WORKFLOW: ServiceWorkflowConfig = {
     { key: 'content', label: 'Content' },
     { key: 'design', label: 'Design' },
     { key: 'development', label: 'Development' },
+    { key: 'deployment', label: 'Deployment' },
   ],
   tasks: WEB_DEV_TASKS,
 };

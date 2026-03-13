@@ -7,6 +7,61 @@ npm run lint
 echo "🔍 Running typecheck before commit..."
 npm run typecheck
 
+# ── Migration orphan detection ──
+# Catches the case where a migration file exists locally but isn't being committed.
+# This prevents the dangerous scenario: migration applied to DB, code committed,
+# but migration file left untracked — causing CI to never know about it.
+echo "🔍 Checking for orphaned migrations..."
+
+# Get the highest migration number in the staged changes
+STAGED_MIGRATIONS=$(git diff --cached --name-only -- 'supabase/migrations/*.sql' || true)
+if [ -n "$STAGED_MIGRATIONS" ]; then
+  STAGED_MAX=$(echo "$STAGED_MIGRATIONS" | xargs -I{} basename {} | sed 's/_.*//' | sort -n | tail -1)
+else
+  STAGED_MAX=""
+fi
+
+# Get the highest migration number already committed
+COMMITTED_MAX=$(git ls-files -- 'supabase/migrations/*.sql' | xargs -I{} basename {} 2>/dev/null | sed 's/_.*//' | sort -n | tail -1 || echo "00000")
+
+# Combine: the effective "latest known" number
+if [ -n "$STAGED_MAX" ] && [ "$STAGED_MAX" -gt "$COMMITTED_MAX" ] 2>/dev/null; then
+  LATEST_KNOWN="$STAGED_MAX"
+else
+  LATEST_KNOWN="$COMMITTED_MAX"
+fi
+
+# Check for untracked or unstaged migration files with LOWER numbers
+ORPHANED=""
+for file in supabase/migrations/*.sql; do
+  [ -f "$file" ] || continue
+  BASENAME=$(basename "$file")
+  NUM=$(echo "$BASENAME" | sed 's/_.*//')
+
+  # Skip if already tracked and unmodified
+  git ls-files --error-unmatch "$file" > /dev/null 2>&1 && continue
+
+  # Skip if it's in the staged changes
+  echo "$STAGED_MIGRATIONS" | grep -q "$BASENAME" 2>/dev/null && continue
+
+  # This file exists locally but isn't committed or staged
+  ORPHANED="$ORPHANED\n   $BASENAME"
+done
+
+if [ -n "$ORPHANED" ]; then
+  echo ""
+  echo "⚠️  Orphaned migration(s) detected — files exist locally but aren't staged:"
+  echo -e "$ORPHANED"
+  echo ""
+  echo "   These migrations may have been applied to the database but aren't in git."
+  echo "   CI will never apply them, and other agents won't know they exist."
+  echo ""
+  echo "   Fix: stage them with 'git add supabase/migrations/<file>'"
+  echo "   Or if they're drafts: move them out of supabase/migrations/ temporarily"
+  echo "   To bypass (not recommended): git commit --no-verify"
+  exit 1
+fi
+
 # Check staged .tsx/.ts files for hardcoded values that should use BDS tokens
 STAGED_SRC=$(git diff --cached --name-only --diff-filter=ACM -- 'src/**/*.tsx' 'src/**/*.ts' | grep -v 'email\.ts' | grep -v 'src/emails/' | grep -v 'global-error\.tsx' || true)
 

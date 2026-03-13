@@ -458,9 +458,21 @@ Write SQL → push to staging → CI applies via Management API → test → mer
 ### Creating migrations
 
 1. Write SQL in `supabase/migrations/NNNNN_description.sql` (increment the number)
-2. Commit and push to `staging` — CI auto-applies to staging Supabase
-3. Test on staging branch deploy
-4. Merge `staging` → `main` — CI auto-applies to production Supabase
+2. **IMMEDIATELY stage and commit the migration file** — even if the feature code isn't ready
+3. Push to `staging` — CI auto-applies to staging Supabase
+4. Test on staging branch deploy
+5. Merge `staging` → `main` — CI auto-applies to production Supabase
+
+**CRITICAL: Never leave migration files uncommitted.** The pre-commit hook blocks commits when untracked/unstaged migration files exist in `supabase/migrations/`. This prevents the most dangerous scenario: a migration gets applied to the DB (via script or dashboard) but never enters git — so CI never knows about it, other agents can't see it, and production will be missing it.
+
+### Migration safety guards
+
+| Guard | When | What it catches |
+|-------|------|-----------------|
+| **Pre-commit: orphan detection** | Every commit | Migration files that exist locally but aren't staged |
+| **Pre-push: number conflict** | Every push | Two branches creating the same migration number |
+| **qa-check.sh: orphan check** | Pre-merge QA | Untracked migrations missed by commit hook |
+| **qa-check.sh: data integrity** | Pre-merge QA | DB state inconsistent with code expectations |
 
 ### Multi-agent safety
 
