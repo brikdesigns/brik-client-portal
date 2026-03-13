@@ -199,7 +199,7 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
           {/* User type + status row */}
           <div style={detail.grid}>
             <div>
-              <p style={detail.label}>User type</p>
+              <p style={detail.label}>User Type</p>
               <p style={detail.value}>
                 {profile ? (
                   <Tag size="sm">{userTypeLabel}</Tag>
@@ -209,7 +209,7 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
               </p>
             </div>
             <div>
-              <p style={detail.label}>User status</p>
+              <p style={detail.label}>User Status</p>
               <p style={detail.value}>
                 {profile ? (
                   <Badge status={userIsActive ? 'positive' : 'neutral'}>
@@ -221,7 +221,7 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
               </p>
             </div>
             <div>
-              <p style={detail.label}>Last login</p>
+              <p style={detail.label}>Last Login</p>
               <p style={detail.value}>
                 {profile?.last_login_at
                   ? new Date(profile.last_login_at).toLocaleDateString()
@@ -241,13 +241,13 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
               </p>
             </div>
             <div>
-              <p style={detail.label}>Date added</p>
+              <p style={detail.label}>Date Added</p>
               <p style={detail.value}>
                 {new Date(contact.created_at).toLocaleDateString()}
               </p>
             </div>
             <div>
-              <p style={detail.label}>Last updated</p>
+              <p style={detail.label}>Last Updated</p>
               <p style={detail.value}>
                 {new Date(contact.updated_at).toLocaleDateString()}
               </p>
@@ -283,7 +283,7 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
               <p style={detail.value}>{contact.phone ? formatPhone(contact.phone) : '—'}</p>
             </div>
             <div>
-              <p style={detail.label}>Job title</p>
+              <p style={detail.label}>Job Title</p>
               <p style={detail.value}>{contact.title || '—'}</p>
             </div>
           </div>
@@ -393,7 +393,7 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
                 style: { color: color.text.secondary },
               },
               {
-                header: 'IP address',
+                header: 'IP Address',
                 accessor: (t) => t.ip_address || '—',
                 style: { color: color.text.muted },
               },

@@ -95,10 +95,10 @@ export default async function AdminServicesPage() {
         actions={
           <>
             <Button variant="secondary" size="md" asLink href="/admin/services/stripe-sync">
-              Stripe sync
+              Stripe Sync
             </Button>
             <Button variant="primary" size="md" asLink href="/admin/services/new">
-              Add service
+              Add Service
             </Button>
           </>
         }

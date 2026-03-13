@@ -99,7 +99,7 @@ export default async function UserDetailPage({ params }: Props) {
               </a>
             ) : '—',
           },
-          { label: 'Last login', value: formatDateTime(user.last_login_at) },
+          { label: 'Last Login', value: formatDateTime(user.last_login_at) },
         ]}
         actions={
           <Link href={`/admin/users/${id}/edit`}>
@@ -115,7 +115,7 @@ export default async function UserDetailPage({ params }: Props) {
         <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Activity</h2>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
-            <p style={labelStyle}>Last login</p>
+            <p style={labelStyle}>Last Login</p>
             <p style={fieldStyle}>{formatDateTime(user.last_login_at)}</p>
           </div>
           <div>
@@ -123,13 +123,13 @@ export default async function UserDetailPage({ params }: Props) {
             <p style={fieldStyle}>{formatDate(user.invited_at)}</p>
           </div>
           <div>
-            <p style={labelStyle}>Invited by</p>
+            <p style={labelStyle}>Invited By</p>
             <p style={fieldStyle}>{invitedByName || '—'}</p>
           </div>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
           <div>
-            <p style={labelStyle}>Account created</p>
+            <p style={labelStyle}>Account Created</p>
             <p style={fieldStyle}>{formatDate(user.created_at)}</p>
           </div>
           <div />

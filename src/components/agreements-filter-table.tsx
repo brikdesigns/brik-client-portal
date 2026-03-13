@@ -129,7 +129,7 @@ export function AgreementsFilterTable({
             style: { color: color.text.secondary },
           },
           {
-            header: 'Signed by',
+            header: 'Signed By',
             accessor: (a) => a.signed_by_name || '—',
             style: { color: color.text.secondary },
           },

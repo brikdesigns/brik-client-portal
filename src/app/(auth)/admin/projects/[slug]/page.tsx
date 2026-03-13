@@ -82,11 +82,11 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       ) : '—',
     },
     {
-      label: 'Start date',
+      label: 'Start Date',
       value: project.start_date ? new Date(project.start_date).toLocaleDateString() : '—',
     },
     {
-      label: 'End date',
+      label: 'End Date',
       value: project.end_date ? new Date(project.end_date).toLocaleDateString() : '—',
     },
   ];
@@ -157,7 +157,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
       {/* ── Overview Tab ──────────────────────────────────────── */}
       {activeTab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: gap.xl }}>
-          <h2 style={detail.sectionHeading}>Project details</h2>
+          <h2 style={detail.sectionHeading}>Project Details</h2>
           <div style={detail.grid}>
             <div>
               <p style={detail.label}>Status</p>
@@ -205,18 +205,18 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
               <div style={{ ...detail.grid, paddingTop: space.md }}>
                 {oneTimeCents > 0 && (
                   <div>
-                    <p style={detail.label}>One-time</p>
+                    <p style={detail.label}>One-Time</p>
                     <p style={detail.value}>{formatCurrency(oneTimeCents)}</p>
                   </div>
                 )}
                 {monthlyCents > 0 && (
                   <div>
-                    <p style={detail.label}>Monthly recurring</p>
+                    <p style={detail.label}>Monthly Recurring</p>
                     <p style={detail.value}>{formatCurrency(monthlyCents)}/mo</p>
                   </div>
                 )}
                 <div>
-                  <p style={detail.label}>Estimated total</p>
+                  <p style={detail.label}>Estimated Total</p>
                   <p style={{ ...detail.value, fontWeight: font.weight.semibold }}>
                     {totalEstimateCents > 0 ? formatCurrency(totalEstimateCents) : <span style={detail.empty}>—</span>}
                   </p>
@@ -228,7 +228,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
           {/* ClickUp */}
           {(project.clickup_task_id || hasClickupDetails) && (
             <div>
-              <h2 style={detail.sectionHeading}>ClickUp details</h2>
+              <h2 style={detail.sectionHeading}>ClickUp Details</h2>
               <div style={{ ...detail.grid, paddingTop: space.md }}>
                 <div>
                   <p style={detail.label}>Task</p>
@@ -294,7 +294,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                   ),
                 },
                 {
-                  header: 'Service line',
+                  header: 'Service Line',
                   accessor: (svc) => svc.category_name || <span style={detail.empty}>—</span>,
                 },
                 {

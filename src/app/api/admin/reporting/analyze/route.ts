@@ -9,6 +9,7 @@ import { analyzeReviews } from '@/lib/analysis/reviews';
 import { analyzeCompetitors } from '@/lib/analysis/competitors';
 import { recalculateReportScore, recalculateReportSetScore } from '@/lib/analysis/scoring';
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
+import { sanitizeOpportunitiesText } from '@/lib/ai-validation';
 import { sendAnalysisCompleteEmail, logEmail } from '@/lib/email';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
@@ -165,7 +166,7 @@ export async function POST(request: Request) {
   }
 
   // Regenerate opportunities text from the full results
-  const opportunitiesText = generateOpportunities(results);
+  const opportunitiesText = sanitizeOpportunitiesText(generateOpportunities(results));
   await supabase
     .from('reports')
     .update({ opportunities_text: opportunitiesText })

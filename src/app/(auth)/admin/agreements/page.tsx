@@ -57,7 +57,7 @@ export default async function AdminAgreementsPage() {
       {pending.length > 0 && (
         <Card variant="elevated" padding="lg" style={{ marginBottom: space.lg }}>
           <h2 style={heading.section}>
-            Pending signature
+            Pending Signature
           </h2>
           <DataTable<AgreementRow>
             data={pending}
@@ -114,7 +114,7 @@ export default async function AdminAgreementsPage() {
       {/* All agreements */}
       <Card variant="elevated" padding="lg">
         <h2 style={heading.section}>
-          All agreements
+          All Agreements
         </h2>
         <DataTable<AgreementRow>
           data={all}
@@ -154,7 +154,7 @@ export default async function AdminAgreementsPage() {
               style: { color: color.text.secondary },
             },
             {
-              header: 'Signed by',
+              header: 'Signed By',
               accessor: (a) => a.signed_by_name || '—',
               style: { color: color.text.secondary },
             },

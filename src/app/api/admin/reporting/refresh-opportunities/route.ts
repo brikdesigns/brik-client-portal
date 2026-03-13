@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
 import { generateOpportunities } from '@/lib/analysis/seed-reports';
+import { sanitizeOpportunitiesText } from '@/lib/ai-validation';
 import { type WebsiteCheckResult } from '@/lib/analysis/website';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 
@@ -46,7 +47,7 @@ export async function POST(request: Request) {
     metadata: (item.metadata as Record<string, unknown>) ?? {},
   }));
 
-  const opportunitiesText = generateOpportunities(results);
+  const opportunitiesText = sanitizeOpportunitiesText(generateOpportunities(results));
 
   await supabase
     .from('reports')

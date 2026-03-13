@@ -58,8 +58,8 @@ export default async function PaymentsPage() {
           marginBottom: space.xl,
         }}
       >
-        <CardSummary label="Amount due" value={formatCurrency(totalDue)} />
-        <CardSummary label="Open invoices" value={openInvoices.length} />
+        <CardSummary label="Amount Due" value={formatCurrency(totalDue)} />
+        <CardSummary label="Open Invoices" value={openInvoices.length} />
         <CardSummary label="Paid" value={`${paidInvoices.length} (${formatCurrency(totalPaid)})`} />
       </div>
 

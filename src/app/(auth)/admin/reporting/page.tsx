@@ -35,9 +35,9 @@ export default async function AdminReportingPage() {
           marginBottom: space.xl,
         }}
       >
-        <CardSummary label="Total analyses" value={all.length} />
+        <CardSummary label="Total Analyses" value={all.length} />
         <CardSummary label="Passing" value={passing} />
-        <CardSummary label="Needs attention" value={needsAttention} />
+        <CardSummary label="Needs Attention" value={needsAttention} />
       </div>
 
       <ReportingFilterTable reportSets={all} />

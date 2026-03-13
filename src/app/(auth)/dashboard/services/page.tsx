@@ -76,10 +76,10 @@ export default async function ServicesPage() {
           marginBottom: space.xl,
         }}
       >
-        <CardSummary label="Total services" value={services.length} />
+        <CardSummary label="Total Services" value={services.length} />
         <CardSummary label="Active" value={activeCount} />
         <CardSummary
-          label="Monthly cost"
+          label="Monthly Cost"
           value={monthlyCost > 0 ? formatCurrency(monthlyCost) : '$0'}
         />
       </div>

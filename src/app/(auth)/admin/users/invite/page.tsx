@@ -14,13 +14,13 @@ export default async function InviteUserPage() {
   return (
     <div>
       <PageHeader
-        title="Invite a user"
+        title="Invite a User"
         subtitle="Send a portal invitation to a new user."
         breadcrumbs={
           <Breadcrumb
             items={[
               { label: 'Users', href: '/admin/users' },
-              { label: 'Invite user' },
+              { label: 'Invite User' },
             ]}
           />
         }

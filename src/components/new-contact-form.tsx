@@ -74,24 +74,6 @@ export function NewContactForm({ companies, defaultCompanyId }: NewContactFormPr
         return;
       }
 
-      // Send welcome email if contact has an email address
-      if (email) {
-        try {
-          const emailRes = await fetch('/api/admin/email/welcome', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contact_id: data.id }),
-          });
-          if (!emailRes.ok) {
-            const body = await emailRes.json().catch(() => ({}));
-            console.error('Welcome email failed:', emailRes.status, body);
-          }
-        } catch (err) {
-          // Don't block navigation if email fails
-          console.error('Welcome email network error:', err);
-        }
-      }
-
       toastSuccess('Contact added', `${firstName} ${lastName} has been added.`);
       router.push(`/admin/contacts/${data.id}`);
       router.refresh();

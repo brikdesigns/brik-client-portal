@@ -22,7 +22,7 @@ export default async function AdminOverviewPage() {
     { label: 'Leads', value: leadsRes.count ?? 0, href: '/admin/companies?type=lead' },
     { label: 'Clients', value: clientsRes.count ?? 0, href: '/admin/companies?type=client' },
     { label: 'Projects', value: projectsRes.count ?? 0, href: '/admin/projects' },
-    { label: 'Open invoices', value: invoicesRes.count ?? 0, href: '/admin/invoices' },
+    { label: 'Open Invoices', value: invoicesRes.count ?? 0, href: '/admin/invoices' },
   ];
 
   const { data: recentProjects } = await supabase
@@ -49,7 +49,7 @@ export default async function AdminOverviewPage() {
               color: color.text.primary,
             }}
           >
-            Get started
+            Get Started
           </Button>
         }
         style={{ marginBottom: space.xl, borderRadius: border.radius.md }}
@@ -73,7 +73,7 @@ export default async function AdminOverviewPage() {
         ))}
       </div>
 
-      <h2 style={heading.section}>Recent projects</h2>
+      <h2 style={heading.section}>Recent Projects</h2>
 
       <DataTable
         data={recentProjects ?? []}

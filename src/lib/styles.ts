@@ -77,6 +77,7 @@ export const heading = {
     fontWeight: font.weight.semibold,
     color: color.text.primary,
     margin: `0 0 ${space.md}`,
+    textTransform: 'capitalize' as const,
   } satisfies CSSProperties,
 
   /** Sub-section heading (body/md · 16px semibold) */
@@ -86,6 +87,7 @@ export const heading = {
     fontWeight: font.weight.semibold,
     color: color.text.primary,
     margin: `${space.md} 0 ${gap.sm}`,
+    textTransform: 'capitalize' as const,
   } satisfies CSSProperties,
 } as const;
 
@@ -170,13 +172,14 @@ export const meta = {
 //   <a style={detail.link} href="...">Open ↗</a>
 
 export const detail = {
-  /** Field label — body/md, muted, no margin */
+  /** Field label — body/md, muted, no margin, Title Case */
   label: {
     fontFamily: font.family.body,
     fontSize: font.size.body.md,
     lineHeight: font.lineHeight.normal,
     color: color.text.muted,
     margin: 0,
+    textTransform: 'capitalize' as const,
   } satisfies CSSProperties,
 
   /** Field value — body/md, primary, no margin */
@@ -185,7 +188,7 @@ export const detail = {
     margin: 0,
   } satisfies CSSProperties,
 
-  /** Section heading — heading/md, primary, top padding (e.g. "Location", "Contact") */
+  /** Section heading — heading/md, primary, top padding, Title Case */
   sectionHeading: {
     fontFamily: font.family.heading,
     fontSize: font.size.heading.medium,
@@ -194,14 +197,16 @@ export const detail = {
     color: color.text.primary,
     margin: 0,
     paddingTop: space.xl,
+    textTransform: 'capitalize' as const,
   } satisfies CSSProperties,
 
-  /** Section divider label — label/md, muted, top padding (minor groupings) */
+  /** Section divider label — label/md, muted, top padding, Title Case */
   sectionLabel: {
     ...label.md,
     color: color.text.muted,
     margin: 0,
     paddingTop: space.xl,
+    textTransform: 'capitalize' as const,
   } satisfies CSSProperties,
 
   /** 3-column grid for field pairs */

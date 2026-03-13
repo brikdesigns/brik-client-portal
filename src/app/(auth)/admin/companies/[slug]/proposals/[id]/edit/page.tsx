@@ -16,6 +16,8 @@ import { heading } from '@/lib/styles';
 import { font, color, space, gap, border } from '@/lib/tokens';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faTrash, faPlus, faWandMagicSparkles } from '@fortawesome/free-solid-svg-icons';
+import { Modal } from '@bds/components/ui/Modal/Modal';
+import { RewriteNotesPicker } from '@/components/rewrite-notes-picker';
 
 interface Service {
   id: string;
@@ -57,6 +59,8 @@ export default function EditProposalPage() {
   const [meetingNotesUrl, setMeetingNotesUrl] = useState('');
   const [meetingNotesContent, setMeetingNotesContent] = useState('');
   const [regeneratingSection, setRegeneratingSection] = useState<string | null>(null);
+
+  const [showRewriteModal, setShowRewriteModal] = useState(false);
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -159,9 +163,14 @@ export default function EditProposalPage() {
     return data as T;
   }
 
-  async function handleGenerateSections() {
+  /**
+   * Rewrite all proposal sections. If newMeetingNotes is provided,
+   * updates the proposal's meeting notes first (so pipeline mode picks them up).
+   */
+  async function handleGenerateSections(newMeetingNotes?: { content: string; url?: string }) {
     setError('');
     setGenerating(true);
+    setShowRewriteModal(false);
 
     const sectionSteps = [
       { type: 'overview_and_goals', label: 'Writing overview...' },
@@ -171,6 +180,25 @@ export default function EditProposalPage() {
     ];
 
     try {
+      // If new meeting notes were selected, update the proposal first
+      if (newMeetingNotes) {
+        setGeneratingStep('Updating meeting notes...');
+        const patchRes = await fetch(`/api/admin/proposals/${proposalId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            meeting_notes_content: newMeetingNotes.content,
+            meeting_notes_url: newMeetingNotes.url || null,
+          }),
+        });
+        if (!patchRes.ok) {
+          const data = await patchRes.json().catch(() => ({}));
+          throw new Error((data as { error?: string }).error || 'Failed to update meeting notes.');
+        }
+        setMeetingNotesContent(newMeetingNotes.content);
+        if (newMeetingNotes.url) setMeetingNotesUrl(newMeetingNotes.url);
+      }
+
       // Pipeline mode: proposal already exists, server reads notes + services from DB
       const generatedSections: ProposalSection[] = [];
 
@@ -365,7 +393,7 @@ export default function EditProposalPage() {
             variant="secondary"
             size="sm"
             iconBefore={<FontAwesomeIcon icon={faWandMagicSparkles} style={iconSize} />}
-            onClick={handleGenerateSections}
+            onClick={() => setShowRewriteModal(true)}
             disabled={generating}
           >
             {generating ? (generatingStep || 'Generating...') : 'Rewrite Proposal'}
@@ -605,6 +633,23 @@ export default function EditProposalPage() {
           </div>
         </Card>
       </form>
+
+      {/* Rewrite modal — pick a meeting note before regenerating */}
+      <Modal
+        isOpen={showRewriteModal}
+        onClose={() => setShowRewriteModal(false)}
+        title="Rewrite Proposal"
+        size="md"
+      >
+        <RewriteNotesPicker
+          companyName={companyName}
+          currentMeetingNotes={meetingNotesContent}
+          onRewrite={(notes) => handleGenerateSections(notes)}
+          onRewriteWithExisting={() => handleGenerateSections()}
+          generating={generating}
+          generatingStep={generatingStep}
+        />
+      </Modal>
     </div>
   );
 }

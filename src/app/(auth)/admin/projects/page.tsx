@@ -80,7 +80,7 @@ export default async function AdminProjectsPage() {
         subtitle={`${all.length} total projects across all clients.`}
         actions={
           <Button variant="primary" size="md" asLink href="/admin/projects/new">
-            Add project
+            Add Project
           </Button>
         }
       />
@@ -93,9 +93,9 @@ export default async function AdminProjectsPage() {
           marginBottom: space.xl,
         }}
       >
-        <CardSummary label="In progress" value={inProgress} />
+        <CardSummary label="In Progress" value={inProgress} />
         <CardSummary label="Complete" value={completed} />
-        <CardSummary label="Not started" value={notStarted} />
+        <CardSummary label="Not Started" value={notStarted} />
       </div>
 
       <ProjectsFilterTable projects={projectRows} clientOptions={clientOptions} />

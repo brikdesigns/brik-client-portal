@@ -32,12 +32,12 @@ export default async function AdminUsersPage() {
         subtitle="Manage portal access and send invitations."
         actions={
           <Button variant="primary" size="md" asLink href="/admin/users/invite">
-            Invite user
+            Invite User
           </Button>
         }
       />
 
-      <h2 style={heading.section}>All users</h2>
+      <h2 style={heading.section}>All Users</h2>
 
       <DataTable
         data={users ?? []}
@@ -75,7 +75,7 @@ export default async function AdminUsersPage() {
             ),
           },
           {
-            header: 'Last login',
+            header: 'Last Login',
             accessor: (u) =>
               u.last_login_at
                 ? new Date(u.last_login_at).toLocaleDateString()

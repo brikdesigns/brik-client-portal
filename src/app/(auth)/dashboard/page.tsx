@@ -81,9 +81,9 @@ export default async function DashboardPage() {
           marginBottom: space.xl,
         }}
       >
-        <CardSummary label="Amount due" value={formatCurrency(totalDue)} />
-        <CardSummary label="Open invoices" value={openInvoices.length} />
-        <CardSummary label="Active services" value={activeServiceCount} />
+        <CardSummary label="Amount Due" value={formatCurrency(totalDue)} />
+        <CardSummary label="Open Invoices" value={openInvoices.length} />
+        <CardSummary label="Active Services" value={activeServiceCount} />
       </div>
 
       {/* Services */}
