@@ -2,41 +2,32 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import { requireAdmin, isAuthError } from '@/lib/auth';
-import { getMeetingNotes, fetchMeetingNotes } from '@/lib/notion-fetch';
+import { fetchMeetingNotes } from '@/lib/notion-fetch';
 import { recommendServices, type CatalogService } from '@/lib/service-recommendation';
-import {
-  generateProposalSections,
-  type ServiceDetail,
-  type ProposalGenerationInput,
-} from '@/lib/proposal-generation';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 import crypto from 'crypto';
 
-// Netlify Pro: allow up to 120s for AI generation (2 Claude calls + Notion fetch)
-export const maxDuration = 120;
-
 const autoGenerateSchema = z.object({
   company_id: uuidSchema,
-  meeting_note_page_id: z.string().optional(),
+  meeting_note_page_id: z.string().min(1, 'A meeting note must be selected'),
   title: z.string().min(1).optional(),
 });
 
 /**
  * POST /api/admin/proposals/auto-generate
- * One-click proposal generation pipeline. Admin-only.
+ * Step 1 of proposal generation — recommend services + create proposal shell.
+ * Section content is generated client-side via sequential /generate/section calls.
  *
- * Input: { company_id, meeting_note_page_id? }
- * Pipeline:
- *   1. Fetch company + primary contact
- *   2. Search Notion for meeting notes by company name
- *   3. Fetch full service catalog
- *   4. AI recommends services based on meeting notes
- *   5. AI generates 4 proposal sections
- *   6. Creates proposal + line items in Supabase
- *   7. Returns proposal ID for redirect
+ * Pipeline (all fast — no multi-section AI generation):
+ *   1. Fetch company + primary contact from Supabase
+ *   2. Fetch meeting notes content from Notion
+ *   3. Fetch service catalog from Supabase
+ *   4. AI recommends services (1 Claude call, ~10-15s)
+ *   5. Create proposal shell + line items in Supabase
  *
- * Returns: { proposal_id, token, slug, recommendations }
+ * Returns: { proposal_id, company_id, slug, service_ids, meeting_notes_content }
+ * Client then calls /api/admin/proposals/generate/section for each section.
  */
 export async function POST(request: Request) {
   const limited = rateLimitOrNull(request, 'proposal-auto-generate', AI_GENERATION_LIMIT);
@@ -55,7 +46,7 @@ export async function POST(request: Request) {
   const { company_id, meeting_note_page_id, title: customTitle } = body;
 
   try {
-    // 1. Fetch company + primary contact
+    // 1. Fetch company
     const { data: company, error: companyError } = await supabase
       .from('companies')
       .select('id, name, industry, slug')
@@ -66,29 +57,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Company not found' }, { status: 404 });
     }
 
-    const { data: contact } = await supabase
-      .from('contacts')
-      .select('full_name, first_name, email')
-      .eq('company_id', company_id)
-      .eq('is_primary', true)
-      .single();
+    // 2. Fetch meeting notes from Notion
+    const content = await fetchMeetingNotes(meeting_note_page_id);
 
-    // 2. Fetch meeting notes — use specific page if provided, otherwise search by name
-    let notesResult: { content: string; pageId: string; title: string; url: string };
-
-    if (meeting_note_page_id) {
-      const content = await fetchMeetingNotes(meeting_note_page_id);
-      notesResult = { content, pageId: meeting_note_page_id, title: '', url: '' };
-    } else {
-      notesResult = await getMeetingNotes({ clientName: company.name });
-    }
-
-    if (!notesResult.content || notesResult.content.trim().length < 50) {
+    if (!content || content.trim().length < 50) {
       return NextResponse.json(
         {
-          error: meeting_note_page_id
-            ? 'The selected meeting note has insufficient content (less than 50 characters).'
-            : `No meeting notes found for "${company.name}" in Notion.`,
+          error: 'The selected meeting note has insufficient content (less than 50 characters).',
           error_code: 'NO_MEETING_NOTES',
           company_name: company.name,
         },
@@ -127,8 +102,8 @@ export async function POST(request: Request) {
       };
     });
 
-    // 4. AI recommends services
-    const recommendations = await recommendServices(notesResult.content, catalogServices);
+    // 4. AI recommends services (1 Claude call — fits within Netlify 26s limit)
+    const recommendations = await recommendServices(content, catalogServices);
 
     if (recommendations.length === 0) {
       return NextResponse.json(
@@ -138,47 +113,9 @@ export async function POST(request: Request) {
     }
 
     const recommendedIds = recommendations.map(r => r.service_id);
-
-    // 5. Build service details for proposal generation
     const recommendedServices = allServices.filter(s => recommendedIds.includes(s.id));
-    const serviceDetails: ServiceDetail[] = recommendedServices.map(s => {
-      const cat = s.service_categories as unknown as { name: string; slug: string } | null;
-      return {
-        id: s.id,
-        name: s.name,
-        description: s.description,
-        proposal_copy: s.proposal_copy,
-        contract_copy: null,
-        included_scope: s.included_scope,
-        not_included: s.not_included,
-        projected_timeline: s.projected_timeline,
-        base_price_cents: s.base_price_cents || 0,
-        billing_frequency: s.billing_frequency,
-        category_name: cat?.name || null,
-        category_slug: cat?.slug || null,
-      };
-    });
 
-    // 6. AI generates 4 proposal sections
-    const generationInput: ProposalGenerationInput = {
-      companyName: company.name,
-      companyIndustry: company.industry,
-      contactName: contact?.first_name || contact?.full_name || 'the team',
-      meetingNotes: notesResult.content,
-      services: serviceDetails,
-    };
-
-    const generated = await generateProposalSections(generationInput);
-
-    const sections = [
-      generated.overview_and_goals,
-      generated.scope_of_project,
-      generated.project_timeline,
-      generated.why_brik,
-      { type: 'fee_summary', title: 'Fee Summary', content: null, sort_order: 5 },
-    ];
-
-    // 7. Create proposal in Supabase
+    // 5. Create proposal shell (no sections yet — client generates them one by one)
     const token = crypto.randomUUID();
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 30);
@@ -196,11 +133,9 @@ export async function POST(request: Request) {
         token,
         valid_until: validUntil.toISOString().split('T')[0],
         total_amount_cents: totalAmountCents,
-        sections,
-        meeting_notes_url: notesResult.url || null,
-        meeting_notes_content: notesResult.content,
-        generation_status: 'completed',
-        generated_at: new Date().toISOString(),
+        sections: [],
+        meeting_notes_content: content,
+        generation_status: 'pending',
       })
       .select('id, token')
       .single();
@@ -209,7 +144,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: proposalError.message }, { status: 400 });
     }
 
-    // 8. Create line items from recommended services
+    // Create line items from recommended services
     const itemRows = recommendedServices.map((s, index) => ({
       proposal_id: proposal.id,
       service_id: s.id,
@@ -229,15 +164,9 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: itemsError.message }, { status: 400 });
     }
 
+    // Return only what the client needs — meeting notes + services stay server-side
     return NextResponse.json({
       proposal_id: proposal.id,
-      token: proposal.token,
-      slug: company.slug,
-      recommendations: recommendations.map(r => ({
-        service_id: r.service_id,
-        service_name: catalogServices.find(s => s.id === r.service_id)?.name,
-        reason: r.reason,
-      })),
     });
   } catch (err) {
     console.error('Auto-generate pipeline failed:', err);

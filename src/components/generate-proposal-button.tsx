@@ -23,10 +23,18 @@ interface GenerateProposalButtonProps {
   label?: string;
 }
 
+const SECTION_STEPS = [
+  { type: 'overview_and_goals', label: 'Writing overview...' },
+  { type: 'scope_of_project', label: 'Writing scope...' },
+  { type: 'project_timeline', label: 'Writing timeline...' },
+  { type: 'why_brik', label: 'Finalizing proposal...' },
+] as const;
+
 export function GenerateProposalButton({ companyId, companyName, slug, label = 'Get started' }: GenerateProposalButtonProps) {
   const router = useRouter();
   const [showModal, setShowModal] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [progressStep, setProgressStep] = useState('');
   const [error, setError] = useState('');
   const [meetingNotes, setMeetingNotes] = useState<MeetingNote[]>([]);
   const [selectedNoteId, setSelectedNoteId] = useState('');
@@ -60,6 +68,28 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
     }
   }, [companyName]);
 
+  /** Helper: POST JSON and return parsed response or throw */
+  async function postJSON<T>(url: string, body: Record<string, unknown>): Promise<T> {
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const contentType = res.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      throw new Error(
+        res.status === 504 || res.status === 502
+          ? 'Request timed out. Try again or use Manual mode.'
+          : `Server error (${res.status}). Try again or use Manual mode.`
+      );
+    }
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Request failed.');
+    return data as T;
+  }
+
   async function handleGenerate() {
     if (!selectedNoteId) {
       setError('Select a meeting note to continue.');
@@ -68,43 +98,54 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
 
     setGenerating(true);
     setError('');
+    setProgressStep('Analyzing meeting notes...');
+
+    let proposalId: string | null = null;
 
     try {
-      const res = await fetch('/api/admin/proposals/auto-generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          company_id: companyId,
-          meeting_note_page_id: selectedNoteId,
-          title: proposalTitle.trim() || undefined,
-        }),
+      // Step 1: Recommend services + create proposal shell (~15-20s)
+      const shell = await postJSON<{
+        proposal_id: string;
+      }>('/api/admin/proposals/auto-generate', {
+        company_id: companyId,
+        meeting_note_page_id: selectedNoteId,
+        title: proposalTitle.trim() || undefined,
       });
+      proposalId = shell.proposal_id;
 
-      const contentType = res.headers.get('content-type') || '';
-      if (!contentType.includes('application/json')) {
-        setError(
-          res.status === 504 || res.status === 502
-            ? 'Generation timed out. The AI pipeline may need more time — try again or use Manual mode.'
-            : `Server error (${res.status}). Try again or use Manual mode.`
-        );
-        return;
+      // Step 2: Generate each section sequentially (~15-20s each)
+      // Pipeline mode: only send proposal_id + section_type (lightweight)
+      // The server reads meeting notes + services from the proposal DB row
+      for (const step of SECTION_STEPS) {
+        setProgressStep(step.label);
+        await postJSON('/api/admin/proposals/generate/section', {
+          proposal_id: shell.proposal_id,
+          section_type: step.type,
+        });
       }
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        setError(data.error || 'Generation failed.');
-        return;
-      }
-
+      // Done — redirect to proposal
       setShowModal(false);
-      router.push(`/admin/companies/${slug}/proposals/${data.proposal_id}`);
+      router.push(`/admin/companies/${slug}/proposals/${shell.proposal_id}`);
       router.refresh();
     } catch (err) {
       console.error('Auto-generate failed:', err);
-      setError(err instanceof Error ? err.message : 'An unexpected error occurred.');
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred.';
+      if (proposalId) {
+        // Step 1 succeeded but a section failed — proposal exists with partial content
+        setError(`${message} The proposal was created — you can resume generation from the proposal page.`);
+        // Redirect to the partial proposal after a short delay so user sees the message
+        setTimeout(() => {
+          setShowModal(false);
+          router.push(`/admin/companies/${slug}/proposals/${proposalId}`);
+          router.refresh();
+        }, 3000);
+      } else {
+        setError(message);
+      }
     } finally {
       setGenerating(false);
+      setProgressStep('');
     }
   }
 
@@ -128,10 +169,10 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
         size="md"
         footer={
           <>
-            <Button variant="ghost" size="md" onClick={() => setShowModal(false)}>
+            <Button variant="ghost" size="md" onClick={() => setShowModal(false)} disabled={generating}>
               Cancel
             </Button>
-            <Button variant="secondary" size="md" onClick={handleManual}>
+            <Button variant="secondary" size="md" onClick={handleManual} disabled={generating}>
               Manual
             </Button>
             <Button
@@ -179,6 +220,19 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
               : undefined}
             size="md"
           />
+
+          {generating && progressStep && (
+            <p
+              style={{
+                ...text.body,
+                color: color.text.muted,
+                margin: 0,
+                fontStyle: 'italic',
+              }}
+            >
+              {progressStep}
+            </p>
+          )}
 
           {error && (
             <p

@@ -15,6 +15,8 @@ import {
   faStop,
   faClipboardList,
   faUser,
+  faForward,
+  faLock,
 } from '@fortawesome/free-solid-svg-icons';
 import { faCircle as faCircleRegular } from '@fortawesome/free-regular-svg-icons';
 import { color } from '@/lib/tokens';
@@ -290,5 +292,43 @@ export function ServiceTypeTag({ type }: { type: string }) {
 
 export function RoleTag({ role }: { role: string }) {
   return <Tag size="sm">{roleLabels[role] ?? role}</Tag>;
+}
+
+// ── Task Status ─────────────────────────────────────────────────────
+const taskStatusMap: Record<string, StatusConfig> = {
+  not_started: {
+    label: 'Not Started',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faCircleRegular} style={iconSize} />,
+  },
+  in_progress: {
+    label: 'In Progress',
+    variant: 'info',
+    icon: <FontAwesomeIcon icon={faRotate} style={iconSize} />,
+  },
+  completed: {
+    label: 'Completed',
+    variant: 'positive',
+    icon: <FontAwesomeIcon icon={faCircleCheck} style={iconSize} />,
+  },
+  blocked: {
+    label: 'Blocked',
+    variant: 'warning',
+    icon: <FontAwesomeIcon icon={faTriangleExclamation} style={iconSize} />,
+  },
+  skipped: {
+    label: 'Skipped',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faForward} style={iconSize} />,
+  },
+  locked: {
+    label: 'Locked',
+    variant: 'neutral',
+    icon: <FontAwesomeIcon icon={faLock} style={iconSize} />,
+  },
+};
+
+export function TaskStatusBadge({ status }: { status: string }) {
+  return <StatusBadgeBase status={status} map={taskStatusMap} />;
 }
 

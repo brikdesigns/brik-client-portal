@@ -55,6 +55,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       company_services(
         id, status, started_at, notes,
         services(id, name, slug, service_type, billing_frequency, base_price_cents,
+          offering_structure, included_scope,
           service_categories(slug, name)
         )
       )
@@ -154,6 +155,8 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       service_type: string;
       billing_frequency: string | null;
       base_price_cents: number | null;
+      offering_structure: string | null;
+      included_scope: string | null;
       service_categories: { slug: string; name: string } | null;
     } | null;
   }[]) ?? [];
@@ -172,6 +175,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       const svc = (pi as unknown as Record<string, unknown>).services as {
         id: string; name: string; slug: string; service_type: string;
         billing_frequency: string | null; base_price_cents: number | null;
+        offering_structure: string | null; included_scope: string | null;
         service_categories: { slug: string; name: string } | null;
       };
       const proposal = (pi as unknown as Record<string, unknown>).proposals as { title: string; status: string };
@@ -608,26 +612,26 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {companyType === 'client' && (() => {
             const billingRows: { id: string; name: string; type: string; status: React.ReactNode; href: string }[] = [];
 
-            // Add proposals as Marketing Analysis
+            // Add proposals
             if (proposals?.length) {
               for (const p of proposals) {
                 billingRows.push({
                   id: `proposal-${p.id}`,
                   name: p.title || 'Proposal',
-                  type: 'Marketing Analysis',
+                  type: 'Proposal',
                   status: <ProposalStatusBadge status={p.status} />,
                   href: `/admin/companies/${client.slug}/proposals/${p.id}`,
                 });
               }
             }
 
-            // Add BAAs as Marketing Analysis
+            // Add agreements
             if (agreements?.length) {
               for (const a of agreements.filter((ag) => ag.type === 'baa')) {
                 billingRows.push({
                   id: `agreement-${a.id}`,
                   name: a.title || 'Business Associate Agreement',
-                  type: 'Marketing Analysis',
+                  type: 'Agreement',
                   status: <AgreementStatusBadge status={a.status} />,
                   href: `/admin/companies/${client.slug}/agreements/${a.id}`,
                 });
@@ -774,6 +778,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               },
             ]}
           />
+
         </div>
       )}
 

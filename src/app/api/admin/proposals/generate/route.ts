@@ -11,8 +11,10 @@ import {
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_GENERATION_LIMIT } from '@/lib/rate-limit';
 
-// Netlify Pro: allow up to 120s for AI generation (Claude API + Notion fetch)
-export const maxDuration = 120;
+// TODO: This route generates all 4 sections in one Claude call (~30-60s).
+// Netlify Pro hard-caps serverless functions at 26s, so this will timeout.
+// Migrate to multi-step pattern: client calls /generate/section 4 times sequentially.
+// For now, the auto-generate flow (Begin Proposal button) uses the multi-step pattern.
 
 const generateSchema = z.object({
   company_id: uuidSchema,
