@@ -105,17 +105,13 @@ export async function POST(request: Request) {
     // 4. AI recommends services (1 Claude call — fits within Netlify 26s limit)
     const recommendations = await recommendServices(content, catalogServices);
 
-    if (recommendations.length === 0) {
-      return NextResponse.json(
-        { error: 'AI could not identify relevant services from the meeting notes. Use the manual proposal builder.' },
-        { status: 400 }
-      );
-    }
-
     const recommendedIds = recommendations.map(r => r.service_id);
     const recommendedServices = allServices.filter(s => recommendedIds.includes(s.id));
+    const hasServices = recommendedServices.length > 0;
 
-    // 5. Create proposal shell (no sections yet — client generates them one by one)
+    // 5. Create proposal shell
+    // If AI found services: generation_status='pending' (client will generate sections next)
+    // If no services: generation_status='none' (admin must add services manually first)
     const token = crypto.randomUUID();
     const validUntil = new Date();
     validUntil.setDate(validUntil.getDate() + 30);
@@ -135,7 +131,7 @@ export async function POST(request: Request) {
         total_amount_cents: totalAmountCents,
         sections: [],
         meeting_notes_content: content,
-        generation_status: 'pending',
+        generation_status: hasServices ? 'pending' : 'none',
       })
       .select('id, token')
       .single();
@@ -144,29 +140,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: proposalError.message }, { status: 400 });
     }
 
-    // Create line items from recommended services
-    const itemRows = recommendedServices.map((s, index) => ({
-      proposal_id: proposal.id,
-      service_id: s.id,
-      name: s.name,
-      description: s.description || null,
-      quantity: 1,
-      unit_price_cents: s.base_price_cents || 0,
-      sort_order: index,
-    }));
+    // Create line items from recommended services (if any)
+    if (hasServices) {
+      const itemRows = recommendedServices.map((s, index) => ({
+        proposal_id: proposal.id,
+        service_id: s.id,
+        name: s.name,
+        description: s.description || null,
+        quantity: 1,
+        unit_price_cents: s.base_price_cents || 0,
+        sort_order: index,
+      }));
 
-    const { error: itemsError } = await supabase
-      .from('proposal_items')
-      .insert(itemRows);
+      const { error: itemsError } = await supabase
+        .from('proposal_items')
+        .insert(itemRows);
 
-    if (itemsError) {
-      await supabase.from('proposals').delete().eq('id', proposal.id);
-      return NextResponse.json({ error: itemsError.message }, { status: 400 });
+      if (itemsError) {
+        await supabase.from('proposals').delete().eq('id', proposal.id);
+        return NextResponse.json({ error: itemsError.message }, { status: 400 });
+      }
     }
 
-    // Return only what the client needs — meeting notes + services stay server-side
+    // Return proposal ID + whether services were identified
+    // Client skips section generation if no services (redirects to edit page instead)
     return NextResponse.json({
       proposal_id: proposal.id,
+      has_services: hasServices,
     });
   } catch (err) {
     console.error('Auto-generate pipeline failed:', err);

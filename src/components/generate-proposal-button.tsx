@@ -106,12 +106,21 @@ export function GenerateProposalButton({ companyId, companyName, slug, label = '
       // Step 1: Recommend services + create proposal shell (~15-20s)
       const shell = await postJSON<{
         proposal_id: string;
+        has_services: boolean;
       }>('/api/admin/proposals/auto-generate', {
         company_id: companyId,
         meeting_note_page_id: selectedNoteId,
         title: proposalTitle.trim() || undefined,
       });
       proposalId = shell.proposal_id;
+
+      if (!shell.has_services) {
+        // No services identified — redirect to edit page for manual service selection
+        setShowModal(false);
+        router.push(`/admin/companies/${slug}/proposals/${shell.proposal_id}/edit`);
+        router.refresh();
+        return;
+      }
 
       // Step 2: Generate each section sequentially (~15-20s each)
       // Pipeline mode: only send proposal_id + section_type (lightweight)

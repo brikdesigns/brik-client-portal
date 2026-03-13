@@ -100,9 +100,23 @@ export async function recommendServices(
     jsonStr = jsonStr.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '');
   }
 
-  const parsed: ServiceRecommendation[] = JSON.parse(jsonStr);
+  let parsed: ServiceRecommendation[];
+  try {
+    parsed = JSON.parse(jsonStr);
+  } catch (e) {
+    console.error('[service-recommendation] Failed to parse JSON:', jsonStr.slice(0, 300));
+    throw new Error(
+      `Failed to parse service recommendations: ${e instanceof Error ? e.message : 'Invalid JSON'}. ` +
+      `Response (first 200 chars): ${jsonStr.slice(0, 200)}`
+    );
+  }
+
+  if (!Array.isArray(parsed)) {
+    console.error('[service-recommendation] Expected array, got:', typeof parsed);
+    return [];
+  }
 
   // Validate service IDs exist in catalog
   const validIds = new Set(services.map(s => s.id));
-  return parsed.filter(r => validIds.has(r.service_id));
+  return parsed.filter(r => r && typeof r.service_id === 'string' && validIds.has(r.service_id));
 }

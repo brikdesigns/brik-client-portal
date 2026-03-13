@@ -9,6 +9,7 @@ import {
   type ProposalGenerationInput,
   type GeneratedSection,
 } from '@/lib/proposal-generation';
+import { resolveGenerationStatus } from '@/lib/ai-validation';
 import { parseBody, isValidationError, uuidSchema } from '@/lib/validation';
 import { rateLimitOrNull, AI_SECTION_LIMIT } from '@/lib/rate-limit';
 
@@ -224,16 +225,24 @@ async function appendSectionToProposal(
 
   const existing = (proposal?.sections as GeneratedSection[] | null) || [];
 
+  // Guard: reject sections with no content (prevents silent empty writes)
+  if (!section.content || section.content.trim().length === 0) {
+    console.error(`[appendSectionToProposal] Rejecting empty section "${section.type}" for proposal ${proposalId}`);
+    return;
+  }
+
   // Replace existing section of same type, or append
   const filtered = existing.filter(s => s.type !== section.type);
   filtered.push(section);
 
-  // Check if all 4 AI sections are now present
-  const presentTypes = new Set(filtered.map(s => s.type));
-  const allComplete = [...ALL_SECTION_TYPES].every(t => presentTypes.has(t));
+  // Determine generation status based on actual content quality, not just type count
+  const status = resolveGenerationStatus(
+    filtered as { type: string; title: string; content: string; sort_order: number }[],
+  );
 
-  // Add fee_summary placeholder if completing
-  if (allComplete && !presentTypes.has('fee_summary')) {
+  // Add fee_summary placeholder if all AI sections have content
+  const presentTypes = new Set(filtered.map(s => s.type));
+  if (status === 'completed' && !presentTypes.has('fee_summary')) {
     filtered.push({ type: 'fee_summary', title: 'Fee Summary', content: '', sort_order: 5 });
   }
 
@@ -241,9 +250,11 @@ async function appendSectionToProposal(
   filtered.sort((a, b) => (a.sort_order || 0) - (b.sort_order || 0));
 
   const updateData: Record<string, unknown> = { sections: filtered };
-  if (allComplete) {
+  if (status === 'completed') {
     updateData.generation_status = 'completed';
     updateData.generated_at = new Date().toISOString();
+  } else {
+    updateData.generation_status = status;
   }
 
   await supabase

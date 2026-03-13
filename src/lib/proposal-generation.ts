@@ -6,6 +6,11 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk';
+import {
+  validateScopeItem,
+  validateTimelinePhase,
+  sanitizeMarkdown,
+} from './ai-validation';
 
 const MODEL = 'claude-sonnet-4-20250514';
 
@@ -378,40 +383,144 @@ export async function generateProposalSections(
     });
   }
 
-  // Validate timeline_phases have required fields
-  const timelinePhases: TimelinePhase[] = (parsed.project_timeline.timeline_phases || []).map(phase => ({
-    phase_label: phase.phase_label || 'Phase',
-    deliverables: Array.isArray(phase.deliverables) ? phase.deliverables : [],
-  }));
+  // Validate timeline_phases through sanitization layer
+  const timelinePhases: TimelinePhase[] = (parsed.project_timeline.timeline_phases || [])
+    .map(phase => {
+      const validated = validateTimelinePhase(phase as unknown as Record<string, unknown>);
+      return validated as TimelinePhase;
+    });
+
+  // Validate scope_items through sanitization layer (after service-id filtering)
+  const sanitizedScopeItems: ScopeItem[] = scopeItems.map(item => {
+    const validated = validateScopeItem(item as unknown as Record<string, unknown>);
+    return validated as unknown as ScopeItem;
+  });
 
   return {
     overview_and_goals: {
       type: 'overview_and_goals',
       title: parsed.overview_and_goals.title,
-      content: parsed.overview_and_goals.content,
+      content: sanitizeMarkdown(parsed.overview_and_goals.content),
       sort_order: 1,
     },
     scope_of_project: {
       type: 'scope_of_project',
       title: parsed.scope_of_project.title,
-      content: parsed.scope_of_project.content,
+      content: sanitizeMarkdown(parsed.scope_of_project.content),
       sort_order: 2,
-      scope_items: scopeItems,
+      scope_items: sanitizedScopeItems,
     },
     project_timeline: {
       type: 'project_timeline',
       title: parsed.project_timeline.title,
-      content: parsed.project_timeline.content,
+      content: sanitizeMarkdown(parsed.project_timeline.content),
       sort_order: 3,
       timeline_phases: timelinePhases,
     },
     why_brik: {
       type: 'why_brik',
       title: parsed.why_brik.title,
-      content: parsed.why_brik.content,
+      content: sanitizeMarkdown(parsed.why_brik.content),
       sort_order: 4,
     },
   };
+}
+
+const SECTION_NAMES: Record<string, string> = {
+  overview_and_goals: 'Overview and Goals',
+  scope_of_project: 'Scope of Project',
+  project_timeline: 'Project Timeline',
+  why_brik: 'Why Brik?',
+};
+
+const SORT_ORDERS: Record<string, number> = {
+  overview_and_goals: 1,
+  scope_of_project: 2,
+  project_timeline: 3,
+  why_brik: 4,
+};
+
+/**
+ * Build a focused single-section prompt.
+ * Includes all context (company, notes, services) but asks for ONLY one section.
+ * Avoids the conflicting "return 4 sections" instruction from buildUserPrompt().
+ */
+function buildSingleSectionPrompt(input: ProposalGenerationInput, sectionType: string, currentContent?: string): string {
+  const servicesBlock = input.services.map(s => {
+    const price = (s.base_price_cents / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
+    const freq = s.billing_frequency === 'recurring' ? '/month' : 'one-time';
+    return `### ${s.name} (${s.category_name || 'General'})
+- **Service ID**: ${s.id}
+- **Category Slug**: ${s.category_slug || 'brand'}
+- **Price**: ${price} ${freq}
+- **Proposal Copy**: ${s.proposal_copy || s.description || 'No description available'}
+- **Included Scope**: ${s.included_scope || 'Standard scope'}
+- **Not Included**: ${s.not_included || 'N/A'}
+- **Projected Timeline**: ${s.projected_timeline || 'TBD'}`;
+  }).join('\n\n');
+
+  const sectionInstructions: Record<string, string> = {
+    overview_and_goals: `### Overview and Goals
+- Open by acknowledging the client's current situation using details from the meeting notes
+- Identify their key pain points (use their own words where possible)
+- State what success looks like for them (from their stated goals)
+- Include a "Our goal is simple" subsection with a bullet list of 4-6 specific, measurable objectives
+- Close with a brief statement framing this proposal as the plan to get there
+- Length: 3-5 paragraphs + bullet list`,
+    scope_of_project: `### Scope of Project
+- For EACH selected service, write a subsection with:
+  - A brief description of what's included (synthesized from proposal_copy and included_scope)
+  - A "Deliverables" bullet list of specific outputs
+  - The projected timeline
+  - What's NOT included (from not_included field), framed constructively
+- Open with a brief summary paragraph tying all services together
+- Length: varies by number of services`,
+    project_timeline: `### Project Timeline
+- Organize the selected services into logical phases:
+  - Phase 1 should be foundational work (branding, website, initial setup)
+  - Phase 2 should be ongoing/recurring services
+  - Phase 3 should be optimization and growth
+- For each phase use format: "**Phase N (Timeline): Phase Name**"
+- Each phase gets a brief description + bullet list of activities
+- Include a note about client involvement requirements
+- Length: 3-5 phases`,
+    why_brik: `### Why Brik?
+- Open with the StoryBrand "problem" — what most agencies get wrong
+- Position Brik as the guide: "We work differently"
+- Describe the Brik approach specific to their industry and pain points
+- Include a bullet list of 4-6 concrete ways Brik addresses their specific concerns
+- Close with the Brik voice: honest, no pressure, focused on long-term fit
+- Reference their specific situation from meeting notes (don't write generic copy)
+- Length: 5-7 paragraphs + bullet list`,
+  };
+
+  return `Generate ONLY the "${SECTION_NAMES[sectionType]}" section for this proposal.
+
+Return ONLY a JSON object with exactly two keys: "title" (string) and "content" (markdown string).
+Do NOT return multiple sections. Do NOT wrap the section in a parent key.
+
+Example response format:
+{
+  "title": "${SECTION_NAMES[sectionType]}",
+  "content": "## Your heading here\\n\\nYour markdown content..."
+}
+
+${currentContent ? `The current draft is:\n${currentContent}\n\nPlease write a fresh version that's different but still addresses the same points.\n\n` : ''}## Client Information
+- **Company**: ${input.companyName}
+- **Industry**: ${input.companyIndustry || 'Not specified'}
+- **Primary Contact**: ${input.contactName}
+
+## Discovery Call Meeting Notes
+${input.meetingNotes}
+
+## Selected Services
+${servicesBlock}
+
+## Section Instructions
+${sectionInstructions[sectionType] || ''}
+
+ALLOWED service_ids: ${input.services.map(s => s.id).join(', ')}
+ALLOWED service_names: ${input.services.map(s => s.name).join(', ')}`;
 }
 
 /**
@@ -425,13 +534,6 @@ export async function regenerateSection(
 ): Promise<GeneratedSection> {
   const client = getAnthropicClient();
 
-  const sectionNames: Record<string, string> = {
-    overview_and_goals: 'Overview and Goals',
-    scope_of_project: 'Scope of Project',
-    project_timeline: 'Project Timeline',
-    why_brik: 'Why Brik?',
-  };
-
   const message = await client.messages.create({
     model: MODEL,
     max_tokens: 3000,
@@ -439,9 +541,7 @@ export async function regenerateSection(
     messages: [
       {
         role: 'user',
-        content: `Regenerate ONLY the "${sectionNames[sectionType]}" section for this proposal. Return JSON: { "title": "...", "content": "markdown..." }
-
-${currentContent ? `The current draft is:\n${currentContent}\n\nPlease write a fresh version that's different but still addresses the same points.\n\n` : ''}${buildUserPrompt(input)}`,
+        content: buildSingleSectionPrompt(input, sectionType, currentContent),
       },
     ],
   });
@@ -451,19 +551,30 @@ ${currentContent ? `The current draft is:\n${currentContent}\n\nPlease write a f
     throw new Error('No text response from Claude API');
   }
 
-  const parsed = extractAndParseJSON<{ title?: string; content: string }>(textBlock.text, `regenerate ${sectionType}`);
+  let parsed = extractAndParseJSON<Record<string, unknown>>(textBlock.text, `regenerate ${sectionType}`);
 
-  const sortOrders: Record<string, number> = {
-    overview_and_goals: 1,
-    scope_of_project: 2,
-    project_timeline: 3,
-    why_brik: 4,
-  };
+  // Guard: if Claude returned the 4-section format, extract the right section
+  if (parsed[sectionType] && typeof parsed[sectionType] === 'object') {
+    console.warn(`[proposal-generation] regenerateSection got 4-section format for ${sectionType}, extracting nested section`);
+    parsed = parsed[sectionType] as Record<string, unknown>;
+  }
+
+  const rawContent = parsed.content;
+  if (!rawContent || typeof rawContent !== 'string' || rawContent.trim().length === 0) {
+    throw new Error(
+      `[proposal-generation] regenerateSection for ${sectionType} returned empty content. ` +
+      `Keys in response: ${Object.keys(parsed).join(', ')}. ` +
+      `Raw response (first 200 chars): ${textBlock.text.slice(0, 200)}`
+    );
+  }
+
+  // Sanitize before returning — strip dangerous HTML, enforce length limits
+  const content = sanitizeMarkdown(rawContent);
 
   return {
     type: sectionType,
-    title: parsed.title || sectionNames[sectionType],
-    content: parsed.content,
-    sort_order: sortOrders[sectionType],
+    title: (typeof parsed.title === 'string' && parsed.title) || SECTION_NAMES[sectionType],
+    content,
+    sort_order: SORT_ORDERS[sectionType],
   };
 }
