@@ -203,7 +203,7 @@ export function EditableReportTable({
     padding: `${space.sm} ${space.sm}`,
     fontSize: font.size.body.sm,
     color: color.text.primary,
-    borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+    borderBottom: `${border.width.md} solid ${color.border.muted}`,
     fontFamily: font.family.body,
     verticalAlign: 'top',
     overflowWrap: 'anywhere',
@@ -294,7 +294,7 @@ export function EditableReportTable({
                         colSpan={columns.length + 1}
                         style={{
                           padding: `${space.xs} ${space.sm} ${space.md}`,
-                          borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+                          borderBottom: `${border.width.md} solid ${color.border.muted}`,
                           background: color.background.secondary,
                         }}
                       >

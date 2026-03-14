@@ -143,7 +143,7 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         style={{
           display: 'flex',
           gap: gap.xl,
-          borderBottom: `${border.width.lg} solid ${color.border.muted}`,
+          borderBottom: `${border.width.md} solid ${color.border.muted}`,
           marginBottom: space.lg,
         }}
       >
