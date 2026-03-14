@@ -206,6 +206,7 @@ export function EditableReportTable({
     borderBottom: `${border.width.lg} solid ${color.border.muted}`,
     fontFamily: font.family.body,
     verticalAlign: 'top',
+    overflowWrap: 'anywhere',
   };
 
   return (

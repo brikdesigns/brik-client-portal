@@ -1,6 +1,6 @@
-/* BDS Design System — fonts + clean React token definitions */
+/* BDS Design System — fonts + auto-generated tokens (Style Dictionary from Figma) */
 @import '../../brik-bds/tokens/fonts.css';
-@import '../../brik-bds/tokens/react-tokens.css';
+@import '../../brik-bds/tokens/figma-tokens.css';
 
 /* Tailwind layers */
 @tailwind base;
@@ -10,6 +10,7 @@
 /* Match overscroll background to page color so scrolling past content bounds is seamless */
 html {
   background-color: var(--page-primary);
+  overflow-x: hidden;
 }
 :root[data-theme="dark"] {
   background-color: var(--grayscale--black);
