@@ -89,6 +89,15 @@ export const heading = {
     margin: `${space.md} 0 ${gap.sm}`,
     textTransform: 'capitalize' as const,
   } satisfies CSSProperties,
+
+  /** Card title (heading/small · semibold, no margin) */
+  card: {
+    fontFamily: font.family.heading,
+    fontSize: font.size.heading.small,
+    fontWeight: font.weight.semibold,
+    color: color.text.primary,
+    margin: 0,
+  } satisfies CSSProperties,
 } as const;
 
 // ─── Labels (subtitle/md pattern) ────────────────────────────────────

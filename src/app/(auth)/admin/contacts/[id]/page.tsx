@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ContactDetailTabs } from '@/components/contact-detail-tabs';
+import { DeleteContactButton } from '@/components/delete-contact-button';
 import { gap } from '@/lib/tokens';
 
 interface Props {
@@ -105,6 +106,11 @@ export default async function ContactDetailPage({ params }: Props) {
             <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${contact.id}/edit`}>
               Edit
             </Button>
+            <DeleteContactButton
+              contactId={contact.id}
+              contactName={contact.full_name}
+              hasPortalAccess={!!contact.user_id}
+            />
           </div>
         }
         metadata={[]}

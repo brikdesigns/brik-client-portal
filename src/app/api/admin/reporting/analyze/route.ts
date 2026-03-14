@@ -172,9 +172,31 @@ export async function POST(request: Request) {
     .update({ opportunities_text: opportunitiesText })
     .eq('id', report_id);
 
-  // Cascade recalculation
+  // Update report status to completed
+  await supabase
+    .from('reports')
+    .update({ status: 'completed' })
+    .eq('id', report_id);
+
+  // Cascade recalculation (score + tier)
   await recalculateReportScore(supabase, report_id);
   await recalculateReportSetScore(supabase, report.report_set_id);
+
+  // Update report_set status based on all reports
+  const { data: allSetReports } = await supabase
+    .from('reports')
+    .select('status')
+    .eq('report_set_id', report.report_set_id);
+
+  if (allSetReports) {
+    const allCompleted = allSetReports.every((r) => r.status === 'completed');
+    const someCompleted = allSetReports.some((r) => r.status === 'completed');
+    const setStatus = allCompleted ? 'needs_review' : someCompleted ? 'in_progress' : 'draft';
+    await supabase
+      .from('report_sets')
+      .update({ status: setStatus })
+      .eq('id', report.report_set_id);
+  }
 
   // Send notification email to the admin who triggered analysis
   // skip_email=true when called in batch from RunAnalysisButton (avoids 4 emails)

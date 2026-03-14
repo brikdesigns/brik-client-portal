@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/empty-state';
 import { formatCurrency } from '@/lib/format';
 import { getCurrentClientId } from '@/lib/current-client';
 import { font, color, space, gap } from '@/lib/tokens';
+import { heading, text } from '@/lib/styles';
 
 export default async function ServicesPage() {
   const supabase = await createClient();
@@ -109,25 +110,14 @@ export default async function ServicesPage() {
                       )}
                       <ServiceStatusBadge status={cs.status} />
                     </div>
-                    <h2
-                      style={{
-                        fontFamily: font.family.heading,
-                        fontSize: font.size.heading.small,
-                        fontWeight: font.weight.semibold,
-                        color: color.text.primary,
-                        margin: 0,
-                      }}
-                    >
+                    <h2 style={heading.card}>
                       {svc.name}
                     </h2>
                     {svc.description && (
                       <p
                         style={{
-                          fontFamily: font.family.body,
-                          fontSize: font.size.body.sm,
-                          color: color.text.secondary,
+                          ...text.bodySmall,
                           margin: `${gap.xs} 0 0`,
-                          lineHeight: font.lineHeight.normal,
                         }}
                       >
                         {svc.description}
@@ -136,9 +126,7 @@ export default async function ServicesPage() {
                     {cs.started_at && (
                       <p
                         style={{
-                          fontFamily: font.family.body,
-                          fontSize: font.size.body.xs,
-                          color: color.text.muted,
+                          ...text.bodyXs,
                           margin: `${gap.xs} 0 0`,
                         }}
                       >
@@ -150,20 +138,16 @@ export default async function ServicesPage() {
                     {svc.base_price_cents && (
                       <p
                         style={{
-                          fontFamily: font.family.heading,
-                          fontSize: font.size.body.md,
-                          fontWeight: font.weight.semibold,
-                          color: color.text.primary,
-                          margin: 0,
+                          ...heading.card,
+                          fontSize: font.size.heading.small,
                         }}
                       >
                         {formatCurrency(svc.base_price_cents)}
                         {svc.billing_frequency === 'monthly' && (
                           <span
                             style={{
-                              fontSize: font.size.body.xs,
+                              ...text.bodyXs,
                               fontWeight: font.weight.regular,
-                              color: color.text.muted,
                             }}
                           >
                             /mo
@@ -173,9 +157,7 @@ export default async function ServicesPage() {
                     )}
                     <p
                       style={{
-                        fontFamily: font.family.label,
-                        fontSize: font.size.body.tiny,
-                        color: color.text.muted,
+                        ...text.bodyXs,
                         margin: `${gap.tiny} 0 0`,
                         textTransform: 'capitalize',
                       }}

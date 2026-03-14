@@ -5,8 +5,9 @@ import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
+import { Dot } from '@bds/components/ui/Dot/Dot';
 import { ServiceBadge } from './service-badge';
-import { ServiceTypeTag, CompanyStatusBadge } from './status-badges';
+import { ServiceTypeTag } from './status-badges';
 import { formatCurrency } from '@/lib/format';
 
 interface ServiceCategory {
@@ -157,24 +158,13 @@ export function ServicesFilterTable({
             {
               header: 'Status',
               accessor: (s) => (
-                <CompanyStatusBadge status={s.active ? 'active' : 'inactive'} />
+                <Dot status={s.active ? 'positive' : 'neutral'} size="sm" title={s.active ? 'Active' : 'Inactive'} />
               ),
             },
             {
               header: 'Stripe',
               accessor: (s) => (
-                <span
-                  style={{
-                    display: 'inline-block',
-                    width: '8px',
-                    height: '8px',
-                    borderRadius: '50%',
-                    backgroundColor: s.stripe_product_id
-                      ? color.system.green
-                      : color.border.secondary,
-                  }}
-                  title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'}
-                />
+                <Dot status={s.stripe_product_id ? 'positive' : 'neutral'} size="sm" title={s.stripe_product_id ? 'Linked to Stripe' : 'Not linked'} />
               ),
             },
             {

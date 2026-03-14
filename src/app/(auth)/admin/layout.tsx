@@ -30,10 +30,12 @@ export default async function AdminLayout({
       <main
         style={{
           flex: 1,
+          minWidth: 0,
           backgroundColor: color.page.primary,
           padding: space.xl,
           marginLeft: '260px',
           minHeight: '100vh',
+          overflowX: 'hidden',
         }}
       >
         {children}

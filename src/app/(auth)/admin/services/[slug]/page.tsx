@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@bds/components/ui/Badge/Badge';
+import { Dot } from '@bds/components/ui/Dot/Dot';
 import { Button } from '@bds/components/ui/Button/Button';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ServiceBadge } from '@/components/service-badge';
@@ -99,10 +100,19 @@ export default async function ServiceDetailPage({ params }: Props) {
           },
           { label: 'Type', value: <ServiceTypeTag type={service.service_type} /> },
           {
+            label: 'Stripe',
+            value: service.stripe_product_id
+              ? <Badge status="positive">Linked</Badge>
+              : <Badge status="neutral">Not Linked</Badge>,
+          },
+          {
             label: 'Status',
-            value: service.active
-              ? <Badge status="positive">Active</Badge>
-              : <Badge status="neutral">Inactive</Badge>,
+            value: (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: gap.xs }}>
+                <Dot status={service.active ? 'positive' : 'neutral'} size="sm" />
+                {service.active ? 'Active' : 'Inactive'}
+              </span>
+            ),
           },
           {
             label: 'Price',

@@ -3,14 +3,33 @@ import { Card } from '@bds/components/ui/Card/Card';
 import { PageHeader } from '@/components/page-header';
 import { ProjectStatusBadge } from '@/components/status-badges';
 import { EmptyState } from '@/components/empty-state';
-import { font, color, gap, space } from '@/lib/tokens';
+import { getCurrentClientId } from '@/lib/current-client';
+import { gap, space } from '@/lib/tokens';
+import { heading, text } from '@/lib/styles';
 
 export default async function ProjectsPage() {
   const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  const currentClientId = await getCurrentClientId(user!.id);
+
+  if (!currentClientId) {
+    return (
+      <div>
+        <PageHeader title="Projects" subtitle="Select a client to view projects." />
+        <EmptyState
+          title="No client selected"
+          description="Use the client switcher above to select a client."
+          inline={false}
+        />
+      </div>
+    );
+  }
 
   const { data: projects } = await supabase
     .from('projects')
     .select('id, name, status, description, start_date, end_date')
+    .eq('company_id', currentClientId)
     .order('created_at', { ascending: false });
 
   return (
@@ -29,25 +48,14 @@ export default async function ProjectsPage() {
                 }}
               >
                 <div style={{ flex: 1 }}>
-                  <h2
-                    style={{
-                      fontFamily: font.family.heading,
-                      fontSize: font.size.heading.small,
-                      fontWeight: font.weight.semibold,
-                      color: color.text.primary,
-                      margin: 0,
-                    }}
-                  >
+                  <h2 style={heading.card}>
                     {project.name}
                   </h2>
                   {project.description && (
                     <p
                       style={{
-                        fontFamily: font.family.body,
-                        fontSize: font.size.body.sm,
-                        color: color.text.secondary,
+                        ...text.bodySmall,
                         margin: `${gap.xs} 0 0`,
-                        lineHeight: font.lineHeight.normal,
                       }}
                     >
                       {project.description}
@@ -56,9 +64,7 @@ export default async function ProjectsPage() {
                   {(project.start_date || project.end_date) && (
                     <p
                       style={{
-                        fontFamily: font.family.body,
-                        fontSize: font.size.body.xs,
-                        color: color.text.muted,
+                        ...text.bodyXs,
                         margin: `${gap.xs} 0 0`,
                       }}
                     >

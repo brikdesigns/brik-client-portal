@@ -89,7 +89,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
       .order('created_at', { ascending: false }),
     supabase
       .from('report_sets')
-      .select('id, status, overall_tier')
+      .select('id, type, status, overall_tier')
       .eq('company_id', client.id)
       .order('created_at', { ascending: false })
       .limit(1)
@@ -506,7 +506,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         </div>
       )}
 
-      {/* ── Reporting Tab (prospects only) ──────────────────────── */}
+      {/* ── Reporting Tab ──────────────────────────────────────── */}
       {activeTab === 'reporting' && (
         <>
           {!reportSet ? (
@@ -533,6 +533,11 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                       {REPORT_TYPE_LABELS[r.report_type as ReportType] || r.report_type}
                     </a>
                   ),
+                },
+                {
+                  header: 'Type',
+                  accessor: () => reportSet?.type === 'marketing_analysis' ? 'Marketing Analysis' : (reportSet?.type ?? '—'),
+                  style: { color: color.text.secondary },
                 },
                 {
                   header: 'Score',
