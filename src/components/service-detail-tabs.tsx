@@ -3,6 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { DataTable } from '@/components/data-table';
+import { Badge } from '@bds/components/ui/Badge/Badge';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ProjectStatusBadge } from '@/components/status-badges';
 import { font, color, gap, space, border } from '@/lib/tokens';
@@ -145,7 +146,14 @@ export function ServiceDetailTabs({ service, category, assignments, projects }: 
                 )}
               </p>
             </div>
-            <div />
+            <div>
+              <p style={fieldLabelStyle}>Stripe</p>
+              <p style={fieldValueStyle}>
+                {service.stripe_product_id
+                  ? <Badge status="positive">Linked</Badge>
+                  : <Badge status="neutral">Not Linked</Badge>}
+              </p>
+            </div>
           </div>
 
           {/* Stripe */}
