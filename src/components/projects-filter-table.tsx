@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { formatCurrency } from '@/lib/format';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
@@ -223,12 +223,12 @@ export function ProjectsFilterTable({
             header: '',
             accessor: (r) => (
               <div style={{ display: 'flex', gap: gap.xs, justifyContent: 'flex-end' }}>
-                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${r.project.slug}/edit`}>
+                <LinkButton variant="secondary" size="sm" href={`/admin/projects/${r.project.slug}/edit`}>
                   Edit
-                </Button>
-                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${r.project.slug}`}>
+                </LinkButton>
+                <LinkButton variant="secondary" size="sm" href={`/admin/projects/${r.project.slug}`}>
                   View
-                </Button>
+                </LinkButton>
               </div>
             ),
             style: { textAlign: 'right' },

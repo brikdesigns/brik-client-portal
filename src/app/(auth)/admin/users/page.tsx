@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 
 import { Badge } from '@bds/components/ui/Badge/Badge';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { RoleTag } from '@/components/status-badges';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -31,9 +31,9 @@ export default async function AdminUsersPage() {
         title="Users"
         subtitle="Manage portal access and send invitations."
         actions={
-          <Button variant="primary" size="md" asLink href="/admin/users/invite">
+          <LinkButton variant="primary" size="md" href="/admin/users/invite">
             Invite User
-          </Button>
+          </LinkButton>
         }
       />
 
@@ -85,9 +85,9 @@ export default async function AdminUsersPage() {
           {
             header: '',
             accessor: (u) => (
-              <Button variant="secondary" size="sm" asLink href={`/admin/users/${u.id}/edit`}>
+              <LinkButton variant="secondary" size="sm" href={`/admin/users/${u.id}/edit`}>
                 Edit
-              </Button>
+              </LinkButton>
             ),
             style: { textAlign: 'right' },
           },

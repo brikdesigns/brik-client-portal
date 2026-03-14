@@ -2,11 +2,11 @@
 
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { Dot } from '@bds/components/ui/Dot/Dot';
-import { ServiceBadge } from './service-badge';
+import { ServiceBadge, ServiceCategoryLabel } from './service-badge';
 import { ServiceTypeTag } from './status-badges';
 import { formatCurrency } from '@/lib/format';
 
@@ -135,8 +135,9 @@ export function ServicesFilterTable({
             },
             {
               header: 'Service Line',
-              accessor: (s) => s.category?.name ?? '—',
-              style: { color: color.text.secondary },
+              accessor: (s) => s.category?.slug
+                ? <ServiceCategoryLabel category={s.category.slug} />
+                : '—',
             },
             {
               header: 'Type',
@@ -170,14 +171,13 @@ export function ServicesFilterTable({
             {
               header: '',
               accessor: (s) => (
-                <Button
+                <LinkButton
                   variant="secondary"
                   size="sm"
-                  asLink
                   href={`/admin/services/${s.slug}`}
                 >
                   View
-                </Button>
+                </LinkButton>
               ),
               style: { textAlign: 'right' },
             },

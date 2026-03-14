@@ -1,7 +1,7 @@
 'use client';
 
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { DataTable } from '@/components/data-table';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceStatusBadge, ProjectStatusBadge } from '@/components/status-badges';
@@ -285,9 +285,9 @@ export function ServiceDetailTabs({ service, category, assignments, projects }: 
             {
               header: '',
               accessor: (p) => (
-                <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                <LinkButton variant="secondary" size="sm" href={`/admin/projects/${p.slug}`}>
                   View
-                </Button>
+                </LinkButton>
               ),
               style: { textAlign: 'right' as const },
             },
@@ -338,9 +338,9 @@ export function ServiceDetailTabs({ service, category, assignments, projects }: 
               header: '',
               accessor: (a) =>
                 a.companies ? (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${a.companies.slug}`}>
+                  <LinkButton variant="secondary" size="sm" href={`/admin/companies/${a.companies.slug}`}>
                     View
-                  </Button>
+                  </LinkButton>
                 ) : null,
               style: { textAlign: 'right' as const },
             },

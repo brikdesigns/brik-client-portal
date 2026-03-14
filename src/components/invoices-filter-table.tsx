@@ -3,6 +3,7 @@
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
 import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { font, color, space, gap } from '@/lib/tokens';
 import { DataTable } from './data-table';
 import { InvoiceStatusBadge } from './status-badges';
@@ -139,9 +140,9 @@ export function InvoicesFilterTable({
             header: '',
             accessor: (inv) => (
               <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
-                <Button variant="secondary" size="sm" asLink href={`/admin/invoices/${inv.id}/edit`}>
+                <LinkButton variant="secondary" size="sm" href={`/admin/invoices/${inv.id}/edit`}>
                   Edit
-                </Button>
+                </LinkButton>
                 {inv.invoice_url && (
                   <a href={inv.invoice_url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                     <Button variant="secondary" size="sm">View</Button>

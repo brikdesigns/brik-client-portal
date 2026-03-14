@@ -3,7 +3,7 @@
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { Badge } from '@bds/components/ui/Badge/Badge';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { TextLink } from '@bds/components/ui/TextLink/TextLink';
 import { DataTable } from '@/components/data-table';
 import { CompanyTypeTag } from '@/components/status-badges';
@@ -339,9 +339,9 @@ export function ContactDetailTabs({ contact, company, profile, connectedCompanie
             {
               header: '',
               accessor: (c) => (
-                <Button variant="secondary" size="sm" asLink href={`/admin/companies/${c.slug}`}>
+                <LinkButton variant="secondary" size="sm" href={`/admin/companies/${c.slug}`}>
                   View
-                </Button>
+                </LinkButton>
               ),
               style: { textAlign: 'right' },
             },

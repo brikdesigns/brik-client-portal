@@ -3,6 +3,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { font, color, space, gap } from '@/lib/tokens';
 
 export default function DashboardError({
@@ -55,9 +56,9 @@ export default function DashboardError({
         <Button variant="primary" size="md" onClick={() => reset()}>
           Try again
         </Button>
-        <Button variant="secondary" size="md" asLink href="/dashboard">
+        <LinkButton variant="secondary" size="md" href="/dashboard">
           Back to dashboard
-        </Button>
+        </LinkButton>
       </div>
     </div>
   );

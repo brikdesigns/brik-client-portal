@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { font, color, space, gap } from '@/lib/tokens';
 import { formatIndustry } from '@/lib/format';
 import { DataTable } from './data-table';
@@ -136,9 +136,9 @@ export function CompaniesFilterTable({ companies }: { companies: CompanyRow[] })
             {
               header: '',
               accessor: (c) => (
-                <Button variant="secondary" size="sm" asLink href={`/admin/companies/${c.slug}`}>
+                <LinkButton variant="secondary" size="sm" href={`/admin/companies/${c.slug}`}>
                   View
-                </Button>
+                </LinkButton>
               ),
               style: { textAlign: 'right' },
             },

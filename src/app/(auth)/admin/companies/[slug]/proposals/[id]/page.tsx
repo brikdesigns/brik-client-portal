@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ProposalStatusBadge } from '@/components/status-badges';
 import { formatCurrency } from '@/lib/format';
@@ -155,9 +155,9 @@ export default async function ProposalDetailPage({ params, searchParams }: Props
         }
         actions={
           <div style={{ display: 'flex', gap: gap.md, alignItems: 'center' }}>
-            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${slug}/proposals/${id}/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/companies/${slug}/proposals/${id}/edit`}>
               Edit
-            </Button>
+            </LinkButton>
             <ProposalActions
               proposalId={proposal.id}
               companyId={proposal.company_id}

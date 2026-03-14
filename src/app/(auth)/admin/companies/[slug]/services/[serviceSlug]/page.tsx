@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { Counter } from '@bds/components/ui/Counter/Counter';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -272,14 +272,13 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
                 companyType={(company as unknown as { type: string }).type}
               />
             )}
-            <Button
+            <LinkButton
               variant="primary"
               size="sm"
-              asLink
               href={`/admin/companies/${company.slug}/projects/new?company_service_id=${assignment.id}`}
             >
               Add Project
-            </Button>
+            </LinkButton>
           </div>
         }
         metadata={[
@@ -442,14 +441,13 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...heading.section, margin: 0 }}>Projects</h2>
-            <Button
+            <LinkButton
               variant="primary"
               size="sm"
-              asLink
               href={`/admin/companies/${company.slug}/projects/new?company_service_id=${assignment.id}`}
             >
               Add Project
-            </Button>
+            </LinkButton>
           </div>
 
           <DataTable
@@ -493,9 +491,9 @@ export default async function CompanyServiceDetailPage({ params, searchParams }:
               {
                 header: '',
                 accessor: (p) => (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+                  <LinkButton variant="secondary" size="sm" href={`/admin/projects/${p.slug}`}>
                     View
-                  </Button>
+                  </LinkButton>
                 ),
                 style: { textAlign: 'right' },
               },

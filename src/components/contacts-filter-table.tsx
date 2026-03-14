@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { FilterButton } from '@bds/components/ui/FilterButton/FilterButton';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { font, color, space, gap } from '@/lib/tokens';
 import { formatContactRole } from '@/lib/format';
@@ -143,12 +143,12 @@ export function ContactsFilterTable({ contacts }: { contacts: ContactRow[] }) {
             header: '',
             accessor: (c) => (
               <div style={{ display: 'flex', gap: gap.sm, justifyContent: 'flex-end' }}>
-                <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
+                <LinkButton variant="secondary" size="sm" href={`/admin/contacts/${c.id}`}>
                   View
-                </Button>
-                <Button variant="primary" size="sm" asLink href={`/admin/contacts/${c.id}/edit`}>
+                </LinkButton>
+                <LinkButton variant="primary" size="sm" href={`/admin/contacts/${c.id}/edit`}>
                   Edit
-                </Button>
+                </LinkButton>
               </div>
             ),
             style: { textAlign: 'right' },

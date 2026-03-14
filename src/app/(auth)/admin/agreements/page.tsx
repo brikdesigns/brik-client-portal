@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { Tag } from '@bds/components/ui/Tag/Tag';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -99,9 +99,9 @@ export default async function AdminAgreementsPage() {
                 accessor: (a) => {
                   const client = a.companies as unknown as { slug: string } | null;
                   return client ? (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${a.id}`}>
+                    <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/agreements/${a.id}`}>
                       View
-                    </Button>
+                    </LinkButton>
                   ) : null;
                 },
                 style: { textAlign: 'right' },
@@ -163,9 +163,9 @@ export default async function AdminAgreementsPage() {
               accessor: (a) => {
                 const client = a.companies as unknown as { slug: string } | null;
                 return client ? (
-                  <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${a.id}`}>
+                  <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/agreements/${a.id}`}>
                     View
-                  </Button>
+                  </LinkButton>
                 ) : null;
               },
               style: { textAlign: 'right' },

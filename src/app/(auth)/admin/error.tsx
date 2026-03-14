@@ -3,6 +3,7 @@
 import * as Sentry from '@sentry/nextjs';
 import { useEffect } from 'react';
 import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { font, color, space, gap } from '@/lib/tokens';
 
 export default function AdminError({
@@ -55,9 +56,9 @@ export default function AdminError({
         <Button variant="primary" size="md" onClick={() => reset()}>
           Try again
         </Button>
-        <Button variant="secondary" size="md" asLink href="/admin">
+        <LinkButton variant="secondary" size="md" href="/admin">
           Back to overview
-        </Button>
+        </LinkButton>
       </div>
     </div>
   );

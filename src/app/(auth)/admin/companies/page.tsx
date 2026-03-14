@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader } from '@/components/page-header';
 import { CompaniesFilterTable, type CompanyRow } from '@/components/companies-filter-table';
 import { gap, space } from '@/lib/tokens';
@@ -48,9 +48,9 @@ export default async function AdminCompaniesPage() {
         title="Companies"
         subtitle="Manage leads and client accounts."
         actions={
-          <Button variant="primary" size="md" asLink href="/admin/companies/new">
+          <LinkButton variant="primary" size="md" href="/admin/companies/new">
             Add Company
-          </Button>
+          </LinkButton>
         }
       />
 

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card } from '@bds/components/ui/Card/Card';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { heading } from '@/lib/styles';
@@ -250,9 +251,9 @@ export default function StripeSyncPage() {
                 >
                   Sync complete. {result.summary.matched} services updated.
                 </p>
-                <Button variant="outline" size="md" asLink href="/admin/services">
+                <LinkButton variant="outline" size="md" href="/admin/services">
                   Back to services
-                </Button>
+                </LinkButton>
               </>
             )}
           </div>

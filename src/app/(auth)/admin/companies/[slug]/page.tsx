@@ -6,7 +6,7 @@ import { parseAddressString, extractStreet } from '@/lib/address';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { CardControl } from '@bds/components/ui/CardControl/CardControl';
 import { Tag } from '@bds/components/ui/Tag/Tag';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { Dot } from '@bds/components/ui/Dot/Dot';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
@@ -256,9 +256,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           <div style={{ display: 'flex', gap: gap.md, alignItems: 'center' }}>
             <DeleteCompanyButton companyId={client.id} companyName={client.name} />
             <GHLSyncButton companyId={client.id} hasGhlId={!!(client as unknown as Record<string, string>).ghl_contact_id} />
-            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/edit`}>
               Edit
-            </Button>
+            </LinkButton>
             {companyType === 'lead' && <QualifyLeadButton companyId={client.id} />}
             {companyType === 'prospect' && (!latestProposal || ['draft', 'declined', 'expired'].includes(latestProposal.status)) && (
               <GenerateProposalButton
@@ -324,9 +324,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={detail.sectionHeading}>Location</h2>
-            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/edit`}>
               Edit
-            </Button>
+            </LinkButton>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
@@ -360,9 +360,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {/* Contact */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={detail.sectionHeading}>Contact</h2>
-            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/edit`}>
               Edit
-            </Button>
+            </LinkButton>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
@@ -399,9 +399,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
           {/* Opportunities */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <h2 style={detail.sectionHeading}>Opportunities</h2>
-            <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/opportunities/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/opportunities/edit`}>
               Edit
-            </Button>
+            </LinkButton>
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: gap.xl, textAlign: 'left' }}>
             <div>
@@ -551,9 +551,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                 {
                   header: '',
                   accessor: (r) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/reporting/${r.report_type}`}>
+                    <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/reporting/${r.report_type}`}>
                       View
-                    </Button>
+                    </LinkButton>
                   ),
                   style: { textAlign: 'right' },
                 },
@@ -580,9 +580,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
                     {latestProposal && <ProposalStatusBadge status={latestProposal.status} />}
                     {latestProposal && (
-                      <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
+                      <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/proposals/${latestProposal.id}`}>
                         View
-                      </Button>
+                      </LinkButton>
                     )}
                     {(!latestProposal || ['declined', 'expired'].includes(latestProposal.status)) && (
                       <GenerateProposalButton companyId={client.id} companyName={client.name} slug={client.slug} />
@@ -598,9 +598,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                   action={
                     <div style={{ display: 'flex', alignItems: 'center', gap: gap.md }}>
                       <AgreementStatusBadge status={latestBaa.status} />
-                      <Button variant="secondary" size="sm" asLink href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
+                      <LinkButton variant="secondary" size="sm" href={`/admin/companies/${client.slug}/agreements/${latestBaa.id}`}>
                         View
-                      </Button>
+                      </LinkButton>
                     </div>
                   }
                   style={{ boxShadow: shadow.sm }}
@@ -654,7 +654,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
                   <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Billing</h2>
-                  <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/invoices/new`}>Add Invoice</Button>
+                  <LinkButton variant="primary" size="sm" href={`/admin/companies/${client.slug}/invoices/new`}>Add Invoice</LinkButton>
                 </div>
                 <DataTable
                   data={billingRows}
@@ -681,9 +681,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     {
                       header: '',
                       accessor: (r) => (
-                        <Button variant="secondary" size="sm" asLink href={r.href}>
+                        <LinkButton variant="secondary" size="sm" href={r.href}>
                           View
-                        </Button>
+                        </LinkButton>
                       ),
                       style: { textAlign: 'right' },
                     },
@@ -700,7 +700,7 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Services</h2>
-            <Button variant="primary" size="sm" asLink href={`/admin/companies/${client.slug}/services/new`}>Assign Service</Button>
+            <LinkButton variant="primary" size="sm" href={`/admin/companies/${client.slug}/services/new`}>Assign Service</LinkButton>
           </div>
           <DataTable
             data={allServices}
@@ -788,9 +788,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                           />
                         ) : null;
                       })()}
-                      <Button variant="secondary" size="sm" asLink href={href}>
+                      <LinkButton variant="secondary" size="sm" href={href}>
                         View
-                      </Button>
+                      </LinkButton>
                     </span>
                   );
                 },
@@ -808,9 +808,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
         <div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: space.md }}>
             <h2 style={{ ...sectionHeadingStyle, margin: 0 }}>Contacts</h2>
-            <Button variant="primary" size="sm" asLink href={`/admin/contacts/new?company_id=${client.id}`}>
+            <LinkButton variant="primary" size="sm" href={`/admin/contacts/new?company_id=${client.id}`}>
               Add New
-            </Button>
+            </LinkButton>
           </div>
           <DataTable
             data={contacts ?? []}
@@ -860,9 +860,9 @@ export default async function CompanyDetailPage({ params, searchParams }: Props)
                     {c.email && !c.setup_completed_at && (
                       <ResendWelcomeButton contactId={c.id} contactName={c.full_name ?? c.email} />
                     )}
-                    <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${c.id}`}>
+                    <LinkButton variant="secondary" size="sm" href={`/admin/contacts/${c.id}`}>
                       View
-                    </Button>
+                    </LinkButton>
                   </span>
                 ),
                 style: { textAlign: 'right' },

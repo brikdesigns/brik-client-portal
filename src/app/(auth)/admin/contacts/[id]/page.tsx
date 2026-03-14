@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ContactDetailTabs } from '@/components/contact-detail-tabs';
 import { DeleteContactButton } from '@/components/delete-contact-button';
@@ -103,9 +103,9 @@ export default async function ContactDetailPage({ params }: Props) {
         }
         actions={
           <div style={{ display: 'flex', gap: gap.md }}>
-            <Button variant="secondary" size="sm" asLink href={`/admin/contacts/${contact.id}/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/contacts/${contact.id}/edit`}>
               Edit
-            </Button>
+            </LinkButton>
             <DeleteContactButton
               contactId={contact.id}
               contactName={contact.full_name}

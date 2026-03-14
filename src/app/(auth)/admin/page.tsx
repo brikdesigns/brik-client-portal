@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
 import { Banner } from '@bds/components/ui/Banner/Banner';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
@@ -39,10 +39,9 @@ export default async function AdminOverviewPage() {
         title="Want to set up a new client?"
         description="Click to begin the setup workflow for new clients."
         action={
-          <Button
+          <LinkButton
             variant="primary"
             size="sm"
-            asLink
             href="/admin/companies/new"
             style={{
               backgroundColor: color.background.onColorDark,
@@ -50,7 +49,7 @@ export default async function AdminOverviewPage() {
             }}
           >
             Get Started
-          </Button>
+          </LinkButton>
         }
         style={{ marginBottom: space.xl, borderRadius: border.radius.md }}
       />
@@ -100,9 +99,9 @@ export default async function AdminOverviewPage() {
           {
             header: '',
             accessor: (p) => (
-              <Button variant="secondary" size="sm" asLink href={`/admin/projects/${p.slug}`}>
+              <LinkButton variant="secondary" size="sm" href={`/admin/projects/${p.slug}`}>
                 View
-              </Button>
+              </LinkButton>
             ),
             style: { textAlign: 'right' },
           },

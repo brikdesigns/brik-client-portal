@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ScoreTierBadge } from '@/components/report-badges';
@@ -109,9 +109,9 @@ export default async function ClientReportListPage({ params }: Props) {
           {
             header: '',
             accessor: (r) => (
-              <Button variant="secondary" size="sm" asLink href={`/admin/companies/${slug}/reporting/${r.report_type}`}>
+              <LinkButton variant="secondary" size="sm" href={`/admin/companies/${slug}/reporting/${r.report_type}`}>
                 View
-              </Button>
+              </LinkButton>
             ),
             style: { textAlign: 'right' },
           },

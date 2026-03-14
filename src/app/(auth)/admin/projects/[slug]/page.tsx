@@ -1,10 +1,10 @@
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { DataTable } from '@/components/data-table';
 import { ProjectStatusBadge } from '@/components/status-badges';
-import { ServiceBadge } from '@/components/service-badge';
+import { ServiceBadge, ServiceCategoryLabel } from '@/components/service-badge';
 import { DeleteProjectButton } from '@/components/delete-project-button';
 import { formatCurrency } from '@/lib/format';
 import { color, gap, space, font, border } from '@/lib/tokens';
@@ -130,9 +130,9 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
         actions={
           <div style={{ display: 'flex', gap: '8px' }}>
             <DeleteProjectButton projectId={project.id} projectName={project.name} />
-            <Button variant="secondary" size="sm" asLink href={`/admin/projects/${project.slug}/edit`}>
+            <LinkButton variant="secondary" size="sm" href={`/admin/projects/${project.slug}/edit`}>
               Edit
-            </Button>
+            </LinkButton>
           </div>
         }
         metadata={metadataItems}
@@ -295,7 +295,9 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                 },
                 {
                   header: 'Service Line',
-                  accessor: (svc) => svc.category_name || <span style={detail.empty}>—</span>,
+                  accessor: (svc) => svc.category_slug
+                    ? <ServiceCategoryLabel category={svc.category_slug} />
+                    : <span style={detail.empty}>—</span>,
                 },
                 {
                   header: 'Price',
@@ -308,9 +310,9 @@ export default async function ProjectDetailPage({ params, searchParams }: Props)
                 {
                   header: '',
                   accessor: (svc) => (
-                    <Button variant="secondary" size="sm" asLink href={`/admin/services/${svc.slug}`}>
+                    <LinkButton variant="secondary" size="sm" href={`/admin/services/${svc.slug}`}>
                       View
-                    </Button>
+                    </LinkButton>
                   ),
                   style: { textAlign: 'right' },
                 },

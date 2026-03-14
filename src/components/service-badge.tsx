@@ -5,7 +5,6 @@ import {
   categoryConfig,
   type ServiceCategory,
 } from '@bds/components/ui/ServiceBadge/ServiceBadge';
-import { font, gap, serviceColor } from '@/lib/tokens';
 
 /**
  * Thin wrapper around BDS ServiceBadge.
@@ -128,24 +127,8 @@ export function ServiceBadge({ category, serviceName, size = 28 }: ServiceBadgeP
 }
 
 export function ServiceCategoryLabel({ category }: { category: string }) {
-  const config = categoryConfig[category as ServiceCategory] ?? { token: 'orange', label: category };
-
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: gap.xs }}>
-      <BdsServiceBadge category={category as ServiceCategory} size="sm" />
-      <span
-        style={{
-          fontFamily: font.family.label,
-          fontSize: font.size.body.xs,
-          fontWeight: font.weight.medium,
-          color: serviceColor(category).text,
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-        }}
-      >
-        {config.label}
-      </span>
-    </div>
+    <BdsServiceBadge category={category as ServiceCategory} mode="label" size="sm" />
   );
 }
 

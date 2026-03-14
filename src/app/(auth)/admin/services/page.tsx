@@ -1,6 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader } from '@/components/page-header';
 import { ServicesFilterTable } from '@/components/services-filter-table';
 import { gap, space } from '@/lib/tokens';
@@ -94,12 +94,12 @@ export default async function AdminServicesPage() {
         subtitle={`${totalActive} active of ${totalServices} total services in the catalog.`}
         actions={
           <>
-            <Button variant="secondary" size="md" asLink href="/admin/services/stripe-sync">
+            <LinkButton variant="secondary" size="md" href="/admin/services/stripe-sync">
               Stripe Sync
-            </Button>
-            <Button variant="primary" size="md" asLink href="/admin/services/new">
+            </LinkButton>
+            <LinkButton variant="primary" size="md" href="/admin/services/new">
               Add Service
-            </Button>
+            </LinkButton>
           </>
         }
       />

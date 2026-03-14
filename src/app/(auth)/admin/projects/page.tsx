@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server';
 
 import { CardSummary } from '@bds/components/ui/Card/CardSummary';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader } from '@/components/page-header';
 import { ProjectsFilterTable, type ProjectRow } from '@/components/projects-filter-table';
 import { space } from '@/lib/tokens';
@@ -79,9 +79,9 @@ export default async function AdminProjectsPage() {
         title="Projects"
         subtitle={`${all.length} total projects across all clients.`}
         actions={
-          <Button variant="primary" size="md" asLink href="/admin/projects/new">
+          <LinkButton variant="primary" size="md" href="/admin/projects/new">
             Add Project
-          </Button>
+          </LinkButton>
         }
       />
 

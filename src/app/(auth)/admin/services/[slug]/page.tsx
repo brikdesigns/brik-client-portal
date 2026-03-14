@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { Badge } from '@bds/components/ui/Badge/Badge';
 import { Dot } from '@bds/components/ui/Dot/Dot';
-import { Button } from '@bds/components/ui/Button/Button';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 import { PageHeader, Breadcrumb } from '@/components/page-header';
 import { ServiceBadge } from '@/components/service-badge';
 import { ServiceTypeTag } from '@/components/status-badges';
@@ -84,9 +84,9 @@ export default async function ServiceDetailPage({ params }: Props) {
         }
         subtitle={service.description || undefined}
         actions={
-          <Button variant="secondary" size="sm" asLink href={`/admin/services/${service.slug}/edit`}>
+          <LinkButton variant="secondary" size="sm" href={`/admin/services/${service.slug}/edit`}>
             Edit
-          </Button>
+          </LinkButton>
         }
         metadata={[
           {

@@ -1,4 +1,5 @@
 import { EmptyState as BdsEmptyState } from '@bds/components/ui/EmptyState/EmptyState';
+import { LinkButton } from '@bds/components/ui/Button/LinkButton';
 
 interface PortalEmptyStateProps {
   /** Primary heading */
@@ -26,16 +27,17 @@ export function EmptyState({
     <BdsEmptyState
       title={title}
       description={description}
-      buttonProps={
-        action
-          ? { children: action.label, href: action.href, asLink: true }
-          : undefined
-      }
       style={
         inline
           ? { backgroundColor: 'transparent', border: 'none', minHeight: 'auto' }
           : undefined
       }
-    />
+    >
+      {action && (
+        <LinkButton variant="primary" size="sm" href={action.href}>
+          {action.label}
+        </LinkButton>
+      )}
+    </BdsEmptyState>
   );
 }
